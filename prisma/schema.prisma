@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url = env("DATABASE_URL")
+}
+
+enum Mode {
+  yellow
+  red
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  // Relations
+  createdSessions     Session[]            @relation("SessionsCreated")
+  sessionParticipants SessionParticipant[]
+  roundScores         RoundScore[]
+}
+
+model Session {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  mode        Mode
+  createdById String   @db.ObjectId
+  createdAt   DateTime @default(now())
+
+  // Relations
+  createdBy    User                 @relation("SessionsCreated", fields: [createdById], references: [id])
+  participants SessionParticipant[]
+  roundScores  RoundScore[]
+
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model SessionParticipant {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String   @db.ObjectId
+  userId    String   @db.ObjectId
+  joinedAt  DateTime @default(now())
+
+  // Relations
+  session Session @relation(fields: [sessionId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  // Uniqueness: a user can only appear once per session
+  @@unique([sessionId, userId])
+  @@index([userId])
+  @@index([sessionId])
+}
+
+model RoundScore {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId   String @db.ObjectId
+  userId      String @db.ObjectId
+  roundNumber Int
+  score       Int
+
+  // Relations
+  session Session @relation(fields: [sessionId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  // Ensure only one score per (session, user, round)
+  @@unique([sessionId, userId, roundNumber])
+  @@index([sessionId])
+  @@index([userId])
+}
+
