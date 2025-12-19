@@ -24,6 +24,7 @@ model User {
   name      String
   email     String   @unique
   createdAt DateTime @default(now())
+  lastLogin DateTime?
 
   // Relations
   createdSessions     Session[]            @relation("SessionsCreated")
