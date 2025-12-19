@@ -1,9 +1,11 @@
 "use client";
 
+import { signIn } from "next-auth/react";
+
 export default function LoginButton() {
   return (
-    <a href="/auth/login" className="button login">
-      Log In
-    </a>
+    <button onClick={() => signIn("google")} className="button login">
+      Google
+    </button>
   );
 }
