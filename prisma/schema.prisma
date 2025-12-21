@@ -104,7 +104,7 @@ model ArcherySession {
   createdAt   DateTime @default(now())
 
   // Relations
-  createdBy    User                 @relation("ArcherySessionsCreated", fields: [createdById], references: [id])
+  createdBy    User                 @relation("ArcherySessionsCreated", fields: [createdById], references: [id], onDelete: Cascade)
   participants SessionParticipant[]
   roundScores  RoundScore[]
 
@@ -119,8 +119,8 @@ model SessionParticipant {
   joinedAt  DateTime @default(now())
 
   // Relations
-  session ArcherySession @relation(fields: [sessionId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  session ArcherySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Uniqueness: a user can only appear once per session
   @@unique([sessionId, userId])
@@ -136,8 +136,8 @@ model RoundScore {
   score       Int
 
   // Relations
-  session ArcherySession @relation(fields: [sessionId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  session ArcherySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Ensure only one score per (session, user, round)
   @@unique([sessionId, userId, roundNumber])

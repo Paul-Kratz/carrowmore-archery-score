@@ -1,3 +1,4 @@
+"use client";
 import { ROUTES } from "@/constants/routes";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
