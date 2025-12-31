@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "In The Woods",
+  title: "In The Forest",
   description: "Archery score app",
 };
 
@@ -35,7 +35,7 @@ export default function RootLayout({
           <div className="navbar bg-base-100 shadow-sm">
             <h3 className="text-default text-2xl font-bold flex flex-row gap-2 items-center">
               <BowArrow />
-              In the woods
+              In the forest
             </h3>
           </div>
           {children}

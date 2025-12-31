@@ -25,7 +25,7 @@ export const getRoundScore = async ({
 
     // Get total score for all rounds this shoot
     const totalScore = roundScores.reduce((aggregate, round) => {
-      return aggregate + round.score;
+      return aggregate + (round?.score ?? 0);
     }, 0);
 
     return {

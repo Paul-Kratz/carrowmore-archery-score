@@ -28,7 +28,7 @@ export const getShoot = async ({
     for (const rs of shoot.roundScores) {
       totalsByUserId.set(
         rs.userId,
-        (totalsByUserId.get(rs.userId) ?? 0) + rs.score
+        (totalsByUserId.get(rs.userId) ?? 0) + (rs?.score ?? 0)
       );
     }
 
