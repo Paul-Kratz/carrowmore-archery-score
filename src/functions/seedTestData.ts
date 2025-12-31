@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import data from "./data.json";
-import { Mode } from "@prisma/enums";
+import { Mode } from "@prisma-local/enums";
 const namesMap: Record<string, string> = {
   Vero: "6952db86d85ed8f6a15c1787",
   Veronika: "6952db86d85ed8f6a15c1787",

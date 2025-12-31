@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Shoot } from "@prisma/client";
+import { Shoot } from "@prisma-local/client";
 
 export const getParticipatedShoots = async (
   userId: string

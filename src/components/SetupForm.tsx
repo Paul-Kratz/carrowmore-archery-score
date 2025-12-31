@@ -1,7 +1,7 @@
 "use client";
 
-import { User } from "@prisma/client";
-import { Mode } from "@prisma/enums";
+import { User } from "@prisma-local/client";
+import { Mode } from "@prisma-local/enums";
 import { Delete } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useState } from "react";

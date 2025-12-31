@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { User } from "@prisma-local/client";
 
 export const getUserInitials = (user?: User) => {
   const nameToUse = user?.name || user?.email;

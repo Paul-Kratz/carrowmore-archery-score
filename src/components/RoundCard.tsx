@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ScoringButtonGroup } from "./ScoringButtonGroup";
 import { useState } from "react";
 import { getUserInitials } from "@/helpers/getUserInitials";
-import { User } from "@prisma/client";
+import { User } from "@prisma-local/client";
 
 export const RoundCard = ({
   user,

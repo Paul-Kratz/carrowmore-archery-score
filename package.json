@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "prisma:push-db": "npx prisma db push",
@@ -15,6 +16,7 @@
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "6.19",
     "@prisma/extension-accelerate": "^3.0.1",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
@@ -39,5 +41,8 @@
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "exports": {
+    ".": "./src/lib/index.ts"
   }
 }
