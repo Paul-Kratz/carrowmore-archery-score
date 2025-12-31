@@ -34,7 +34,7 @@ export default function RootLayout({
         <SessionProvider>
           <div className="navbar bg-base-100 shadow-sm">
             <h3 className="text-default text-2xl font-bold flex flex-row gap-2 items-center">
-              <BowArrow />
+              <BowArrow className="text-success" />
               In the forest
             </h3>
           </div>
