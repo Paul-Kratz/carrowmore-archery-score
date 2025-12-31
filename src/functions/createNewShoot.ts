@@ -1,8 +1,8 @@
 import { NUM_STATIONS } from "@/constants";
 import { prisma } from "@/lib/prisma";
 
-// test session = { userId: '694515cd2702e65598d6c5f2', mode: 'red', participantIds: ['694515cd2702e65598d6c5f2', '69454dc18b2d4763f5f50611']}
-export const createNewSession = async ({
+// test shoot = { userId: '694515cd2702e65598d6c5f2', mode: 'red', participantIds: ['694515cd2702e65598d6c5f2', '69454dc18b2d4763f5f50611']}
+export const createNewShoot = async ({
   userId,
   mode,
   participantIds,
@@ -26,18 +26,18 @@ export const createNewSession = async ({
   }
 
   const ROUNDS = Array.from({ length: NUM_STATIONS }, (_, i) => i + 1);
-  const session = await prisma.$transaction(async (tx) => {
-    // create session
-    const session = await tx.archerySession.create({
+  const shoot = await prisma.$transaction(async (tx) => {
+    // create shoot
+    const shoot = await tx.shoot.create({
       data: {
         mode,
         createdById: userId,
       },
     });
-    // create all session participants
-    await tx.sessionParticipant.createMany({
+    // create all shoot participants
+    await tx.shootParticipant.createMany({
       data: userIds.map((userId) => ({
-        sessionId: session.id,
+        shootId: shoot.id,
         userId,
       })),
     });
@@ -45,15 +45,15 @@ export const createNewSession = async ({
     await tx.roundScore.createMany({
       data: userIds.flatMap((userId) =>
         ROUNDS.map((roundNumber) => ({
-          sessionId: session.id,
+          shootId: shoot.id,
           userId,
           roundNumber,
-          score: 0, // or null if you prefer
+          score: null,
         }))
       ),
     });
 
-    return session;
+    return shoot;
   });
-  return session;
+  return shoot;
 };

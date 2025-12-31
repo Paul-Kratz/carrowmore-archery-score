@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import Resend from "next-auth/providers/resend";
 import { ROUTES } from "@/constants/routes";
 
-const publicRoutes: string[] = [ROUTES.HOME, ROUTES.VERIFY_REQUEST];
+const publicRoutes: string[] = [];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),

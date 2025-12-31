@@ -1,17 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import { getRoundScore } from "./getRoundScore";
 
 export const updateRound = async (
   userId: string,
-  sessionId: string,
+  shootId: string,
   roundNumber: number,
   score: number
 ) => {
   try {
-    const round = await prisma.roundScore.upsert({
+    await prisma.roundScore.upsert({
       where: {
-        sessionId_userId_roundNumber: {
+        shootId_userId_roundNumber: {
           userId,
-          sessionId,
+          shootId,
           roundNumber,
         },
       },
@@ -21,9 +22,15 @@ export const updateRound = async (
       create: {
         score,
         userId,
-        sessionId,
+        shootId,
         roundNumber,
       },
+    });
+
+    const round = await getRoundScore({
+      userId,
+      shootId,
+      roundNumber,
     });
 
     return round;

@@ -1,22 +1,15 @@
 import { updateRound } from "@/functions/updateRound";
 import { validRoundNumber, validScore } from "@/helpers";
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/functions/getSession";
+import { getShoot } from "@/functions/getShoot";
 
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, sessionId, roundNumber, score } = body;
+    const { userId, shootId, roundNumber, score } = body;
 
     if (!userId) {
       return NextResponse.json({ error: "User not valid" }, { status: 401 });
-    }
-
-    if (!sessionId || !roundNumber || !score) {
-      return NextResponse.json(
-        { error: "Missing required field: sessionId, roundNumber or score" },
-        { status: 400 }
-      );
     }
 
     if (!validScore(score)) {
@@ -33,23 +26,22 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const session = await getSession({
-      sessionId,
-      includeParticipants: true,
+    const shoot = await getShoot({
+      shootId,
     });
 
-    if (!session?.participants.find((p) => p.userId === userId)) {
+    if (!shoot?.participants?.find((p) => p.userId === userId)) {
       return NextResponse.json(
-        { error: "You are not a part of this session" },
+        { error: "You are not a part of this shoot" },
         { status: 400 }
       );
     }
 
-    const round = await updateRound(userId, sessionId, roundNumber, score);
+    const round = await updateRound(userId, shootId, roundNumber, score);
 
     return NextResponse.json(round, { status: 200 });
   } catch (error) {
-    console.error("Error updating session:", error);
+    console.error("Error updating shoot:", error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Internal server error",

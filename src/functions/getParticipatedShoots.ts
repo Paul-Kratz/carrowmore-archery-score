@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { ArcherySession } from "../../generated/prisma/client";
+import { Shoot } from "../../generated/prisma/client";
 
-export const getParticipatedSessions = async (
+export const getParticipatedShoots = async (
   userId: string
-): Promise<ArcherySession[]> => {
+): Promise<Shoot[]> => {
   try {
-    const sessions = await prisma.archerySession.findMany({
+    const shoots = await prisma.shoot.findMany({
       where: {
         participants: {
           some: { userId },
@@ -16,7 +16,7 @@ export const getParticipatedSessions = async (
       },
     });
 
-    return sessions;
+    return shoots;
   } catch (e: unknown) {
     console.error(e);
     return [];

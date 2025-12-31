@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/prisma";
 
-export const getCreatedSessions = async (userId: string) => {
+export const getCreatedShoots = async (userId: string) => {
   try {
-    const sessions = await prisma.archerySession.findMany({
+    const shoots = await prisma.shoot.findMany({
       where: {
         createdById: userId,
       },
     });
 
-    return sessions;
+    return shoots;
   } catch (e: unknown) {
     console.log(e);
   }

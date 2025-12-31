@@ -1,33 +1,23 @@
-"use client";
-import { Button } from "@/components/Button";
-import LoginButton from "@/components/LoginButton";
-import LogoutButton from "@/components/LogoutButton";
-import Profile from "@/components/Profile";
-import ResendForm from "@/components/ResendForm";
-import { useSession } from "next-auth/react";
+import DockWrapper from "@/components/DockWrapper";
+import SetupForm from "@/components/SetupForm";
+import { getUsers } from "@/functions/getUsers";
+import { auth } from "@/lib/auth";
+import { User } from "@prisma/client";
 
-export default function Home() {
-  const { data, status } = useSession();
+export default async function Home() {
+  const users = await getUsers();
+
+  const session = await auth();
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen w-full p-4 box-border">
-      <div className="bg-white p-2.5 rounded-md w-full m-2.5 h-auto drop-shadow-2xl">
-        {data ? (
-          <div className="logged-in-section">
-            <p className="text-black">✅ Successfully logged in!</p>
-            <Profile />
-            <LogoutButton />
-          </div>
-        ) : (
-          <>
-            <p className="text-black">
-              Welcome! Please log in to access your protected content.
-            </p>
-            <ResendForm />
-            <LoginButton />
-          </>
-        )}
+    <DockWrapper>
+      <div className="flex flex-col justify-center bg-base-200 items-center min-h-screen w-full p-4 box-border">
+        <h1 className="text-2xl font-thin mb-3">Start a new shoot</h1>
+        <SetupForm
+          users={users as User[]}
+          currentUser={session?.user as User}
+        />
       </div>
-    </div>
+    </DockWrapper>
   );
 }

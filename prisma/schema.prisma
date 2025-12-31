@@ -34,8 +34,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  createdSessions     ArcherySession[]            @relation("ArcherySessionsCreated")
-  sessionParticipants SessionParticipant[]
+  createdShoots   Shoot[]            @relation("ShootsCreated")
+  shootParticipants ShootParticipant[]
   roundScores         RoundScore[]
 }
  
@@ -97,51 +97,53 @@ model Authenticator {
   @@unique([userId, credentialID])
 }
 
-model ArcherySession {
+model Shoot {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   mode        Mode
   createdById String   @db.ObjectId
   createdAt   DateTime @default(now())
+  completed   Boolean  @default(false)
+  notes       String?
 
   // Relations
-  createdBy    User                 @relation("ArcherySessionsCreated", fields: [createdById], references: [id], onDelete: Cascade)
-  participants SessionParticipant[]
+  createdBy    User                 @relation("ShootsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+  participants ShootParticipant[]
   roundScores  RoundScore[]
 
   @@index([createdById])
   @@index([createdAt])
 }
 
-model SessionParticipant {
+model ShootParticipant {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionId String   @db.ObjectId
+  shootId   String   @db.ObjectId
   userId    String   @db.ObjectId
   joinedAt  DateTime @default(now())
 
   // Relations
-  session ArcherySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shoot     Shoot @relation(fields: [shootId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Uniqueness: a user can only appear once per session
-  @@unique([sessionId, userId])
+  // Uniqueness: a user can only appear once per shoot
+  @@unique([shootId, userId])
   @@index([userId])
-  @@index([sessionId])
+  @@index([shootId])
 }
 
 model RoundScore {
   id          String @id @default(auto()) @map("_id") @db.ObjectId
-  sessionId   String @db.ObjectId
+  shootId     String @db.ObjectId
   userId      String @db.ObjectId
   roundNumber Int
-  score       Int
+  score       Int? 
 
   // Relations
-  session ArcherySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shoot       Shoot   @relation(fields: [shootId], references: [id], onDelete: Cascade)
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Ensure only one score per (session, user, round)
-  @@unique([sessionId, userId, roundNumber])
-  @@index([sessionId])
+  // Ensure only one score per (shoot, user, round)
+  @@unique([shootId, userId, roundNumber])
+  @@index([shootId])
   @@index([userId])
 }
 

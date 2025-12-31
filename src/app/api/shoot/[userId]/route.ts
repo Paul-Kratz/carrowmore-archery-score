@@ -1,4 +1,4 @@
-import { getParticipatedSessions } from "@/functions/getParticipatedSessions";
+import { getParticipatedShoots } from "@/functions/getParticipatedShoots";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   const { userId } = await params;
-  const sessions = await getParticipatedSessions(userId);
+  const shoots = await getParticipatedShoots(userId);
 
-  return NextResponse.json(sessions, { status: 200 });
+  return NextResponse.json(shoots, { status: 200 });
 }
