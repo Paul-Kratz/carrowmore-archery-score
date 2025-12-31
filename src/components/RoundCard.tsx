@@ -1,12 +1,9 @@
 "use client";
 import Image from "next/image";
-import { User } from "../../generated/prisma/client";
 import { ScoringButtonGroup } from "./ScoringButtonGroup";
 import { useState } from "react";
-import {
-  getRandomBackgroundColor,
-  getUserInitials,
-} from "@/helpers/getUserInitials";
+import { getUserInitials } from "@/helpers/getUserInitials";
+import { User } from "@prisma/client";
 
 export const RoundCard = ({
   user,
