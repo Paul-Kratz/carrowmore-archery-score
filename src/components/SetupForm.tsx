@@ -1,12 +1,11 @@
 "use client";
 
-import { User } from "@prisma-local/client";
-import { Mode } from "@prisma-local/enums";
 import { Delete } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { ACTIVE_SHOOT_COOKIE } from "@/constants";
+import { Mode, User } from "@/generated/prisma/client";
 
 const getUserLabel = (user: User, currentUserId: string) => {
   let label = user.name;
