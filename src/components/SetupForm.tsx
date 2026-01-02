@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { ACTIVE_SHOOT_COOKIE } from "@/constants";
-import { User } from "@/generated/prisma/client";
-import { Mode } from "@/generated/prisma/enums";
+import { User } from "../../generated/prisma/client";
+import { Mode } from "../../generated/prisma/enums";
 
 const getUserLabel = (user: User, currentUserId: string) => {
   let label = user.name;

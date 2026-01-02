@@ -1,4 +1,4 @@
-import { Shoot } from "@/generated/prisma/client";
+import { Shoot } from "../../generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const getParticipatedShoots = async (

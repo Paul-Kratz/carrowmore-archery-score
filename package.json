@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
-    "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "6.19",
     "@prisma/extension-accelerate": "^3.0.1",
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.19.0",

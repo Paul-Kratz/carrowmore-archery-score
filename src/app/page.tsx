@@ -1,7 +1,7 @@
 import DockWrapper from "@/components/DockWrapper";
 import SetupForm from "@/components/SetupForm";
 import { getUsers } from "@/functions/getUsers";
-import { User } from "@/generated/prisma/client";
+import { User } from "../../generated/prisma/client";
 import { auth } from "@/lib/auth";
 
 export default async function Home() {

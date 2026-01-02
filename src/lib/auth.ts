@@ -1,14 +1,15 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { prisma } from "@/lib/prisma";
 import Resend from "next-auth/providers/resend";
 import { ROUTES } from "@/constants/routes";
+import { prisma } from "./prisma";
 
 const publicRoutes: string[] = [];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any),
   providers: [Google, Resend({ from: process.env.AUTH_EMAIL })],
   pages: {
     verifyRequest: ROUTES.VERIFY_REQUEST,
