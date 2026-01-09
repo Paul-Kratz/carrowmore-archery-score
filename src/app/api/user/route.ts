@@ -1,12 +1,18 @@
-import { getUsers } from "@/functions/getUsers";
+import { formatResponse } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
+import { connectMongoose } from "@/lib/mongoose";
+import { IUser } from "@/models";
+import { User } from "@/models/mongoose";
 import { NextResponse } from "next/server";
 
-export const GET = auth(async function GET(req) {
-  if (req.auth) {
-    const users = await getUsers();
-
-    return NextResponse.json(users, { status: 200 });
+export const GET = async () => {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
-});
+  await connectMongoose();
+
+  const users = await User.find({}, { email: 1, name: 1 }).lean();
+
+  return NextResponse.json(formatResponse<IUser>(users), { status: 200 });
+};

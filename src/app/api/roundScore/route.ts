@@ -2,6 +2,7 @@ import { updateRound } from "@/functions/updateRound";
 import { validRoundNumber, validScore } from "@/helpers";
 import { NextRequest, NextResponse } from "next/server";
 import { getShoot } from "@/functions/getShoot";
+import { IShootParticipant } from "@/models";
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -26,11 +27,13 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const shoot = await getShoot({
+    const { participants } = await getShoot({
       shootId,
     });
 
-    if (!shoot?.participants?.find((p) => p.userId === userId)) {
+    if (
+      !(participants as IShootParticipant[])?.find((p) => p.user.id === userId)
+    ) {
       return NextResponse.json(
         { error: "You are not a part of this shoot" },
         { status: 400 }

@@ -1,5 +1,8 @@
 import { createNewShoot } from "@/functions/createNewShoot";
 import { updateShoot } from "@/functions/updateShoot";
+import { auth } from "@/lib/auth";
+import { connectMongoose } from "@/lib/mongoose";
+import { Shoot } from "@/models/mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -61,3 +64,12 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+export const GET = auth(async function GET(req) {
+  if (req.auth) {
+    await connectMongoose();
+    const shoots = await Shoot.find({});
+
+    return NextResponse.json(shoots, { status: 200 });
+  }
+  return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+});

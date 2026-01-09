@@ -4,9 +4,10 @@ import { RoundCard } from "@/components/RoundCard";
 import { ACTIVE_SHOOT_COOKIE, TARGET_NAMES } from "@/constants";
 import { getShoot } from "@/functions/getShoot";
 import { auth } from "@/lib/auth";
+import { IShootParticipant } from "@/models";
 import { ChartColumn, MenuIcon, UserPlus2 } from "lucide-react";
 import { cookies } from "next/headers";
-import { redirect, RedirectType } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export default async function Session({
   params,
@@ -15,6 +16,7 @@ export default async function Session({
 }) {
   const cookieStore = await cookies();
   const shootId = cookieStore.get(ACTIVE_SHOOT_COOKIE)?.value;
+  console.log("made it to shoot page");
 
   const { roundNumber } = await params; // Get shoot id from route
   const authData = await auth(); // Check auth data for current user id
@@ -30,24 +32,24 @@ export default async function Session({
   }
 
   // Get the shoot data
-  const shootData = await getShoot({
+  const { shoot, participants, roundScores } = await getShoot({
     shootId,
     roundNumber: roundNum,
   });
 
-  if (shootData?.error) {
-    //handle error by sending to home screen with error message.
-    redirect("/"); // TODO
-  }
+  // if (shootData?.error) {
+  //   //handle error by sending to home screen with error message.
+  //   redirect("/"); // TODO
+  // }
 
-  // Return to home screen if shoot not found or current user not part of shoot
-  // TODO add an error
-  if (
-    !shootData ||
-    !shootData.participants?.some((p) => p.userId === authData?.user?.id)
-  ) {
-    redirect("/", RedirectType.push);
-  }
+  // // Return to home screen if shoot not found or current user not part of shoot
+  // // TODO add an error
+  // if (
+  //   !shootData ||
+  //   !shootData?.participants?.some((p) => p.userId === authData?.user?.id)
+  // ) {
+  //   redirect("/", RedirectType.push);
+  // }
 
   const nextPage = roundNum + 1 <= 18 ? `/shoot/${roundNum + 1}` : null;
   const prevPage = roundNum - 1 > 0 ? `/shoot/${roundNum - 1}` : null;
@@ -58,7 +60,7 @@ export default async function Session({
         <div className="flex justify-between items-center">
           <span className="text-rotate text-lg">
             <span className="justify-items-center">
-              <span>Shoot mode: {shootData?.shoot.mode}</span>
+              <span>Shoot mode: {shoot?.mode}</span>
               <span>Target: {TARGET_NAMES[roundNum]}</span>
             </span>
           </span>
@@ -83,21 +85,22 @@ export default async function Session({
               <li>
                 <FinishShootButton
                   shootId={shootId}
-                  shootNotes={shootData.shoot?.notes}
+                  shootNotes={shoot?.notes as string}
                   iconOnly
                 />
               </li>
             </ul>
           </div>
         </div>
-        {shootData?.participants.map((p) => (
+        {(participants as IShootParticipant[]).map((p) => (
           <RoundCard
-            user={p.user}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            user={p.user as any}
             roundNumber={Number(roundNumber)}
             shootId={shootId}
-            key={p.userId}
-            total={p.totalScore}
-            round={p.thisRoundScore}
+            key={p.id}
+            total={0}
+            round={16}
           />
         ))}
       </div>
@@ -105,7 +108,7 @@ export default async function Session({
         {roundNum === 18 ? (
           <FinishShootButton
             shootId={shootId}
-            shootNotes={shootData.shoot?.notes}
+            shootNotes={shoot?.notes as string}
           />
         ) : (
           <Pagination

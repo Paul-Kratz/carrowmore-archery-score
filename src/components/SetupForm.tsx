@@ -5,10 +5,10 @@ import { redirect } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { ACTIVE_SHOOT_COOKIE } from "@/constants";
-import { User } from "../../generated/prisma/client";
-import { Mode } from "../../generated/prisma/enums";
+import { IShoot, IUser, Mode } from "@/models";
+import { formatResponse } from "@/helpers/formatResponse";
 
-const getUserLabel = (user: User, currentUserId: string) => {
+const getUserLabel = (user: IUser, currentUserId: string) => {
   let label = user.name;
 
   if (!label) {
@@ -26,13 +26,13 @@ export default function SetupForm({
   users,
   currentUser,
 }: {
-  users: User[] | undefined;
-  currentUser: User;
+  users: IUser[] | undefined;
+  currentUser: IUser;
 }) {
   const [mode, setMode] = useState<Mode>(Mode.yellow);
   const [currentSelectOption, setCurrentSelectOption] =
     useState<string>("default");
-  const [participants, setParticipants] = useState<User[]>([]);
+  const [participants, setParticipants] = useState<IUser[]>([]);
 
   const addUser = () => {
     const newParticipant = users?.find((u) => u.id === currentSelectOption);
@@ -58,7 +58,7 @@ export default function SetupForm({
       body: JSON.stringify(body),
     });
 
-    const newShoot = await response.json();
+    const newShoot = formatResponse<IShoot>(await response.json()) as IShoot;
 
     Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
 

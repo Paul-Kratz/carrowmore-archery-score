@@ -1,18 +1,16 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import Resend from "next-auth/providers/resend";
-import { ROUTES } from "@/constants/routes";
-import { prisma } from "./prisma";
+import { MongoDBAdapter } from "@auth/mongodb-adapter";
+import client from "./db";
 
 const publicRoutes: string[] = [];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: PrismaAdapter(prisma as any),
+  adapter: MongoDBAdapter(client),
   providers: [Google, Resend({ from: process.env.AUTH_EMAIL })],
   pages: {
-    verifyRequest: ROUTES.VERIFY_REQUEST,
+    // verifyRequest: ROUTES.VERIFY_REQUEST,
   },
   callbacks: {
     authorized: async ({ auth, request }) => {
