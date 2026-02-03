@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { connectMongoose } from "@/lib/mongoose";
+import { Shoot } from "@/models/mongoose";
+import { Types } from "mongoose";
 
 export const updateShoot = async ({
   shootId,
@@ -9,19 +11,9 @@ export const updateShoot = async ({
   notes: string;
   completed: boolean;
 }) => {
-  try {
-    const shoot = await prisma.shoot.update({
-      where: {
-        id: shootId,
-      },
-      data: {
-        notes,
-        completed,
-      },
-    });
-
-    return shoot;
-  } catch (e: unknown) {
-    console.log(e);
-  }
+  await connectMongoose();
+  await Shoot.updateOne(
+    { _id: new Types.ObjectId(shootId) },
+    { notes: notes, completed: completed }
+  );
 };

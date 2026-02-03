@@ -1,39 +1,24 @@
-import { prisma } from "@/lib/prisma";
-import { getRoundScore } from "./getRoundScore";
+import { connectMongoose } from "@/lib/mongoose";
+import { RoundScore } from "@/models/mongoose";
+import { Types } from "mongoose";
 
 export const updateRound = async (
   userId: string,
   shootId: string,
   roundNumber: number,
-  score: number
+  score: number,
 ) => {
   try {
-    await prisma.roundScore.upsert({
-      where: {
-        shootId_userId_roundNumber: {
-          userId,
-          shootId,
-          roundNumber,
-        },
-      },
-      update: {
-        score,
-      },
-      create: {
-        score,
-        userId,
-        shootId,
+    await connectMongoose();
+    const res = await RoundScore.updateOne(
+      {
+        user: new Types.ObjectId(userId),
+        shoot: new Types.ObjectId(shootId),
         roundNumber,
       },
-    });
-
-    const round = await getRoundScore({
-      userId,
-      shootId,
-      roundNumber,
-    });
-
-    return round;
+      { score },
+    );
+    return res;
   } catch (e: unknown) {
     console.log(e);
   }

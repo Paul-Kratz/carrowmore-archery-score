@@ -1,15 +1,65 @@
-import { prisma } from "@/lib/prisma";
+import { formatResponseArray } from "@/helpers/formatResponse";
+import { connectMongoose } from "@/lib/mongoose";
+import { Shoot } from "@/models/mongoose";
+import { Types } from "mongoose";
 
 export const getCreatedShoots = async (userId: string) => {
-  try {
-    const shoots = await prisma.shoot.findMany({
-      where: {
-        createdById: userId,
+  await connectMongoose();
+  const data = await Shoot.aggregate()
+    .match({
+      createdBy: new Types.ObjectId(userId),
+    }) // for shoots created by current user
+    .lookup({
+      from: "shootparticipants",
+      localField: "_id",
+      foreignField: "shoot",
+      as: "participants",
+    })
+    // .match({
+    //   "participants.user": new Types.ObjectId(userId),
+    // }) // for all shoots user participated in
+    .unwind("$participants")
+    .lookup({
+      from: "users",
+      localField: "participants.user",
+      foreignField: "_id",
+      as: "participantUser",
+    })
+    .addFields({
+      "participants.userInfo": { $arrayElemAt: ["$participantUser", 0] },
+    })
+    .lookup({
+      from: "roundscores",
+      let: { shootId: "$_id", userId: "$participants.user" },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$shoot", "$$shootId"] },
+                { $eq: ["$user", "$$userId"] },
+              ],
+            },
+          },
+        },
+        { $group: { _id: null, totalScore: { $sum: "$score" } } },
+      ],
+      as: "scoreSummary",
+    })
+    .addFields({
+      "participants.totalScore": {
+        $ifNull: [{ $arrayElemAt: ["$scoreSummary.totalScore", 0] }, 0],
       },
+    })
+    .group({
+      _id: "$_id",
+      mode: { $first: "$mode" },
+      createdBy: { $first: "$createdBy" },
+      completed: { $first: "$completed" },
+      notes: { $first: "$notes" },
+      participants: { $push: "$participants" },
+      createdAt: { $first: "$createdAt" },
     });
 
-    return shoots;
-  } catch (e: unknown) {
-    console.log(e);
-  }
+  return formatResponseArray(data);
 };

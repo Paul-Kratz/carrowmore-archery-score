@@ -8,7 +8,6 @@ export enum Mode {
 type ObjectId = Types.ObjectId;
 
 export interface IUser {
-  _id: ObjectId;
   id: string;
   name?: string | null;
   email?: string | null;
@@ -19,10 +18,9 @@ export interface IUser {
 }
 
 export interface IShoot {
-  _id: ObjectId;
   id: string;
   mode: Mode;
-  createdBy: ObjectId;
+  createdBy: ObjectId | IUser;
   createdAt: Date;
   updatedAt: Date;
   completed: boolean;
@@ -30,18 +28,25 @@ export interface IShoot {
 }
 
 export interface IShootParticipant {
-  _id: ObjectId;
   id: string;
-  shoot: ObjectId;
+  shoot: ObjectId | IShoot;
   user: ObjectId | IUser;
   joinedAt: Date;
 }
 
 export interface IRoundScore {
-  _id: ObjectId;
   id: string;
-  shoot: ObjectId;
-  user: ObjectId;
+  shoot: ObjectId | IShoot;
+  user: ObjectId | IUser;
   roundNumber: number;
   score?: number | null;
+}
+export interface IShootParticipantWithScores extends IShootParticipant {
+  roundScores: (number | null)[];
+  totalScore: number;
+  userInfo: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  };
 }

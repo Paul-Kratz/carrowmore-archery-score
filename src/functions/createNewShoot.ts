@@ -1,9 +1,10 @@
 import { NUM_STATIONS } from "@/constants";
+import { formatResponse } from "@/helpers/formatResponse";
 import { connectMongoose } from "@/lib/mongoose";
+import { IShoot } from "@/models";
 import { User, Shoot, ShootParticipant, RoundScore } from "@/models/mongoose";
 import { Types } from "mongoose";
 
-// test shoot = { userId: '694515cd2702e65598d6c5f2', mode: 'red', participantIds: ['694515cd2702e65598d6c5f2', '69454dc18b2d4763f5f50611']}
 export const createNewShoot = async ({
   userId,
   mode,
@@ -57,5 +58,5 @@ export const createNewShoot = async ({
     )
   );
 
-  return shootDoc;
+  return formatResponse<IShoot>(shootDoc);
 };

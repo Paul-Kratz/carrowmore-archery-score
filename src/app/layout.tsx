@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { SessionProvider } from "next-auth/react";
-import { BowArrow } from "lucide-react";
+import "./globals.css";
+import "@radix-ui/themes/styles.css";
+import { Theme } from "@radix-ui/themes";
+
+import { QueryProvider } from "@/contexts/QueryContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,21 +28,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="overflow-y-auto">
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full`}
       >
-        <meta name="viewport" content="viewport-fit=cover"></meta>
-
-        <SessionProvider>
-          <div className="navbar bg-base-100 shadow-sm">
-            <h3 className="text-default text-2xl font-bold flex flex-row gap-2 items-center">
-              <BowArrow />
-              In the forest
-            </h3>
-          </div>
-          {children}
-        </SessionProvider>
+        <QueryProvider>
+          <Theme>
+            <SessionProvider>{children}</SessionProvider>
+          </Theme>
+        </QueryProvider>
       </body>
     </html>
   );

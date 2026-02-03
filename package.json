@@ -5,18 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "eslint",
-    "prisma:push-db": "npx prisma db push",
-    "prisma:studio": "npx prisma studio"
+    "lint": "eslint"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",
-    "@auth/prisma-adapter": "^2.11.1",
-    "@prisma/client": "6.19",
-    "@prisma/extension-accelerate": "^3.0.1",
-    "@prisma/nextjs-monorepo-workaround-plugin": "^6.19.0",
+    "@radix-ui/themes": "^3.3.0",
+    "@tanstack/react-query": "^5.90.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
@@ -39,7 +34,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
-    "prisma": "6.19",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "^5"

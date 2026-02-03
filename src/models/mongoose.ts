@@ -23,8 +23,20 @@ const ShootSchema = new Schema<IShoot>(
     completed: { type: Boolean, required: true, default: false },
     notes: { type: String, required: false },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
 );
+
+// Virtual for roundScores
+ShootSchema.virtual("roundScores", {
+  ref: "RoundScore",
+  localField: "_id",
+  foreignField: "shoot",
+  justOne: false,
+});
 
 const ShootParticipantSchema = new Schema<IShootParticipant>(
   {

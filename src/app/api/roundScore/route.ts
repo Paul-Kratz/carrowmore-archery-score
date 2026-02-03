@@ -2,7 +2,6 @@ import { updateRound } from "@/functions/updateRound";
 import { validRoundNumber, validScore } from "@/helpers";
 import { NextRequest, NextResponse } from "next/server";
 import { getShoot } from "@/functions/getShoot";
-import { IShootParticipant } from "@/models";
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -16,40 +15,31 @@ export async function PATCH(request: NextRequest) {
     if (!validScore(score)) {
       return NextResponse.json(
         { error: "Invalid score value passed" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!validRoundNumber(roundNumber)) {
       return NextResponse.json(
         { error: "Invalid roundNumber value passed" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { participants } = await getShoot({
+    await updateRound(userId, shootId, roundNumber, score);
+
+    const shoot = await getShoot({
       shootId,
     });
 
-    if (
-      !(participants as IShootParticipant[])?.find((p) => p.user.id === userId)
-    ) {
-      return NextResponse.json(
-        { error: "You are not a part of this shoot" },
-        { status: 400 }
-      );
-    }
-
-    const round = await updateRound(userId, shootId, roundNumber, score);
-
-    return NextResponse.json(round, { status: 200 });
+    return NextResponse.json(shoot, { status: 200 });
   } catch (error) {
     console.error("Error updating shoot:", error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
