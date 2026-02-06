@@ -4,11 +4,12 @@ import { ACTIVE_SHOOT_COOKIE } from "@/constants";
 import { formatResponse } from "@/helpers/formatResponse";
 import { IShoot, IUser, Mode } from "@/models";
 import { Button, Card, RadioGroup, Select } from "@radix-ui/themes";
-import { Play, Target, Trash2 } from "lucide-react";
+import { History, Play, Target, Trash2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { getUserLabel } from "@/helpers/getUserLabel";
+import { AddUsernameDialog } from "../AddUsernameDialog";
 
 type SetupPageProps = {
   users: IUser[];
@@ -58,7 +59,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
   };
 
   return (
-    <div className="bg-background mt-16 min-h-screen">
+    <div className="bg-background min-h-screen">
       <header className="bg-background border-b">
         <div className="container max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -183,7 +184,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
           {/* Start Button */}
           <div className="flex flex-col items-center">
             <Button onClick={createNewShoot} disabled={!canStartShoot} size="4">
-              <Play className="w-5 h-5 mr-2" />
+              <Play className="w-5 h-5 mr-1" />
               Start Shoot
             </Button>
           </div>
@@ -193,7 +194,19 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
               Add at least one participant to start the shoot
             </p>
           )}
+
+          <div className="flex flex-col items-center">
+            <Button
+              variant="outline"
+              onClick={() => alert("Coming soon!")}
+              size="4"
+            >
+              <History className="w-5 h-5 mr-1" />
+              History
+            </Button>
+          </div>
         </div>
+        {!currentUser.name && <AddUsernameDialog />}
       </main>
     </div>
   );

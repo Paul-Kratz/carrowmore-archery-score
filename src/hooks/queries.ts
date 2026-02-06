@@ -69,3 +69,22 @@ export const useUpdateScore = () => {
     },
   });
 };
+
+export const useUpdateUsername = () => {
+  return useMutation({
+    mutationFn: async ({ name }: { name: string }) => {
+      const response = await fetch(`/api/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+      if (!response.ok) {
+        throw new Error("Error updating username");
+      }
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      return response;
+    },
+  });
+};

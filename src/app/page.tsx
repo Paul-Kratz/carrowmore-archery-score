@@ -1,4 +1,3 @@
-import DockWrapper from "@/components/DockWrapper";
 import { SetupPage } from "@/components/pages/SetupPage";
 import { formatResponseArray } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
@@ -14,9 +13,5 @@ export default async function Home() {
     await User.find({}, { email: 1, name: 1 }).lean(),
   );
 
-  return (
-    <DockWrapper>
-      <SetupPage users={users} currentUser={session?.user as IUser} />
-    </DockWrapper>
-  );
+  return <SetupPage users={users} currentUser={session?.user as IUser} />;
 }
