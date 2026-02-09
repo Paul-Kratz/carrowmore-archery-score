@@ -1,15 +1,13 @@
-import DockWrapper from "@/components/DockWrapper";
-import { getParticipatedShoots } from "@/functions/getParticipatedShoots";
+import { HistoryPage } from "@/components/pages/HistoryPage";
 import { auth } from "@/lib/auth";
+import { IUser } from "@/models";
 
 export default async function History() {
   const session = await auth();
-  const shoots = await getParticipatedShoots(session?.user?.id as string);
 
-  return (
-    <DockWrapper>
-      <h1 className="mt-20">History</h1>
-      <code>{JSON.stringify(shoots)}</code>
-    </DockWrapper>
-  );
+  if (!session?.user) {
+    return <div className="p-4">Please log in to view your shoot history.</div>;
+  }
+
+  return <HistoryPage currentUser={session.user as IUser} />;
 }

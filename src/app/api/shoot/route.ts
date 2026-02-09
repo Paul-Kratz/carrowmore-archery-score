@@ -1,4 +1,5 @@
 import { createNewShoot } from "@/functions/createNewShoot";
+import { deleteShoot } from "@/functions/deleteShoot";
 import { updateShoot } from "@/functions/updateShoot";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -56,6 +57,35 @@ export async function PATCH(request: NextRequest) {
     );
   } catch (error) {
     console.error("Error updating shoot:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const shootId = searchParams.get("shootId");
+
+    if (!shootId) {
+      return NextResponse.json(
+        { error: "Missing required query parameter: shootId" },
+        { status: 400 },
+      );
+    }
+
+    await deleteShoot(shootId);
+
+    return NextResponse.json(
+      { message: "Shoot deleted successfully" },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Error deleting shoot:", error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Internal server error",

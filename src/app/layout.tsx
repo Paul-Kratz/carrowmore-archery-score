@@ -39,7 +39,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full`}
       >
         <QueryProvider>
-          <Theme>
+          <Theme accentColor="green">
             <SessionProvider>{children}</SessionProvider>
           </Theme>
         </QueryProvider>

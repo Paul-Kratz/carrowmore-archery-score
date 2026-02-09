@@ -2,7 +2,7 @@
 
 import { getUserLabel } from "@/helpers/getUserLabel";
 import { IShoot, IShootParticipantWithScores, IUser } from "@/models";
-import { Button, Card } from "@radix-ui/themes";
+import { Button, Card, ScrollArea } from "@radix-ui/themes";
 import { ArrowLeft, ArrowRight, Home, Target } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -130,7 +130,7 @@ export function ShootPage({
           </div>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto">
+      <ScrollArea type="always" scrollbars="vertical">
         {/* Quick Stats */}
         <Card className="m-2 p-4 bg-muted/50">
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -252,9 +252,9 @@ export function ShootPage({
             />
           </div>
         )}
-      </div>
+      </ScrollArea>
 
-      <Card className="sticky bottom-4">
+      <Card>
         <div className="flex items-center justify-between mb-3">
           <Button
             variant="ghost"

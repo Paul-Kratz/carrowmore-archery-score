@@ -5,7 +5,7 @@ import { formatResponse } from "@/helpers/formatResponse";
 import { IShoot, IUser, Mode } from "@/models";
 import { Button, Card, RadioGroup, Select } from "@radix-ui/themes";
 import { History, Play, Target, Trash2 } from "lucide-react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { getUserLabel } from "@/helpers/getUserLabel";
@@ -20,6 +20,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
   const [mode, setMode] = useState<Mode>(Mode.yellow);
   const [participants, setParticipants] = useState<IUser[]>([]);
   const [newParticipantId, setNewParticipantId] = useState<string>("");
+  const router = useRouter();
 
   const canStartShoot = participants.length > 0;
 
@@ -197,8 +198,8 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
 
           <div className="flex flex-col items-center">
             <Button
-              variant="outline"
-              onClick={() => alert("Coming soon!")}
+              variant="surface"
+              onClick={() => router.push("/history")}
               size="4"
             >
               <History className="w-5 h-5 mr-1" />
@@ -206,7 +207,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
             </Button>
           </div>
         </div>
-        {!currentUser.name && <AddUsernameDialog />}
+        {currentUser && !currentUser.name && <AddUsernameDialog />}
       </main>
     </div>
   );

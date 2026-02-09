@@ -1,4 +1,5 @@
 import { queryClient } from "@/lib/queryClient";
+import { IShootWithParticipants } from "@/models";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useGetShoot = (shootId: string) => {
@@ -88,3 +89,50 @@ export const useUpdateUsername = () => {
     },
   });
 };
+
+export function useDeleteShoot() {
+  return useMutation({
+    mutationFn: async (shootId: string) => {
+      console.log("Deleting shoot with ID:", shootId);
+      const response = await fetch(`/api/shoot?shootId=${shootId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Error deleting shoot");
+      }
+      queryClient.invalidateQueries({ queryKey: ["participatedShoots"] });
+      return response;
+    },
+  });
+}
+
+export function useGetParticipatedShoots(currentUserId: string | null) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["participatedShoots"],
+    queryFn: async () => {
+      const response = await fetch("/api/shoot/participated");
+      if (!response.ok) {
+        throw new Error("Error retrieving participated shoots");
+      }
+      return response.json();
+    },
+  });
+
+  if (isLoading) {
+    return { participatedShoots: [], trackedShoots: [], isLoading: true };
+  }
+
+  const shoots = data as IShootWithParticipants[];
+  const participatedShoots = shoots.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+  const trackedShoots = participatedShoots.filter(
+    (s) => s.createdBy === currentUserId,
+  );
+
+  return { participatedShoots, trackedShoots, isLoading: false };
+}

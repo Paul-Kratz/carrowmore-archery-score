@@ -39,13 +39,20 @@ export const getParticipatedShoots = async (userId: string) => {
             },
           },
         },
-        { $group: { _id: null, totalScore: { $sum: "$score" } } },
+        { $sort: { roundNumber: 1 } },
       ],
-      as: "scoreSummary",
+      as: "roundScores",
     })
     .addFields({
+      "participants.roundScores": {
+        $map: {
+          input: "$roundScores",
+          as: "round",
+          in: "$$round.score",
+        },
+      },
       "participants.totalScore": {
-        $ifNull: [{ $arrayElemAt: ["$scoreSummary.totalScore", 0] }, 0],
+        $sum: "$roundScores.score",
       },
     })
     .group({

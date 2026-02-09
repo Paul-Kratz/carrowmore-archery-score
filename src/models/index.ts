@@ -20,7 +20,7 @@ export interface IUser {
 export interface IShoot {
   id: string;
   mode: Mode;
-  createdBy: ObjectId | IUser;
+  createdBy: ObjectId | IUser | string;
   createdAt: Date;
   updatedAt: Date;
   completed: boolean;
@@ -49,4 +49,8 @@ export interface IShootParticipantWithScores extends IShootParticipant {
     name?: string | null;
     email?: string | null;
   };
+}
+
+export interface IShootWithParticipants extends IShoot {
+  participants: IShootParticipantWithScores[];
 }

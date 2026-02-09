@@ -3,7 +3,7 @@ import { AlertDialog, Button, TextField } from "@radix-ui/themes";
 import { useState } from "react";
 
 export const AddUsernameDialog = () => {
-  const { mutate } = useUpdateUsername();
+  const { mutateAsync } = useUpdateUsername();
   const [username, setUsername] = useState("");
 
   const handleSave = async () => {
@@ -11,7 +11,7 @@ export const AddUsernameDialog = () => {
       return;
     }
     try {
-      await mutate({ name: username });
+      await mutateAsync({ name: username });
       window.location.reload();
     } catch (error) {
       console.error("Error updating username:", error);
