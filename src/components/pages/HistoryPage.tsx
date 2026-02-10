@@ -76,6 +76,8 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
 
   const finaliseDeleteShoot = async () => {
     if (!deleteShootId) return;
+    const shootToDelete = trackedShoots.find((s) => s.id === deleteShootId);
+    if (currentUser.id !== shootToDelete?.createdBy) return; // Extra safety check to ensure only creator can delete
     try {
       mutate(deleteShootId);
     } catch (error) {
@@ -157,13 +159,15 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
           )}
         </div>
         <div className="flex items-end justify-end mt-3 gap-2">
-          <Button
-            variant="surface"
-            color="red"
-            onClick={() => handleOnDelete(shoot.id)}
-          >
-            <Trash2 className="w-6 h-6 text-danger" />
-          </Button>
+          {shoot.createdBy === currentUser.id && (
+            <Button
+              variant="surface"
+              color="red"
+              onClick={() => handleOnDelete(shoot.id)}
+            >
+              <Trash2 className="w-6 h-6 text-danger" />
+            </Button>
+          )}
           <Button variant="surface">
             <ChevronRight className="w-6 h-6 " />
           </Button>
