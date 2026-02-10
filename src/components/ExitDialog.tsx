@@ -4,6 +4,8 @@ import { IShoot } from "@/models";
 import { Button, Dialog, Flex, Text, TextArea } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Cookies from "js-cookie";
+import { ACTIVE_SHOOT_COOKIE } from "@/constants";
 
 type ExitDialogProps = {
   isShootFinished?: boolean;
@@ -34,6 +36,7 @@ export const ExitDialog = ({
         notes,
         completed: isShootFinished,
       });
+      Cookies.remove(ACTIVE_SHOOT_COOKIE);
       router.push("/");
     } catch (error) {
       console.error("Error saving shoot:", error);
