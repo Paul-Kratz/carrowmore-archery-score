@@ -119,3 +119,17 @@ jest.mock("next/server", () => ({
     },
   },
 }));
+
+// Mock mongoose to avoid ES module issues
+jest.mock("mongoose", () => ({
+  __esModule: true,
+  default: {
+    startSession: jest.fn(),
+    Types: {
+      ObjectId: jest.fn((id) => id),
+    },
+  },
+  Types: {
+    ObjectId: jest.fn((id) => id),
+  },
+}));
