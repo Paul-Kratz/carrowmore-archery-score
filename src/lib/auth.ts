@@ -4,7 +4,7 @@ import Resend from "next-auth/providers/resend";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import client from "./db";
 
-const publicRoutes: string[] = [];
+const publicRoutes: string[] = ["/"];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: MongoDBAdapter(client),

@@ -136,3 +136,15 @@ export function useGetParticipatedShoots(currentUserId: string | null) {
 
   return { participatedShoots, trackedShoots, isLoading: false };
 }
+
+export const useVerifyAccessCode = () => {
+  return useMutation({
+    mutationFn: async ({ accessCode }: { accessCode: string }) => {
+      const response = await fetch(`/api/verifyAccessCode?code=${accessCode}`);
+      if (!response.ok) {
+        throw new Error("Invalid access code");
+      }
+      return response.json();
+    },
+  });
+};
