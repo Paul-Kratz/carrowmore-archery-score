@@ -1,11 +1,46 @@
-import { config } from "./middleware";
+const mockAuth = jest.fn();
 
-// Mock the auth module
 jest.mock("@/lib/auth", () => ({
-  auth: jest.fn(),
+  auth: mockAuth,
 }));
 
+jest.mock("next/server", () => {
+  const actual = jest.requireActual("next/server");
+  return {
+    ...actual,
+    NextResponse: {
+      next: () => new Response(null, { status: 200 }),
+      redirect: (url: URL) =>
+        new Response(null, {
+          status: 307,
+          headers: { location: url.toString() },
+        }),
+    },
+  };
+});
+
+import { config, middleware } from "./middleware";
+
+function createRequest(url: string, cookies: Record<string, string> = {}) {
+  const parsedUrl = new URL(url, "http://localhost:3000");
+  const cookieMap = new Map(Object.entries(cookies));
+  return {
+    url: parsedUrl.toString(),
+    nextUrl: parsedUrl,
+    cookies: {
+      has: (name: string) => cookieMap.has(name),
+      get: (name: string) =>
+        cookieMap.has(name) ? { name, value: cookieMap.get(name)! } : undefined,
+      set: (name: string, value: string) => cookieMap.set(name, value),
+    },
+  } as Parameters<typeof middleware>[0];
+}
+
 describe("Middleware", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe("config", () => {
     it("should have the correct runtime configured", () => {
       expect(config.runtime).toBe("nodejs");
@@ -39,22 +74,58 @@ describe("Middleware", () => {
 
     it("should match all other routes", () => {
       const matcher = config.matcher[0];
-      // The pattern should start with /( to match routes
       expect(matcher).toMatch(/^\/\(/);
     });
   });
 
-  describe("middleware export", () => {
-    it("should export middleware function", async () => {
-      const { middleware } = await import("./middleware");
-      expect(middleware).toBeDefined();
-      expect(typeof middleware).toBe("function");
+  describe("gate code check", () => {
+    it("should redirect to /gate when no gate code cookie is present", async () => {
+      const req = createRequest("http://localhost:3000/setup");
+
+      const response = await middleware(req);
+
+      expect(response.status).toBe(307);
+      expect(new URL(response.headers.get("location")!).pathname).toBe("/gate");
+      expect(mockAuth).not.toHaveBeenCalled();
     });
 
-    it("should be the auth function from lib/auth", async () => {
-      const { middleware } = await import("./middleware");
-      const { auth } = await import("@/lib/auth");
-      expect(middleware).toBe(auth);
+    it("should allow /gate page when no gate code cookie is present", async () => {
+      const req = createRequest("http://localhost:3000/gate");
+
+      const response = await middleware(req);
+
+      expect(response.status).toBe(200);
+      expect(mockAuth).not.toHaveBeenCalled();
+    });
+
+    it("should redirect from /gate to / when gate code cookie exists", async () => {
+      const req = createRequest("http://localhost:3000/gate", {
+        "x-gate-code": "valid",
+      });
+
+      const response = await middleware(req);
+
+      expect(response.status).toBe(307);
+      expect(new URL(response.headers.get("location")!).pathname).toBe("/");
+      expect(mockAuth).not.toHaveBeenCalled();
+    });
+
+    it("should pass through to auth when gate code cookie exists on non-gate route", async () => {
+      mockAuth.mockResolvedValue(new Response(null, { status: 200 }));
+      const req = createRequest("http://localhost:3000/setup", {
+        "x-gate-code": "valid",
+      });
+
+      await middleware(req);
+
+      expect(mockAuth).toHaveBeenCalledWith(req);
+    });
+  });
+
+  describe("middleware export", () => {
+    it("should export middleware function", () => {
+      expect(middleware).toBeDefined();
+      expect(typeof middleware).toBe("function");
     });
   });
 });

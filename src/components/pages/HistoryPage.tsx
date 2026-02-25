@@ -10,6 +10,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type HistoryPageProps = {
@@ -31,6 +32,8 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
   const onBack = () => {
     window.history.back();
   };
+
+  const router = useRouter();
 
   const getTopScorer = (shoot: IShootWithParticipants) => {
     if (shoot.participants.length === 0) return null;
@@ -105,18 +108,39 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold">
-                Shoot on {formatDate(new Date(shoot.createdAt).getTime())}
-              </h3>
-              <Badge
-                color={shoot.mode === "red" ? "red" : "yellow"}
-                variant="surface"
-              >
-                {shoot.mode}
-              </Badge>
+            <div className="flex items-center gap-2 mb-1 justify-between">
+              <div className="flex items-center gap-3">
+                <h3 className="font-semibold">
+                  Shoot on {formatDate(new Date(shoot.createdAt).getTime())}
+                </h3>
+                <Badge
+                  radius="large"
+                  color={shoot.mode === "red" ? "red" : "yellow"}
+                  variant="surface"
+                >
+                  {shoot.mode}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {shoot.createdBy === currentUser.id && (
+                  <Button
+                    variant="ghost"
+                    color="red"
+                    onClick={() => handleOnDelete(shoot.id)}
+                  >
+                    <Trash2 className="w-5 h-5 text-danger" />
+                  </Button>
+                )}
+                <Button variant="ghost">
+                  <ChevronRight
+                    className="w-6 h-6"
+                    onClick={() => router.push(`/shoot/summary/${shoot.id}`)}
+                  />
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Notebook className="w-3 h-3" />
                 {shoot.notes ? truncateString(shoot.notes, 30) : "No notes"}
@@ -157,20 +181,6 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
               </div>
             )
           )}
-        </div>
-        <div className="flex items-end justify-end mt-3 gap-2">
-          {shoot.createdBy === currentUser.id && (
-            <Button
-              variant="surface"
-              color="red"
-              onClick={() => handleOnDelete(shoot.id)}
-            >
-              <Trash2 className="w-6 h-6 text-danger" />
-            </Button>
-          )}
-          <Button variant="surface">
-            <ChevronRight className="w-6 h-6 " />
-          </Button>
         </div>
       </Card>
     );
