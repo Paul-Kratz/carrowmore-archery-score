@@ -21,8 +21,6 @@ export default async function Summary({
     userId: authData?.user?.id,
   })) as IShootWithParticipants;
 
-  console.log("Shoot info:", shootInfo);
-
   return (
     <SummaryPage currentUser={authData?.user as IUser} shootInfo={shootInfo} />
   );

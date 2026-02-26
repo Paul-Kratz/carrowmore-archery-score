@@ -54,3 +54,11 @@ export interface IShootParticipantWithScores extends IShootParticipant {
 export interface IShootWithParticipants extends IShoot {
   participants: IShootParticipantWithScores[];
 }
+
+export interface IShootChartData {
+  id: string;
+  mode: Mode;
+  createdAt: string;
+  roundScores: (number | null)[];
+  totalScore: number;
+}

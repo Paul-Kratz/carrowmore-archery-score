@@ -126,11 +126,13 @@ export const SummaryPage = ({
 
             <Table.Root>
               <Table.Header>
-                {POSSIBLE_SCORES.map((score, index) => (
-                  <Table.ColumnHeaderCell key={index}>
-                    {score}
-                  </Table.ColumnHeaderCell>
-                ))}
+                <Table.Row>
+                  {POSSIBLE_SCORES.map((score, index) => (
+                    <Table.ColumnHeaderCell key={index}>
+                      {score}
+                    </Table.ColumnHeaderCell>
+                  ))}
+                </Table.Row>
               </Table.Header>
               <Table.Body>
                 <Table.Row>
@@ -161,11 +163,15 @@ export const SummaryPage = ({
         <Card className="p-6 space-y-4">
           <Table.Root>
             <Table.Header>
-              <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-              {Array.from({ length: 18 }, (_, i) => (
-                <Table.ColumnHeaderCell key={i}>{i + 1}</Table.ColumnHeaderCell>
-              ))}
-              <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
+                {Array.from({ length: 18 }, (_, i) => (
+                  <Table.ColumnHeaderCell key={i}>
+                    {i + 1}
+                  </Table.ColumnHeaderCell>
+                ))}
+                <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
+              </Table.Row>
             </Table.Header>
             <Table.Body>
               {shootInfo.participants.map((participant) => (

@@ -1,6 +1,6 @@
 "use client";
 import { useDeleteShoot, useGetParticipatedShoots } from "@/hooks/queries";
-import { IShootWithParticipants, IUser } from "@/models";
+import { IShootChartData, IShootWithParticipants, IUser } from "@/models";
 import { AlertDialog, Button, Card, Flex, Tabs, Badge } from "@radix-ui/themes";
 import {
   ArrowLeft,
@@ -12,16 +12,18 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ShootsLineChart } from "../ShootsLineChart";
 
 type HistoryPageProps = {
   currentUser: IUser;
+  chartData: IShootChartData[];
 };
 
 const truncateString = (str: string, maxLength: number) => {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength) + "...";
 };
-export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
+export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   const [activeTab, setActiveTab] = useState<"tracked" | "participated">(
     "tracked",
   );
@@ -225,11 +227,14 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
               style={{ width: "100%" }}
             >
               <Tabs.List size={"2"}>
-                <Tabs.Trigger value="tracked" style={{ width: "50%" }}>
+                <Tabs.Trigger value="tracked" style={{ width: "33%" }}>
                   Tracked ({trackedShoots.length})
                 </Tabs.Trigger>
-                <Tabs.Trigger value="participated" style={{ width: "50%" }}>
+                <Tabs.Trigger value="participated" style={{ width: "34%" }}>
                   Participated ({participatedShoots.length})
+                </Tabs.Trigger>
+                <Tabs.Trigger value="statistics" style={{ width: "33%" }}>
+                  Statistics
                 </Tabs.Trigger>
               </Tabs.List>
 
@@ -263,6 +268,10 @@ export const HistoryPage = ({ currentUser }: HistoryPageProps) => {
                     renderShootCard(shoot, true),
                   )
                 )}
+              </Tabs.Content>
+
+              <Tabs.Content value="statistics" className="space-y-4 mt-2">
+                <ShootsLineChart data={chartData} />
               </Tabs.Content>
             </Tabs.Root>
           )}
