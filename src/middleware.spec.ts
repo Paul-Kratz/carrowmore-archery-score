@@ -19,7 +19,7 @@ jest.mock("next/server", () => {
   };
 });
 
-import { config, middleware } from "./middleware";
+import { config, proxy } from "./proxy";
 
 function createRequest(url: string, cookies: Record<string, string> = {}) {
   const parsedUrl = new URL(url, "http://localhost:3000");
@@ -33,19 +33,15 @@ function createRequest(url: string, cookies: Record<string, string> = {}) {
         cookieMap.has(name) ? { name, value: cookieMap.get(name)! } : undefined,
       set: (name: string, value: string) => cookieMap.set(name, value),
     },
-  } as Parameters<typeof middleware>[0];
+  } as Parameters<typeof proxy>[0];
 }
 
-describe("Middleware", () => {
+describe("Proxy", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe("config", () => {
-    it("should have the correct runtime configured", () => {
-      expect(config.runtime).toBe("nodejs");
-    });
-
     it("should have matcher array configured", () => {
       expect(config.matcher).toBeDefined();
       expect(Array.isArray(config.matcher)).toBe(true);
@@ -82,7 +78,7 @@ describe("Middleware", () => {
     it("should redirect to /gate when no gate code cookie is present", async () => {
       const req = createRequest("http://localhost:3000/setup");
 
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(new URL(response.headers.get("location")!).pathname).toBe("/gate");
@@ -92,7 +88,7 @@ describe("Middleware", () => {
     it("should allow /gate page when no gate code cookie is present", async () => {
       const req = createRequest("http://localhost:3000/gate");
 
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(200);
       expect(mockAuth).not.toHaveBeenCalled();
@@ -103,7 +99,7 @@ describe("Middleware", () => {
         "x-gate-code": "valid",
       });
 
-      const response = await middleware(req);
+      const response = await proxy(req);
 
       expect(response.status).toBe(307);
       expect(new URL(response.headers.get("location")!).pathname).toBe("/");
@@ -116,16 +112,16 @@ describe("Middleware", () => {
         "x-gate-code": "valid",
       });
 
-      await middleware(req);
+      await proxy(req);
 
       expect(mockAuth).toHaveBeenCalledWith(req);
     });
   });
 
   describe("middleware export", () => {
-    it("should export middleware function", () => {
-      expect(middleware).toBeDefined();
-      expect(typeof middleware).toBe("function");
+    it("should export proxy function", () => {
+      expect(proxy).toBeDefined();
+      expect(typeof proxy).toBe("function");
     });
   });
 });

@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { SummaryPage } from "./SummaryPage";
 import { IShootWithParticipants, IUser, Mode } from "@/models";
+import type { Types } from "mongoose";
+
+const asObjectId = (value: string) => value as unknown as Types.ObjectId;
 
 const mockCurrentUser: IUser = {
   id: "user1",
@@ -23,8 +26,8 @@ const createShootInfo = (
   participants: [
     {
       id: "p1",
-      shoot: "shoot1" as any,
-      user: "user1" as any,
+      shoot: asObjectId("shoot1"),
+      user: asObjectId("user1"),
       joinedAt: new Date(),
       userInfo: { id: "user1", name: "Alice", email: "alice@test.com" },
       roundScores: [
@@ -116,8 +119,8 @@ describe("SummaryPage", () => {
             participants: [
               {
                 id: "p1",
-                shoot: "shoot1" as any,
-                user: "user1" as any,
+                shoot: asObjectId("shoot1"),
+                user: asObjectId("user1"),
                 joinedAt: new Date(),
                 userInfo: { id: "user1", name: "Alice" },
                 roundScores: [10],
@@ -125,8 +128,8 @@ describe("SummaryPage", () => {
               },
               {
                 id: "p2",
-                shoot: "shoot1" as any,
-                user: "user2" as any,
+                shoot: asObjectId("shoot1"),
+                user: asObjectId("user2"),
                 joinedAt: new Date(),
                 userInfo: { id: "user2", name: "Bob" },
                 roundScores: [14],
@@ -218,8 +221,8 @@ describe("SummaryPage", () => {
             participants: [
               {
                 id: "p1",
-                shoot: "shoot1" as any,
-                user: "user1" as any,
+                shoot: asObjectId("shoot1"),
+                user: asObjectId("user1"),
                 joinedAt: new Date(),
                 userInfo: { id: "user1", name: "Alice" },
                 roundScores: [20, 20, 20],
@@ -244,8 +247,8 @@ describe("SummaryPage", () => {
             participants: [
               {
                 id: "p1",
-                shoot: "shoot1" as any,
-                user: "user1" as any,
+                shoot: asObjectId("shoot1"),
+                user: asObjectId("user1"),
                 joinedAt: new Date(),
                 userInfo: { id: "user1", name: "Alice" },
                 roundScores: [20],
@@ -270,8 +273,8 @@ describe("SummaryPage", () => {
             participants: [
               {
                 id: "p1",
-                shoot: "shoot1" as any,
-                user: "user1" as any,
+                shoot: asObjectId("shoot1"),
+                user: asObjectId("user1"),
                 joinedAt: new Date(),
                 userInfo: { id: "user1", name: "Alice" },
                 roundScores: [0, 4, 20],

@@ -1,27 +1,24 @@
 "use client";
 import { useState } from "react";
-import { Button, Card, TextField } from "@radix-ui/themes";
+import { Button, Card, Text, TextField } from "@radix-ui/themes";
 import { Target } from "lucide-react";
 import { useVerifyAccessCode } from "@/hooks/queries";
 
 export const GateCode = () => {
   const [code, setCode] = useState("");
-  const { mutate: verifyCode } = useVerifyAccessCode();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { mutateAsync: verifyCode, isPending } = useVerifyAccessCode();
 
-  const handleSetCode = () => {
-    verifyCode(
-      { accessCode: code },
-      {
-        onSuccess: () => {
-          // Cookie is set server-side by the API; full reload so middleware sees it
-          window.location.href = "/";
-        },
-        onError: () => {
-          alert("Incorrect gate code. Please try again.");
-          setCode("");
-        },
-      },
-    );
+  const handleSetCode = async () => {
+    try {
+      setErrorMessage(null);
+      await verifyCode({ accessCode: code });
+      // Cookie is set server-side by the API; full reload so proxy sees it
+      window.location.href = "/";
+    } catch {
+      setErrorMessage("Incorrect gate code. Please try again.");
+      setCode("");
+    }
   };
 
   return (
@@ -44,15 +41,26 @@ export const GateCode = () => {
             type="number"
             placeholder="Gate Code"
             value={code}
-            onChange={(e) => setCode(e.target.value)}
+            onChange={(e) => {
+              setCode(e.target.value);
+              if (errorMessage) {
+                setErrorMessage(null);
+              }
+            }}
             maxLength={4}
           />
+          {errorMessage && (
+            <Text color="red" size="2" role="alert">
+              {errorMessage}
+            </Text>
+          )}
           <Button
             className="mt-4"
             style={{ width: "100%" }}
             onClick={handleSetCode}
+            disabled={isPending}
           >
-            Enter
+            {isPending ? "Checking..." : "Enter"}
           </Button>
         </Card>
       </main>

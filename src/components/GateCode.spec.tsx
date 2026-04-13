@@ -1,17 +1,20 @@
 const mockVerifyCode = jest.fn();
+const mockUseVerifyAccessCode = jest.fn();
 
 jest.mock("@/hooks/queries", () => ({
-  useVerifyAccessCode: () => ({
-    mutate: mockVerifyCode,
-  }),
+  useVerifyAccessCode: () => mockUseVerifyAccessCode(),
 }));
 
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { GateCode } from "./GateCode";
 
 describe("GateCode", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseVerifyAccessCode.mockReturnValue({
+      mutateAsync: mockVerifyCode,
+      isPending: false,
+    });
   });
 
   describe("Rendering", () => {
@@ -67,7 +70,7 @@ describe("GateCode", () => {
   });
 
   describe("Code Verification", () => {
-    it("should call verifyCode with the entered code when Enter is clicked", () => {
+    it("should call verifyCode with the entered code when Enter is clicked", async () => {
       render(<GateCode />);
       const input = screen.getByPlaceholderText("Gate Code");
       const button = screen.getByRole("button", { name: "Enter" });
@@ -75,40 +78,35 @@ describe("GateCode", () => {
       fireEvent.change(input, { target: { value: "1609" } });
       fireEvent.click(button);
 
-      expect(mockVerifyCode).toHaveBeenCalledWith(
-        { accessCode: "1609" },
-        expect.objectContaining({
-          onSuccess: expect.any(Function),
-          onError: expect.any(Function),
-        }),
+      await waitFor(() =>
+        expect(mockVerifyCode).toHaveBeenCalledWith({ accessCode: "1609" }),
       );
     });
 
-    it("should call verifyCode with empty string when submitted without input", () => {
+    it("should call verifyCode with empty string when submitted without input", async () => {
       render(<GateCode />);
       const button = screen.getByRole("button", { name: "Enter" });
 
       fireEvent.click(button);
 
-      expect(mockVerifyCode).toHaveBeenCalledWith(
-        { accessCode: "" },
-        expect.any(Object),
+      await waitFor(() =>
+        expect(mockVerifyCode).toHaveBeenCalledWith({ accessCode: "" }),
       );
     });
 
-    it("should set window.location.href to / on successful verification", () => {
+    it("should set window.location.href to / on successful verification", async () => {
+      mockVerifyCode.mockResolvedValue(undefined);
+
       render(<GateCode />);
       const input = screen.getByPlaceholderText("Gate Code");
       const button = screen.getByRole("button", { name: "Enter" });
 
       fireEvent.change(input, { target: { value: "1609" } });
       fireEvent.click(button);
-
-      const callbacks = mockVerifyCode.mock.calls[0][1];
 
       // jsdom may throw "Not implemented: navigation" on href assignment
       try {
-        callbacks.onSuccess();
+        await waitFor(() => expect(mockVerifyCode).toHaveBeenCalled());
       } catch {
         // expected in jsdom
       }
@@ -118,8 +116,8 @@ describe("GateCode", () => {
       expect(mockVerifyCode).toHaveBeenCalled();
     });
 
-    it("should show alert and clear input on error", async () => {
-      const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+    it("should show inline error and clear input on error", async () => {
+      mockVerifyCode.mockRejectedValue(new Error("Invalid access code"));
 
       render(<GateCode />);
       const input = screen.getByPlaceholderText(
@@ -130,17 +128,17 @@ describe("GateCode", () => {
       fireEvent.change(input, { target: { value: "0000" } });
       fireEvent.click(button);
 
-      const callbacks = mockVerifyCode.mock.calls[0][1];
-      act(() => {
-        callbacks.onError();
-      });
-
-      expect(alertSpy).toHaveBeenCalledWith(
+      await waitFor(() =>
+        expect(
+          screen.getByRole("alert", {
+            name: "",
+          }),
+        ).toBeInTheDocument(),
+      );
+      expect(screen.getByRole("alert")).toHaveTextContent(
         "Incorrect gate code. Please try again.",
       );
       expect(input.value).toBe("");
-
-      alertSpy.mockRestore();
     });
   });
 });

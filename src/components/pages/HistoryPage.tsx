@@ -2,6 +2,7 @@
 import { useDeleteShoot, useGetParticipatedShoots } from "@/hooks/queries";
 import { IShootChartData, IShootWithParticipants, IUser } from "@/models";
 import { AlertDialog, Button, Card, Flex, Tabs, Badge } from "@radix-ui/themes";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   ChevronRight,
@@ -12,7 +13,14 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ShootsLineChart } from "../ShootsLineChart";
+
+const ShootsLineChart = dynamic(
+  () => import("../ShootsLineChart").then((mod) => mod.ShootsLineChart),
+  {
+    ssr: false,
+    loading: () => <div className="p-4 text-center">Loading statistics...</div>,
+  },
+);
 
 type HistoryPageProps = {
   currentUser: IUser;
