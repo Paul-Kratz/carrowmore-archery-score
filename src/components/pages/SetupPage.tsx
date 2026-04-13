@@ -42,7 +42,6 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
 
   const createNewShoot = async () => {
     const body = {
-      userId: currentUser.id,
       mode,
       participantIds: participants.map((p) => p.id),
     };

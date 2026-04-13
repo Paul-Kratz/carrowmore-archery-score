@@ -1,6 +1,16 @@
 import { GET } from "./route";
 
 describe("/api/verifyAccessCode", () => {
+  const originalGateCode = process.env.SITE_GATE_CODE;
+
+  beforeEach(() => {
+    process.env.SITE_GATE_CODE = "1609";
+  });
+
+  afterAll(() => {
+    process.env.SITE_GATE_CODE = originalGateCode;
+  });
+
   describe("GET", () => {
     it("should return 200 and success message when code is valid (1609)", async () => {
       const request = new Request(
@@ -106,6 +116,20 @@ describe("/api/verifyAccessCode", () => {
       const response = await GET(request);
 
       expect(response.status).toBe(200);
+    });
+
+    it("should return 503 when the access code is not configured", async () => {
+      delete process.env.SITE_GATE_CODE;
+
+      const request = new Request(
+        "http://localhost:3000/api/verifyAccessCode?code=1609",
+      );
+
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data).toEqual({ message: "Access code not configured" });
     });
   });
 });

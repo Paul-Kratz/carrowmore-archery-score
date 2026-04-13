@@ -2,14 +2,24 @@ import { updateRound } from "@/functions/updateRound";
 import { validRoundNumber, validScore } from "@/helpers";
 import { NextRequest, NextResponse } from "next/server";
 import { getShoot } from "@/functions/getShoot";
+import { getShootAccess } from "@/functions/getShootAccess";
+import { auth } from "@/lib/auth";
 
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, shootId, roundNumber, score } = body;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!userId) {
-      return NextResponse.json({ error: "User not valid" }, { status: 401 });
+    const body = await request.json();
+    const { participantId, shootId, roundNumber, score } = body;
+
+    if (!participantId || !shootId) {
+      return NextResponse.json(
+        { error: "Missing required fields: participantId, shootId" },
+        { status: 400 },
+      );
     }
 
     if (!validScore(score)) {
@@ -26,7 +36,27 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await updateRound(userId, shootId, roundNumber, score);
+    const access = await getShootAccess({
+      shootId,
+      userId: session.user.id,
+    });
+
+    if (!access.exists) {
+      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
+    }
+
+    if (!access.isCreator) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const result = await updateRound(participantId, shootId, roundNumber, score);
+
+    if (result && "matchedCount" in result && result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: "Round score not found" },
+        { status: 404 },
+      );
+    }
 
     const shoot = await getShoot({
       shootId,

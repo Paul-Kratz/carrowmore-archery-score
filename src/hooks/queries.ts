@@ -46,12 +46,12 @@ export const useUpdateScore = () => {
   return useMutation({
     mutationFn: async ({
       shootId,
-      userId,
+      participantId,
       roundNumber,
       score,
     }: {
       shootId: string;
-      userId: string;
+      participantId: string;
       roundNumber: number;
       score: number | null;
     }) => {
@@ -60,7 +60,7 @@ export const useUpdateScore = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ shootId, userId, roundNumber, score }),
+        body: JSON.stringify({ shootId, participantId, roundNumber, score }),
       });
       if (!response.ok) {
         throw new Error("Error updating round score");

@@ -12,7 +12,7 @@ export const GET = async () => {
   }
   await connectMongoose();
 
-  const users = await User.find({}, { email: 1, name: 1 }).lean();
+  const users = await User.find({}, { name: 1 }).lean();
 
   return NextResponse.json(formatResponse<IUser>(users), { status: 200 });
 };
@@ -34,7 +34,7 @@ export const POST = async (request: Request) => {
   const updatedUser = await User.findByIdAndUpdate(
     session.user.id,
     { name },
-    { new: true, fields: { email: 1, name: 1 } },
+    { new: true, fields: { name: 1 } },
   ).lean();
 
   return NextResponse.json(formatResponse<IUser>(updatedUser), { status: 200 });

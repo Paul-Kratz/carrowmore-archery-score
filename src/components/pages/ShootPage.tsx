@@ -87,7 +87,7 @@ export function ShootPage({
   const handleSetScore = async (value: number | null) => {
     await updateScore({
       shootId: shoot.id,
-      userId: selectedParticipant?.userInfo.id,
+      participantId: selectedParticipant?.userInfo.id,
       roundNumber: currentStation,
       score: value,
     });

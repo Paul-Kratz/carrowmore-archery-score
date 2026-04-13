@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-
-const GATE_CODE_COOKIE = "x-gate-code";
+import { GATE_CODE_COOKIE } from "@/lib/runtimeConfig";
 
 type MiddlewareFn = (req: NextRequest) => Promise<Response | NextResponse>;
 

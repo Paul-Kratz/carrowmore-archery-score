@@ -1,4 +1,5 @@
 import { getShoot } from "@/functions/getShoot";
+import { getShootAccess } from "@/functions/getShootAccess";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
@@ -7,13 +8,26 @@ export const GET = async (
   { params }: { params: Promise<{ shootId: string }> }
 ) => {
   const session = await auth();
-  if (!session || !session?.user) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { shootId } = await params;
 
   try {
+    const access = await getShootAccess({
+      shootId,
+      userId: session.user.id,
+    });
+
+    if (!access.exists) {
+      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
+    }
+
+    if (!access.isCreator && !access.isParticipant) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const shoots = await getShoot({ shootId });
     return NextResponse.json(shoots, { status: 200 });
   } catch (error) {

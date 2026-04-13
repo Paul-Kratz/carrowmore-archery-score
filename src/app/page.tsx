@@ -10,7 +10,7 @@ export default async function Home() {
   await connectMongoose();
 
   const users = formatResponseArray<IUser>(
-    await User.find({}, { email: 1, name: 1 }).lean(),
+    await User.find({}, { name: 1 }).lean(),
   );
 
   return <SetupPage users={users} currentUser={session?.user as IUser} />;

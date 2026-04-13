@@ -1,16 +1,26 @@
 import { auth } from "@/lib/auth";
+import { getAdminUserId } from "@/lib/runtimeConfig";
 import { NextResponse } from "next/server";
 import data from "../../../../../scripts/cleanedHistoricalData.json";
 import { loadHistoricalData } from "@/functions/loadHistoricalData";
 
 const disabled = true;
 export const GET = async () => {
+  const adminUserId = getAdminUserId();
+
+  if (!adminUserId) {
+    return NextResponse.json(
+      { error: "This endpoint is disabled" },
+      { status: 503 },
+    );
+  }
+
   const session = await auth();
-  if (!session || !session?.user) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (session.user.id !== "695cc283b49cc001400b092d") {
+  if (session.user.id !== adminUserId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

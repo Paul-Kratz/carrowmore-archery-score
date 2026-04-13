@@ -1,22 +1,29 @@
 import { createNewShoot } from "@/functions/createNewShoot";
 import { deleteShoot } from "@/functions/deleteShoot";
+import { getShootAccess } from "@/functions/getShootAccess";
 import { updateShoot } from "@/functions/updateShoot";
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, mode, participantIds } = body;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!userId || !mode || !participantIds) {
+    const body = await request.json();
+    const { mode, participantIds } = body;
+
+    if (!mode || !Array.isArray(participantIds)) {
       return NextResponse.json(
-        { error: "Missing required fields: userId, mode, participantIds" },
+        { error: "Missing required fields: mode, participantIds" },
         { status: 400 },
       );
     }
 
     const shoot = await createNewShoot({
-      userId,
+      userId: session.user.id,
       mode,
       participantIds,
     });
@@ -35,6 +42,11 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { shootId, notes, completed } = body;
 
@@ -43,6 +55,19 @@ export async function PATCH(request: NextRequest) {
         { error: "Missing required field: shootId" },
         { status: 400 },
       );
+    }
+
+    const access = await getShootAccess({
+      shootId,
+      userId: session.user.id,
+    });
+
+    if (!access.exists) {
+      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
+    }
+
+    if (!access.isCreator) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await updateShoot({
@@ -68,6 +93,11 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const shootId = searchParams.get("shootId");
 
@@ -76,6 +106,19 @@ export async function DELETE(request: NextRequest) {
         { error: "Missing required query parameter: shootId" },
         { status: 400 },
       );
+    }
+
+    const access = await getShootAccess({
+      shootId,
+      userId: session.user.id,
+    });
+
+    if (!access.exists) {
+      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
+    }
+
+    if (!access.isCreator) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await deleteShoot(shootId);

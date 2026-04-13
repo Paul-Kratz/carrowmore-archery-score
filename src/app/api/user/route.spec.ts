@@ -58,12 +58,12 @@ describe("/api/user", () => {
         user: { id: "user123", email: "test@example.com" },
       };
       const mockUsers = [
-        { _id: "user1", email: "user1@example.com", name: "User 1" },
-        { _id: "user2", email: "user2@example.com", name: "User 2" },
+        { _id: "user1", name: "User 1" },
+        { _id: "user2", name: "User 2" },
       ];
       const formattedUsers = [
-        { id: "user1", email: "user1@example.com", name: "User 1" },
-        { id: "user2", email: "user2@example.com", name: "User 2" },
+        { id: "user1", name: "User 1" },
+        { id: "user2", name: "User 2" },
       ];
 
       mockAuth.mockResolvedValue(mockSession);
@@ -80,7 +80,7 @@ describe("/api/user", () => {
 
       expect(mockAuth).toHaveBeenCalled();
       expect(mockConnectMongoose).toHaveBeenCalled();
-      expect(mockUserFind).toHaveBeenCalledWith({}, { email: 1, name: 1 });
+      expect(mockUserFind).toHaveBeenCalledWith({}, { name: 1 });
       expect(mockFormatResponse).toHaveBeenCalledWith(mockUsers);
       expect(response.status).toBe(200);
       expect(data).toEqual(formattedUsers);
@@ -237,7 +237,7 @@ describe("/api/user", () => {
       expect(mockUserFindByIdAndUpdate).toHaveBeenCalledWith(
         "user123",
         { name: "Updated Name" },
-        { new: true, fields: { email: 1, name: 1 } },
+        { new: true, fields: { name: 1 } },
       );
       expect(mockFormatResponse).toHaveBeenCalledWith(mockUpdatedUser);
       expect(response.status).toBe(200);
@@ -320,7 +320,7 @@ describe("/api/user", () => {
       expect(mockUserFindByIdAndUpdate).toHaveBeenCalledWith(
         "user123",
         { name: "New Name" },
-        { new: true, fields: { email: 1, name: 1 } },
+        { new: true, fields: { name: 1 } },
       );
       expect(response.status).toBe(200);
     });
