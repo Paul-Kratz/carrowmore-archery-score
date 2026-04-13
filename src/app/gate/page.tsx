@@ -1,4 +1,4 @@
-import { GateCode } from "@/components/GateCode";
+import { GateCode } from "@/components/shared/GateCode";
 
 export default function GatePage() {
   return <GateCode />;

@@ -16,7 +16,7 @@ jest.mock("js-cookie", () => ({
   set: jest.fn(),
 }));
 
-jest.mock("../AddUsernameDialog", () => ({
+jest.mock("@/components/pages/setup/AddUsernameDialog", () => ({
   AddUsernameDialog: () => <div data-testid="add-username-dialog" />,
 }));
 
