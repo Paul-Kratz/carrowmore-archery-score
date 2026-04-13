@@ -1,9 +1,12 @@
 import { createNewShoot } from "@/functions/createNewShoot";
 import { deleteShoot } from "@/functions/deleteShoot";
 import { getShootAccess } from "@/functions/getShootAccess";
+import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { updateShoot } from "@/functions/updateShoot";
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+
+const VALID_MODES = new Set(["yellow", "red"]);
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,9 +25,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      typeof mode !== "string" ||
+      !VALID_MODES.has(mode) ||
+      !participantIds.every(
+        (participantId) =>
+          typeof participantId === "string" && isValidObjectId(participantId),
+      )
+    ) {
+      return NextResponse.json(
+        { error: "Invalid mode or participantIds" },
+        { status: 400 },
+      );
+    }
+
     const shoot = await createNewShoot({
       userId: session.user.id,
-      mode,
+      mode: mode as "yellow" | "red",
       participantIds,
     });
 
@@ -55,6 +72,10 @@ export async function PATCH(request: NextRequest) {
         { error: "Missing required field: shootId" },
         { status: 400 },
       );
+    }
+
+    if (typeof shootId !== "string" || !isValidObjectId(shootId)) {
+      return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
     }
 
     const access = await getShootAccess({
@@ -106,6 +127,10 @@ export async function DELETE(request: NextRequest) {
         { error: "Missing required query parameter: shootId" },
         { status: 400 },
       );
+    }
+
+    if (!isValidObjectId(shootId)) {
+      return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
     }
 
     const access = await getShootAccess({

@@ -22,6 +22,9 @@ jest.mock("@/functions/getShoot", () => ({
 import { PATCH } from "./route";
 
 describe("/api/roundScore", () => {
+  const validShootId = "507f1f77bcf86cd799439011";
+  const validParticipantId = "507f1f77bcf86cd799439012";
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -32,8 +35,8 @@ describe("/api/roundScore", () => {
     const request = new Request("http://localhost:3000/api/roundScore", {
       method: "PATCH",
       body: JSON.stringify({
-        participantId: "participant-1",
-        shootId: "shoot-1",
+        participantId: validParticipantId,
+        shootId: validShootId,
         roundNumber: 1,
         score: 20,
       }),
@@ -56,8 +59,8 @@ describe("/api/roundScore", () => {
     const request = new Request("http://localhost:3000/api/roundScore", {
       method: "PATCH",
       body: JSON.stringify({
-        participantId: "participant-1",
-        shootId: "shoot-1",
+        participantId: validParticipantId,
+        shootId: validShootId,
         roundNumber: 1,
         score: 20,
       }),
@@ -82,8 +85,8 @@ describe("/api/roundScore", () => {
     const request = new Request("http://localhost:3000/api/roundScore", {
       method: "PATCH",
       body: JSON.stringify({
-        participantId: "participant-1",
-        shootId: "shoot-1",
+        participantId: validParticipantId,
+        shootId: validShootId,
         roundNumber: 1,
         score: 20,
       }),
@@ -110,8 +113,8 @@ describe("/api/roundScore", () => {
     const request = new Request("http://localhost:3000/api/roundScore", {
       method: "PATCH",
       body: JSON.stringify({
-        participantId: "participant-1",
-        shootId: "shoot-1",
+        participantId: validParticipantId,
+        shootId: validShootId,
         roundNumber: 2,
         score: 16,
       }),
@@ -120,12 +123,34 @@ describe("/api/roundScore", () => {
     const response = await PATCH(request as never);
 
     expect(mockUpdateRound).toHaveBeenCalledWith(
-      "participant-1",
-      "shoot-1",
+      validParticipantId,
+      validShootId,
       2,
       16,
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(shoot);
+  });
+
+  it("returns 400 for malformed participant or shoot ids", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+    const response = await PATCH(
+      new Request("http://localhost:3000/api/roundScore", {
+        method: "PATCH",
+        body: JSON.stringify({
+          participantId: "bad-id",
+          shootId: validShootId,
+          roundNumber: 1,
+          score: 20,
+        }),
+      }) as never,
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "Invalid participantId or shootId",
+    });
+    expect(mockGetShootAccess).not.toHaveBeenCalled();
   });
 });

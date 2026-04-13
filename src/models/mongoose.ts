@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types, model, models } from "mongoose";
+import { Schema, model, models } from "mongoose";
 import { IUser, IShoot, IShootParticipant, IRoundScore, Mode } from "./index";
 
 const UserSchema = new Schema<IUser>(
@@ -56,6 +56,7 @@ const ShootParticipantSchema = new Schema<IShootParticipant>(
   },
   { timestamps: false }
 );
+ShootParticipantSchema.index({ shoot: 1, user: 1 }, { unique: true });
 
 const RoundScoreSchema = new Schema<IRoundScore>(
   {
@@ -76,6 +77,10 @@ const RoundScoreSchema = new Schema<IRoundScore>(
   },
   { timestamps: false }
 );
+RoundScoreSchema.index(
+  { shoot: 1, user: 1, roundNumber: 1 },
+  { unique: true },
+);
 
 export const User = models.User || model<IUser>("User", UserSchema);
 export const Shoot = models.Shoot || model<IShoot>("Shoot", ShootSchema);
@@ -84,23 +89,3 @@ export const ShootParticipant =
   model<IShootParticipant>("ShootParticipant", ShootParticipantSchema);
 export const RoundScore =
   models.RoundScore || model<IRoundScore>("RoundScore", RoundScoreSchema);
-
-// When a Shoot is deleted => delete participants + roundScores
-ShootSchema.pre(
-  "deleteOne",
-  { document: false, query: true },
-  async function () {
-    const filter = this.getFilter();
-    const shootId = filter._id as Types.ObjectId | undefined;
-    if (!shootId) return;
-
-    const ShootParticipant =
-      mongoose.model<IShootParticipant>("ShootParticipant");
-    const RoundScore = mongoose.model<IRoundScore>("RoundScore");
-
-    await Promise.all([
-      ShootParticipant.deleteMany({ shootId }),
-      RoundScore.deleteMany({ shootId }),
-    ]);
-  }
-);

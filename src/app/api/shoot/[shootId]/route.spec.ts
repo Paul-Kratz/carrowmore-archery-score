@@ -17,6 +17,8 @@ jest.mock("@/functions/getShoot", () => ({
 import { GET } from "./route";
 
 describe("/api/shoot/[shootId]", () => {
+  const validShootId = "507f1f77bcf86cd799439011";
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -25,7 +27,7 @@ describe("/api/shoot/[shootId]", () => {
     mockAuth.mockResolvedValue(null);
 
     const response = await GET({} as Request, {
-      params: Promise.resolve({ shootId: "shoot-1" }),
+      params: Promise.resolve({ shootId: validShootId }),
     });
 
     expect(response.status).toBe(401);
@@ -41,7 +43,7 @@ describe("/api/shoot/[shootId]", () => {
     });
 
     const response = await GET({} as Request, {
-      params: Promise.resolve({ shootId: "shoot-1" }),
+      params: Promise.resolve({ shootId: validShootId }),
     });
 
     expect(response.status).toBe(403);
@@ -61,11 +63,23 @@ describe("/api/shoot/[shootId]", () => {
     mockGetShoot.mockResolvedValue(shoot);
 
     const response = await GET({} as Request, {
-      params: Promise.resolve({ shootId: "shoot-1" }),
+      params: Promise.resolve({ shootId: validShootId }),
     });
 
-    expect(mockGetShoot).toHaveBeenCalledWith({ shootId: "shoot-1" });
+    expect(mockGetShoot).toHaveBeenCalledWith({ shootId: validShootId });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(shoot);
+  });
+
+  it("returns 400 for malformed shoot ids", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+    const response = await GET({} as Request, {
+      params: Promise.resolve({ shootId: "bad-id" }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Invalid shootId" });
+    expect(mockGetShootAccess).not.toHaveBeenCalled();
   });
 });

@@ -27,6 +27,9 @@ jest.mock("@/functions/getShootAccess", () => ({
 import { DELETE, PATCH, POST } from "./route";
 
 describe("/api/shoot", () => {
+  const validShootId = "507f1f77bcf86cd799439011";
+  const validParticipantId = "507f1f77bcf86cd799439012";
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -37,7 +40,10 @@ describe("/api/shoot", () => {
 
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "POST",
-        body: JSON.stringify({ mode: "yellow", participantIds: ["user-2"] }),
+        body: JSON.stringify({
+          mode: "yellow",
+          participantIds: [validParticipantId],
+        }),
       });
 
       const response = await POST(request as never);
@@ -56,7 +62,7 @@ describe("/api/shoot", () => {
         body: JSON.stringify({
           userId: "spoofed-user",
           mode: "yellow",
-          participantIds: ["user-2"],
+          participantIds: [validParticipantId],
         }),
       });
 
@@ -65,9 +71,29 @@ describe("/api/shoot", () => {
       expect(mockCreateNewShoot).toHaveBeenCalledWith({
         userId: "session-user",
         mode: "yellow",
-        participantIds: ["user-2"],
+        participantIds: [validParticipantId],
       });
       expect(response.status).toBe(201);
+    });
+
+    it("returns 400 for malformed participant ids", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "yellow",
+          participantIds: ["not-an-object-id"],
+        }),
+      });
+
+      const response = await POST(request as never);
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: "Invalid mode or participantIds",
+      });
+      expect(mockCreateNewShoot).not.toHaveBeenCalled();
     });
   });
 
@@ -82,7 +108,7 @@ describe("/api/shoot", () => {
 
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "PATCH",
-        body: JSON.stringify({ shootId: "shoot-1", notes: "note" }),
+        body: JSON.stringify({ shootId: validShootId, notes: "note" }),
       });
 
       const response = await PATCH(request as never);
@@ -103,7 +129,7 @@ describe("/api/shoot", () => {
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "PATCH",
         body: JSON.stringify({
-          shootId: "shoot-1",
+          shootId: validShootId,
           notes: "note",
           completed: true,
         }),
@@ -112,11 +138,26 @@ describe("/api/shoot", () => {
       const response = await PATCH(request as never);
 
       expect(mockUpdateShoot).toHaveBeenCalledWith({
-        shootId: "shoot-1",
+        shootId: validShootId,
         notes: "note",
         completed: true,
       });
       expect(response.status).toBe(200);
+    });
+
+    it("returns 400 for malformed shoot ids on update", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "PATCH",
+        body: JSON.stringify({ shootId: "bad-id", notes: "note" }),
+      });
+
+      const response = await PATCH(request as never);
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "Invalid shootId" });
+      expect(mockGetShootAccess).not.toHaveBeenCalled();
     });
   });
 
@@ -130,7 +171,7 @@ describe("/api/shoot", () => {
       });
 
       const request = new Request(
-        "http://localhost:3000/api/shoot?shootId=missing-shoot",
+        `http://localhost:3000/api/shoot?shootId=${validShootId}`,
         { method: "DELETE" },
       );
 
@@ -150,14 +191,28 @@ describe("/api/shoot", () => {
       });
 
       const request = new Request(
-        "http://localhost:3000/api/shoot?shootId=shoot-1",
+        `http://localhost:3000/api/shoot?shootId=${validShootId}`,
         { method: "DELETE" },
       );
 
       const response = await DELETE(request as never);
 
-      expect(mockDeleteShoot).toHaveBeenCalledWith("shoot-1");
+      expect(mockDeleteShoot).toHaveBeenCalledWith(validShootId);
       expect(response.status).toBe(200);
+    });
+
+    it("returns 400 for malformed shoot ids on delete", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+      const response = await DELETE(
+        new Request("http://localhost:3000/api/shoot?shootId=bad-id", {
+          method: "DELETE",
+        }) as never,
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "Invalid shootId" });
+      expect(mockGetShootAccess).not.toHaveBeenCalled();
     });
   });
 });

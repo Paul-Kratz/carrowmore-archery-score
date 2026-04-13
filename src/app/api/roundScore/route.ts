@@ -1,5 +1,6 @@
 import { updateRound } from "@/functions/updateRound";
 import { validRoundNumber, validScore } from "@/helpers";
+import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { NextRequest, NextResponse } from "next/server";
 import { getShoot } from "@/functions/getShoot";
 import { getShootAccess } from "@/functions/getShootAccess";
@@ -18,6 +19,13 @@ export async function PATCH(request: NextRequest) {
     if (!participantId || !shootId) {
       return NextResponse.json(
         { error: "Missing required fields: participantId, shootId" },
+        { status: 400 },
+      );
+    }
+
+    if (!isValidObjectId(participantId) || !isValidObjectId(shootId)) {
+      return NextResponse.json(
+        { error: "Invalid participantId or shootId" },
         { status: 400 },
       );
     }

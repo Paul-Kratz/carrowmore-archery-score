@@ -1,5 +1,6 @@
 import { getShoot } from "@/functions/getShoot";
 import { getShootAccess } from "@/functions/getShootAccess";
+import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
@@ -15,6 +16,10 @@ export const GET = async (
   const { shootId } = await params;
 
   try {
+    if (!isValidObjectId(shootId)) {
+      return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
+    }
+
     const access = await getShootAccess({
       shootId,
       userId: session.user.id,
