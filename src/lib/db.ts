@@ -1,10 +1,4 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
-
-if (!process.env.MONGODB_URI) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
-}
-
-const uri = process.env.MONGODB_URI;
 const options = {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -13,7 +7,19 @@ const options = {
   },
 };
 
-let client: MongoClient;
+const getMongoUri = () => {
+  const uri = process.env.MONGODB_URI;
+
+  if (!uri) {
+    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
+  }
+
+  return uri;
+};
+
+const createMongoClient = () => new MongoClient(getMongoUri(), options);
+
+let client: MongoClient | undefined;
 
 if (process.env.NODE_ENV === "development") {
   // In development mode, use a global variable so that the value
@@ -22,15 +28,23 @@ if (process.env.NODE_ENV === "development") {
     _mongoClient?: MongoClient;
   };
 
-  if (!globalWithMongo._mongoClient) {
-    globalWithMongo._mongoClient = new MongoClient(uri, options);
-  }
   client = globalWithMongo._mongoClient;
+
+  if (!client) {
+    client = createMongoClient();
+    globalWithMongo._mongoClient = client;
+  }
 } else {
-  // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options);
+  client = undefined;
 }
 
-// Export a module-scoped MongoClient. By doing this in a
-// separate module, the client can be shared across functions.
-export default client;
+export const getMongoDbClient = async () => {
+  if (client) {
+    return client;
+  }
+
+  client = createMongoClient();
+  return client;
+};
+
+export default getMongoDbClient;
