@@ -23,7 +23,7 @@ export default async function Session({
   const roundNum = Number(roundNumber); // parse roundNumber as number
 
   if (roundNum < 1 || roundNum > 18) {
-    redirect(`shoot/1`); // if invalid route param passed then go back to first round page
+    redirect("/shoot/1"); // if invalid route param passed then go back to first round page
   }
 
   return (

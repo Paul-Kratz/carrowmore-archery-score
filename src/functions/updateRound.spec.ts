@@ -116,20 +116,21 @@ describe("updateRound", () => {
     expect(mockRoundScoreUpdateOne).toHaveBeenCalledTimes(2);
   });
 
-  it("should catch and log errors", async () => {
+  it("should reject when the round score update fails", async () => {
     const error = new Error("Database error");
     mockRoundScoreUpdateOne.mockRejectedValue(error);
 
-    const result = await updateRound("user123", "shoot123", 1, 10);
-    expect(result).toBeUndefined();
+    await expect(updateRound("user123", "shoot123", 1, 10)).rejects.toThrow(
+      "Database error",
+    );
   });
 
-  it("should return undefined when error occurs", async () => {
+  it("should reject when mongoose connection fails", async () => {
     mockRoundScoreUpdateOne.mockRejectedValue(new Error("Connection failed"));
 
-    const result = await updateRound("user123", "shoot123", 1, 10);
-
-    expect(result).toBeUndefined();
+    await expect(updateRound("user123", "shoot123", 1, 10)).rejects.toThrow(
+      "Connection failed",
+    );
   });
 
   it("should handle no documents matched", async () => {

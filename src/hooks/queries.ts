@@ -93,7 +93,6 @@ export const useUpdateUsername = () => {
 export function useDeleteShoot() {
   return useMutation({
     mutationFn: async (shootId: string) => {
-      console.log("Deleting shoot with ID:", shootId);
       const response = await fetch(`/api/shoot?shootId=${shootId}`, {
         method: "DELETE",
         headers: {
@@ -103,7 +102,7 @@ export function useDeleteShoot() {
       if (!response.ok) {
         throw new Error("Error deleting shoot");
       }
-      queryClient.invalidateQueries({ queryKey: ["participatedShoots"] });
+      await queryClient.invalidateQueries({ queryKey: ["participatedShoots"] });
       return response;
     },
   });

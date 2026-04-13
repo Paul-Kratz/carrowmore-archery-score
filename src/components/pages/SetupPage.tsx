@@ -5,7 +5,7 @@ import { formatResponse } from "@/helpers/formatResponse";
 import { IShoot, IUser, Mode } from "@/models";
 import { Button, Card, RadioGroup, Select } from "@radix-ui/themes";
 import { History, Play, Target, Trash2 } from "lucide-react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { getUserLabel } from "@/helpers/getUserLabel";
@@ -51,11 +51,15 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
       body: JSON.stringify(body),
     });
 
+    if (!response.ok) {
+      throw new Error("Failed to create shoot");
+    }
+
     const newShoot = formatResponse<IShoot>(await response.json()) as IShoot;
 
     Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
 
-    redirect("/shoot/1");
+    router.push("/shoot/1");
   };
 
   return (

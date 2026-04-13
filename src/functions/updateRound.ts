@@ -6,20 +6,15 @@ export const updateRound = async (
   userId: string,
   shootId: string,
   roundNumber: number,
-  score: number,
+  score: number | null,
 ) => {
-  try {
-    await connectMongoose();
-    const res = await RoundScore.updateOne(
-      {
-        user: new Types.ObjectId(userId),
-        shoot: new Types.ObjectId(shootId),
-        roundNumber,
-      },
-      { score },
-    );
-    return res;
-  } catch (e: unknown) {
-    console.log(e);
-  }
+  await connectMongoose();
+  return RoundScore.updateOne(
+    {
+      user: new Types.ObjectId(userId),
+      shoot: new Types.ObjectId(shootId),
+      roundNumber,
+    },
+    { score },
+  );
 };

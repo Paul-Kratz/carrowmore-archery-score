@@ -65,7 +65,7 @@ export function ShootPage({
   shootId,
 }: ShootPageProps) {
   const { data: shootData } = useGetShoot(shootId);
-  const { mutate: updateScore } = useUpdateScore();
+  const { mutateAsync: updateScore } = useUpdateScore();
   const { participants, ...shoot } =
     (shootData as IShoot & {
       participants: IShootParticipantWithScores[];
@@ -85,6 +85,10 @@ export function ShootPage({
     : null;
 
   const handleSetScore = async (value: number | null) => {
+    if (!shoot.id || !selectedParticipant?.userInfo.id) {
+      return;
+    }
+
     await updateScore({
       shootId: shoot.id,
       participantId: selectedParticipant?.userInfo.id,
@@ -105,7 +109,6 @@ export function ShootPage({
     );
   };
 
-  console.log(shootData);
   return (
     <div className="bg-background min-h-screen flex flex-col justify-between">
       <header className="sticky top-0 z-10 bg-background border-b">

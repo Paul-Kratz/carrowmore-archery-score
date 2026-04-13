@@ -84,7 +84,7 @@ export const SummaryPage = ({
               <Users className="w-3 h-3" />
               {shootInfo.participants.length} participant
               {shootInfo.participants.length !== 1 ? "s" : ""}
-              {shootInfo.participants[0]?.userInfo.name === currentUser.name &&
+              {shootInfo.createdBy === currentUser.id &&
                 " (tracked by you)"}
             </div>
             <div className="flex items-center gap-1">

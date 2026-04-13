@@ -19,7 +19,9 @@ export const ExitDialog = ({
   triggerComponent,
 }: ExitDialogProps) => {
   const [notes, setNotes] = useState("");
-  const { mutate } = useUpdateShoot();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { mutateAsync } = useUpdateShoot();
   const router = useRouter();
 
   const shootLengthMs =
@@ -31,19 +33,23 @@ export const ExitDialog = ({
 
   const saveShoot = async () => {
     try {
-      await mutate({
+      setIsSaving(true);
+      await mutateAsync({
         shootId: shoot.id,
         notes,
         completed: isShootFinished,
       });
       Cookies.remove(ACTIVE_SHOOT_COOKIE);
+      setIsOpen(false);
       router.push("/");
     } catch (error) {
       console.error("Error saving shoot:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
   return (
-    <Dialog.Root>
+    <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger>{triggerComponent}</Dialog.Trigger>
       <Dialog.Content>
         <Dialog.Title>Exit Shoot?</Dialog.Title>
@@ -74,11 +80,9 @@ export const ExitDialog = ({
               Cancel
             </Button>
           </Dialog.Close>
-          <Dialog.Close>
-            <Button onClick={saveShoot} size={"3"}>
-              Save & Exit
-            </Button>
-          </Dialog.Close>
+          <Button onClick={saveShoot} size={"3"} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save & Exit"}
+          </Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

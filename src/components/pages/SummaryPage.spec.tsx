@@ -88,6 +88,26 @@ describe("SummaryPage", () => {
       expect(screen.getByText(/1 participant(?!s)/)).toBeInTheDocument();
     });
 
+    it("should show tracked-by-you only when the current user created the shoot", () => {
+      const { rerender } = render(
+        <SummaryPage
+          currentUser={mockCurrentUser}
+          shootInfo={createShootInfo({ createdBy: "user1" })}
+        />,
+      );
+
+      expect(screen.getByText(/\(tracked by you\)/)).toBeInTheDocument();
+
+      rerender(
+        <SummaryPage
+          currentUser={mockCurrentUser}
+          shootInfo={createShootInfo({ createdBy: "user2" })}
+        />,
+      );
+
+      expect(screen.queryByText(/\(tracked by you\)/)).not.toBeInTheDocument();
+    });
+
     it("should pluralize participants when more than one", () => {
       render(
         <SummaryPage

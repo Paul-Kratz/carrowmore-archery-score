@@ -30,7 +30,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   const [deleteShootId, setDeleteShootId] = useState<string | null>(null);
   const { participatedShoots, trackedShoots, isLoading } =
     useGetParticipatedShoots(currentUser.id); // Refetch participated shoots to get latest data after deletion
-  const { mutate } = useDeleteShoot();
+  const { mutateAsync } = useDeleteShoot();
   const onBack = () => {
     window.history.back();
   };
@@ -84,7 +84,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     const shootToDelete = trackedShoots.find((s) => s.id === deleteShootId);
     if (currentUser.id !== shootToDelete?.createdBy) return; // Extra safety check to ensure only creator can delete
     try {
-      mutate(deleteShootId);
+      await mutateAsync(deleteShootId);
     } catch (error) {
       console.error("Error deleting shoot:", error);
     } finally {
