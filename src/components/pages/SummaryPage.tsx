@@ -45,7 +45,7 @@ export const SummaryPage = ({
         {shootInfo.participants.map((participant) => (
           <ParticipantSummaryCard
             key={participant.id}
-            currentUserName={currentUser.name}
+            currentUserId={currentUser.id}
             participant={participant}
           />
         ))}

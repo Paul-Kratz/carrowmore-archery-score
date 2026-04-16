@@ -1,5 +1,6 @@
 "use client";
 
+import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getUserLabel } from "@/helpers/getUserLabel";
 import { IShootParticipantWithScores, IUser } from "@/models";
 
@@ -32,8 +33,9 @@ export function ParticipantSelector({
                 : "border-border hover:border-primary/50"
             }`}
           >
-            <div className="font-medium">
-              {getUserLabel(participant.userInfo as IUser, currentUserId)}
+            <div className="flex items-center gap-2 font-medium">
+              <span>{getUserLabel(participant.userInfo as IUser, currentUserId)}</span>
+              {participant.userInfo.isGuest && <GuestBadge />}
             </div>
 
             <div className="text-xs text-muted-foreground mt-0.5">

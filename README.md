@@ -1,5 +1,76 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database Backups
+
+The app uses MongoDB Atlas. On the free tier, the practical backup path is a local
+`mongodump` archive.
+
+### Prerequisites
+
+Install MongoDB Database Tools so `mongodump` is available:
+
+```bash
+brew tap mongodb/brew
+brew install mongodb-database-tools
+```
+
+### Create a backup
+
+From the repo root:
+
+```bash
+npm run backup:db
+```
+
+This script:
+
+- loads `MONGODB_URI` from `.env.local` or `.env`
+- creates a local `backups/` directory if needed
+- writes a compressed archive like `backups/archery-backup-20260416-171847.archive`
+
+### Validate a backup
+
+Basic checks:
+
+```bash
+ls -lh backups
+gzip -t < backups/your-backup-file.archive && echo "gzip ok"
+```
+
+Best validation is a test restore into a temporary database:
+
+```bash
+set -a
+source .env
+set +a
+
+mongorestore \
+  --uri "$MONGODB_URI" \
+  --archive="backups/your-backup-file.archive" \
+  --gzip \
+  --nsFrom="archery_db_dev.*" \
+  --nsTo="archery_db_restore_check_$(date +%Y%m%d).*"
+```
+
+### Weekly automatic backups
+
+Yes, weekly backups are possible.
+
+The simplest approach on a Mac is to schedule the repo script with `launchd` or a
+cron job so it runs weekly and writes into `backups/` or another synced folder.
+
+Example weekly cron entry:
+
+```cron
+0 7 * * 1 cd /absolute/path/to/archery-score-site && npm run backup:db >> /tmp/archery-backup.log 2>&1
+```
+
+Recommended follow-up if you automate this:
+
+- store backups somewhere outside the repo folder long term
+- rotate old archives so disk usage does not grow forever
+- occasionally test a restore, not just backup creation
+
 ## Getting Started
 
 First, run the development server:

@@ -7,6 +7,13 @@ import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 const VALID_MODES = new Set(["yellow", "red"]);
+const CREATE_SHOOT_VALIDATION_ERRORS = new Set([
+  "Guest names cannot be empty",
+  "Guest names must be unique",
+  "Guest names cannot match selected registered participant names",
+  "One or more participant userIds do not exist",
+  "Guest names must be 50 characters or fewer",
+]);
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,11 +23,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { mode, participantIds } = body;
+    const { mode, participantIds, guestNames = [] } = body;
 
-    if (!mode || !Array.isArray(participantIds)) {
+    if (!mode || !Array.isArray(participantIds) || !Array.isArray(guestNames)) {
       return NextResponse.json(
-        { error: "Missing required fields: mode, participantIds" },
+        { error: "Missing required fields: mode, participantIds, guestNames" },
         { status: 400 },
       );
     }
@@ -31,10 +38,11 @@ export async function POST(request: NextRequest) {
       !participantIds.every(
         (participantId) =>
           typeof participantId === "string" && isValidObjectId(participantId),
-      )
+      ) ||
+      !guestNames.every((guestName) => typeof guestName === "string")
     ) {
       return NextResponse.json(
-        { error: "Invalid mode or participantIds" },
+        { error: "Invalid mode, participantIds, or guestNames" },
         { status: 400 },
       );
     }
@@ -43,16 +51,24 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       mode: mode as "yellow" | "red",
       participantIds,
+      guestNames,
     });
 
     return NextResponse.json(shoot, { status: 201 });
   } catch (error) {
-    console.error("Error creating shoot:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
+    const isValidationError = CREATE_SHOOT_VALIDATION_ERRORS.has(errorMessage);
+
+    if (!isValidationError) {
+      console.error("Error creating shoot:", error);
+    }
+
     return NextResponse.json(
+      { error: errorMessage },
       {
-        error: error instanceof Error ? error.message : "Internal server error",
+        status: isValidationError ? 400 : 500,
       },
-      { status: 500 },
     );
   }
 }

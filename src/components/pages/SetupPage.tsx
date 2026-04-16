@@ -2,6 +2,11 @@
 
 import { ACTIVE_SHOOT_COOKIE } from "@/constants";
 import { formatResponse } from "@/helpers/formatResponse";
+import {
+  getParticipantDisplayName,
+  MAX_GUEST_NAME_LENGTH,
+  normalizeParticipantName,
+} from "@/helpers/participantDisplay";
 import { IShoot, IUser, Mode } from "@/models";
 import { Button } from "@radix-ui/themes";
 import { History, Play } from "lucide-react";
@@ -22,6 +27,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
   const [mode, setMode] = useState<Mode>(Mode.yellow);
   const [participants, setParticipants] = useState<IUser[]>([]);
   const [newParticipantId, setNewParticipantId] = useState<string>("");
+  const [newGuestName, setNewGuestName] = useState("");
   const router = useRouter();
 
   const canStartShoot = participants.length > 0;
@@ -37,6 +43,39 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
     }
   };
 
+  const handleAddGuest = () => {
+    const trimmedName = newGuestName.trim();
+    const normalizedGuestName = normalizeParticipantName(trimmedName);
+
+    if (!trimmedName || trimmedName.length > MAX_GUEST_NAME_LENGTH) {
+      return;
+    }
+
+    if (
+      [currentUser, ...participants].some(
+        (participant) =>
+          normalizeParticipantName(
+            getParticipantDisplayName(participant, currentUser.id),
+          ) === normalizedGuestName,
+      )
+    ) {
+      return;
+    }
+
+    setParticipants([
+      ...participants,
+      {
+        id: `guest:${normalizedGuestName}`,
+        name: trimmedName,
+        email: null,
+        isGuest: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+    setNewGuestName("");
+  };
+
   const handleRemoveParticipant = (id: string) => {
     const updatedParticipants = participants.filter((p) => p.id !== id);
     setParticipants(updatedParticipants);
@@ -45,7 +84,12 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
   const createNewShoot = async () => {
     const body = {
       mode,
-      participantIds: participants.map((p) => p.id),
+      participantIds: participants
+        .filter((participant) => !participant.isGuest)
+        .map((participant) => participant.id),
+      guestNames: participants
+        .filter((participant) => participant.isGuest)
+        .map((participant) => participant.name ?? ""),
     };
 
     const response = await fetch("/api/shoot", {
@@ -77,8 +121,11 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
 
           <ParticipantsCard
             currentUserId={currentUser.id}
+            newGuestName={newGuestName}
             newParticipantId={newParticipantId}
+            onAddGuest={handleAddGuest}
             onAddParticipant={handleAddParticipant}
+            onGuestNameChange={setNewGuestName}
             onNewParticipantChange={setNewParticipantId}
             onRemoveParticipant={handleRemoveParticipant}
             participants={participants}

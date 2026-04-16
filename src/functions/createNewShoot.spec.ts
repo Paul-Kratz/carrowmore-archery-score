@@ -260,6 +260,85 @@ describe("createNewShoot", () => {
     });
   });
 
+  it("creates guest participants and participant-based round scores", async () => {
+    const mockUsers = [
+      { _id: USER_ID, name: "Alice", email: "alice@example.com" },
+      { _id: USER_TWO_ID, name: "Bob", email: "bob@example.com" },
+    ];
+    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+
+    mockUserFind.mockResolvedValue(mockUsers);
+    mockShootCreate.mockResolvedValue([mockShoot]);
+    mockShootParticipantInsertMany.mockResolvedValue([]);
+    mockRoundScoreInsertMany.mockResolvedValue([]);
+    mockFormatResponse.mockReturnValue(mockShoot);
+
+    await createNewShoot({
+      userId: USER_ID,
+      mode: "yellow",
+      participantIds: [USER_TWO_ID],
+      guestNames: ["Charlie"],
+    });
+
+    const participantDocs = mockShootParticipantInsertMany.mock.calls[0][0];
+    expect(participantDocs).toHaveLength(3);
+    expect(participantDocs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          guestName: "Charlie",
+          guestNameNormalized: "charlie",
+        }),
+      ]),
+    );
+
+    const roundScoreDocs = mockRoundScoreInsertMany.mock.calls[0][0];
+    expect(roundScoreDocs).toHaveLength(30);
+    expect(
+      roundScoreDocs.some(
+        (score: { participant?: string; user?: string }) =>
+          score.participant && !score.user,
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects duplicate guest names after normalization", async () => {
+    await expect(
+      createNewShoot({
+        userId: USER_ID,
+        mode: "yellow",
+        participantIds: [],
+        guestNames: ["Charlie", " charlie "],
+      }),
+    ).rejects.toThrow("Guest names must be unique");
+  });
+
+  it("rejects guest names that clash with registered participant labels", async () => {
+    const mockUsers = [{ _id: USER_ID, name: "Charlie", email: null }];
+    mockUserFind.mockResolvedValue(mockUsers);
+
+    await expect(
+      createNewShoot({
+        userId: USER_ID,
+        mode: "yellow",
+        participantIds: [],
+        guestNames: ["charlie"],
+      }),
+    ).rejects.toThrow(
+      "Guest names cannot match selected registered participant names",
+    );
+  });
+
+  it("rejects overly long guest names", async () => {
+    await expect(
+      createNewShoot({
+        userId: USER_ID,
+        mode: "yellow",
+        participantIds: [],
+        guestNames: ["x".repeat(51)],
+      }),
+    ).rejects.toThrow("Guest names must be 50 characters or fewer");
+  });
+
   it("should format response before returning", async () => {
     const mockUsers = [{ _id: USER_ID }];
     const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };

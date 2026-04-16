@@ -49,14 +49,26 @@ const ShootParticipantSchema = new Schema<IShootParticipant>(
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
       index: true,
     },
+    guestName: { type: String, required: false },
+    guestNameNormalized: { type: String, required: false, index: true },
     joinedAt: { type: Date, required: true, default: () => new Date() },
   },
   { timestamps: false }
 );
-ShootParticipantSchema.index({ shoot: 1, user: 1 }, { unique: true });
+ShootParticipantSchema.index(
+  { shoot: 1, user: 1 },
+  { unique: true, partialFilterExpression: { user: { $exists: true } } },
+);
+ShootParticipantSchema.index(
+  { shoot: 1, guestNameNormalized: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { guestNameNormalized: { $exists: true } },
+  },
+);
 
 const RoundScoreSchema = new Schema<IRoundScore>(
   {
@@ -66,10 +78,16 @@ const RoundScoreSchema = new Schema<IRoundScore>(
       required: true,
       index: true,
     },
+    participant: {
+      type: Schema.Types.ObjectId,
+      ref: "ShootParticipant",
+      required: false,
+      index: true,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
       index: true,
     },
     roundNumber: { type: Number, required: true },
@@ -79,7 +97,14 @@ const RoundScoreSchema = new Schema<IRoundScore>(
 );
 RoundScoreSchema.index(
   { shoot: 1, user: 1, roundNumber: 1 },
-  { unique: true },
+  { unique: true, partialFilterExpression: { user: { $exists: true } } },
+);
+RoundScoreSchema.index(
+  { shoot: 1, participant: 1, roundNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { participant: { $exists: true } },
+  },
 );
 
 export const User = models.User || model<IUser>("User", UserSchema);

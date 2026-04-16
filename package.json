@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "backup:db": "bash scripts/backup-db.sh",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "backfill:roundscore-participants": "tsx scripts/backfill-roundscore-participants.ts",
     "prepare": "node -e \"process.env.CI || require('child_process').execSync('husky install', {stdio: 'inherit'})\""
   },
   "dependencies": {

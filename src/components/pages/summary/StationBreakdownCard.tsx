@@ -1,6 +1,7 @@
 "use client";
 
 import { IShootParticipantWithScores } from "@/models";
+import { GuestBadge } from "@/components/shared/GuestBadge";
 import { Card, Table } from "@radix-ui/themes";
 import { getColourForScore } from "./summaryUtils";
 
@@ -26,7 +27,12 @@ export function StationBreakdownCard({
         <Table.Body>
           {participants.map((participant) => (
             <Table.Row key={participant.id}>
-              <Table.Cell className="font-bold">{participant.userInfo.name}</Table.Cell>
+              <Table.Cell className="font-bold">
+                <div className="flex items-center gap-2">
+                  <span>{participant.userInfo.name}</span>
+                  {participant.userInfo.isGuest && <GuestBadge />}
+                </div>
+              </Table.Cell>
               {participant.roundScores.map((score, index) => (
                 <Table.Cell key={index} className={getColourForScore(score)}>
                   {score}

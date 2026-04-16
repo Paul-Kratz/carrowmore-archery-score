@@ -13,6 +13,7 @@ export interface IUser {
   email?: string | null;
   emailVerified?: Date | null;
   image?: string | null;
+  isGuest?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,14 +31,17 @@ export interface IShoot {
 export interface IShootParticipant {
   id: string;
   shoot: ObjectId | IShoot;
-  user: ObjectId | IUser;
+  user?: ObjectId | IUser | null;
+  guestName?: string | null;
+  guestNameNormalized?: string | null;
   joinedAt: Date;
 }
 
 export interface IRoundScore {
   id: string;
   shoot: ObjectId | IShoot;
-  user: ObjectId | IUser;
+  participant?: ObjectId | IShootParticipant | null;
+  user?: ObjectId | IUser | null;
   roundNumber: number;
   score?: number | null;
 }
@@ -45,9 +49,10 @@ export interface IShootParticipantWithScores extends IShootParticipant {
   roundScores: (number | null)[];
   totalScore: number;
   userInfo: {
-    id: string;
+    id?: string | null;
     name?: string | null;
     email?: string | null;
+    isGuest?: boolean;
   };
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { GuestBadge } from "@/components/shared/GuestBadge";
 import { IShootWithParticipants } from "@/models";
 import { Badge, Button, Card } from "@radix-ui/themes";
 import { ChevronRight, Notebook, Trash2, Trophy, Users } from "lucide-react";
@@ -27,6 +28,9 @@ export function ShootHistoryCard({
 }: ShootHistoryCardProps) {
   const topScorer = getTopScorer(shoot);
   const userScore = showUserScore ? getUserScore(shoot, currentUserId) : null;
+  const guestCount = shoot.participants.filter(
+    (participant) => participant.userInfo.isGuest,
+  ).length;
   const completedStations = shoot.participants.reduce((max, participant) => {
     const completed = participant.roundScores.filter((score) => score !== null).length;
     return Math.max(max, completed);
@@ -74,6 +78,14 @@ export function ShootHistoryCard({
               <Users className="w-3 h-3" />
               {shoot.participants.length} participant
               {shoot.participants.length !== 1 ? "s" : ""}
+              {guestCount > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1">
+                  <GuestBadge />
+                  <span>
+                    {guestCount} guest{guestCount !== 1 ? "s" : ""}
+                  </span>
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -96,8 +108,11 @@ export function ShootHistoryCard({
                 <Trophy className="w-3 h-3" />
                 Top Score
               </div>
-              <div className="font-semibold">
-                {topScorer.name}: {topScorer.score}
+              <div className="flex items-center gap-2 font-semibold">
+                <span>
+                  {topScorer.name}: {topScorer.score}
+                </span>
+                {topScorer.isGuest && <GuestBadge />}
               </div>
             </div>
           )

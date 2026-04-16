@@ -19,14 +19,28 @@ export const getShootChartData = async (userId: string) => {
     .match({ "participants.user": new Types.ObjectId(userId) })
     .lookup({
       from: "roundscores",
-      let: { shootId: "$_id", userId: "$participants.user" },
+      let: {
+        shootId: "$_id",
+        participantId: "$participants._id",
+        userId: "$participants.user",
+      },
       pipeline: [
         {
           $match: {
             $expr: {
               $and: [
                 { $eq: ["$shoot", "$$shootId"] },
-                { $eq: ["$user", "$$userId"] },
+                {
+                  $or: [
+                    { $eq: ["$participant", "$$participantId"] },
+                    {
+                      $and: [
+                        { $ne: ["$$userId", null] },
+                        { $eq: ["$user", "$$userId"] },
+                      ],
+                    },
+                  ],
+                },
               ],
             },
           },

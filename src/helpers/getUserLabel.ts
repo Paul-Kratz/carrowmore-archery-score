@@ -1,13 +1,10 @@
 import { IUser } from "@/models";
+import { getParticipantDisplayName } from "./participantDisplay";
 
 export const getUserLabel = (user: IUser, currentUserId: string) => {
-  let label = user.name?.trim();
+  let label = getParticipantDisplayName(user, currentUserId);
 
-  if (!label) {
-    label = user.id === currentUserId ? (user.email?.trim() ?? "You") : "Unnamed archer";
-  }
-
-  if (user.id === currentUserId) {
+  if (user.id === currentUserId && !user.isGuest) {
     label += " (you)";
   }
 

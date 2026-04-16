@@ -126,11 +126,36 @@ describe("SetupPage", () => {
           body: JSON.stringify({
             mode: Mode.yellow,
             participantIds: ["user-2"],
+            guestNames: [],
           }),
         }),
       );
       expect(Cookies.set).toHaveBeenCalledWith("active_shoot", "shoot-123");
       expect(mockPush).toHaveBeenCalledWith("/shoot/1");
+    });
+  });
+
+  it("includes guest names when creating a shoot", async () => {
+    render(<SetupPage users={mockUsers} currentUser={mockCurrentUser} />);
+
+    fireEvent.change(screen.getByLabelText("Guest name"), {
+      target: { value: "Charlie" },
+    });
+    fireEvent.click(screen.getByText("Add guest"));
+    fireEvent.click(screen.getByText("Start Shoot"));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/shoot",
+        expect.objectContaining({
+          method: "post",
+          body: JSON.stringify({
+            mode: Mode.yellow,
+            participantIds: [],
+            guestNames: ["Charlie"],
+          }),
+        }),
+      );
     });
   });
 });

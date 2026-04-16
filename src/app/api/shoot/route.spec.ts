@@ -72,6 +72,31 @@ describe("/api/shoot", () => {
         userId: "session-user",
         mode: "yellow",
         participantIds: [validParticipantId],
+        guestNames: [],
+      });
+      expect(response.status).toBe(201);
+    });
+
+    it("passes guest names through to shoot creation", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+      mockCreateNewShoot.mockResolvedValue({ id: "shoot-1" });
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "yellow",
+          participantIds: [validParticipantId],
+          guestNames: ["Charlie"],
+        }),
+      });
+
+      const response = await POST(request as never);
+
+      expect(mockCreateNewShoot).toHaveBeenCalledWith({
+        userId: "session-user",
+        mode: "yellow",
+        participantIds: [validParticipantId],
+        guestNames: ["Charlie"],
       });
       expect(response.status).toBe(201);
     });
@@ -91,9 +116,32 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: "Invalid mode or participantIds",
+        error: "Invalid mode, participantIds, or guestNames",
       });
       expect(mockCreateNewShoot).not.toHaveBeenCalled();
+    });
+
+    it("returns 400 for guest validation errors from creation", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+      mockCreateNewShoot.mockRejectedValue(
+        new Error("Guest names cannot be empty"),
+      );
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "yellow",
+          participantIds: [],
+          guestNames: [""],
+        }),
+      });
+
+      const response = await POST(request as never);
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: "Guest names cannot be empty",
+      });
     });
   });
 

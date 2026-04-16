@@ -2,15 +2,16 @@
 
 import { IShootParticipantWithScores } from "@/models";
 import { Badge, Card, Table } from "@radix-ui/themes";
+import { GuestBadge } from "@/components/shared/GuestBadge";
 import { POSSIBLE_SCORES, getColourForScore, getScoreCounts } from "./summaryUtils";
 
 type ParticipantSummaryCardProps = {
-  currentUserName: string | null | undefined;
+  currentUserId: string;
   participant: IShootParticipantWithScores;
 };
 
 export function ParticipantSummaryCard({
-  currentUserName,
+  currentUserId,
   participant,
 }: ParticipantSummaryCardProps) {
   const counts = getScoreCounts(participant.roundScores);
@@ -21,11 +22,13 @@ export function ParticipantSummaryCard({
         <div className="flex flex-col gap-2">
           <div className="flex flex-row gap-3">
             <span className="font-bold">{participant.userInfo.name}</span>
-            {participant.userInfo.name === currentUserName && (
+            {participant.userInfo.isGuest && <GuestBadge />}
+            {participant.userInfo.id === currentUserId &&
+              !participant.userInfo.isGuest && (
               <Badge size="2" color="green" variant="surface">
                 You
               </Badge>
-            )}
+              )}
           </div>
           <div className="flex flex-col gap-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">

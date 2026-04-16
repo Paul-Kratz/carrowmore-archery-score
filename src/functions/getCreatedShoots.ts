@@ -26,18 +26,47 @@ export const getCreatedShoots = async (userId: string) => {
       as: "participantUser",
     })
     .addFields({
-      "participants.userInfo": { $arrayElemAt: ["$participantUser", 0] },
+      "participants.userInfo": {
+        $cond: [
+          { $gt: [{ $size: "$participantUser" }, 0] },
+          {
+            $mergeObjects: [
+              { $arrayElemAt: ["$participantUser", 0] },
+              { isGuest: false },
+            ],
+          },
+          {
+            name: "$participants.guestName",
+            email: null,
+            isGuest: true,
+          },
+        ],
+      },
     })
     .lookup({
       from: "roundscores",
-      let: { shootId: "$_id", userId: "$participants.user" },
+      let: {
+        shootId: "$_id",
+        participantId: "$participants._id",
+        userId: "$participants.user",
+      },
       pipeline: [
         {
           $match: {
             $expr: {
               $and: [
                 { $eq: ["$shoot", "$$shootId"] },
-                { $eq: ["$user", "$$userId"] },
+                {
+                  $or: [
+                    { $eq: ["$participant", "$$participantId"] },
+                    {
+                      $and: [
+                        { $ne: ["$$userId", null] },
+                        { $eq: ["$user", "$$userId"] },
+                      ],
+                    },
+                  ],
+                },
               ],
             },
           },

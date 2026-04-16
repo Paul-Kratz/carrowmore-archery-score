@@ -18,6 +18,7 @@ export const getTopScorer = (shoot: IShootWithParticipants) => {
   return {
     name: topParticipant?.userInfo?.name || "Unknown",
     score: topParticipant.totalScore,
+    isGuest: Boolean(topParticipant?.userInfo?.isGuest),
   };
 };
 

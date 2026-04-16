@@ -1,5 +1,6 @@
 "use client";
 
+import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getUserLabel } from "@/helpers/getUserLabel";
 import { IUser } from "@/models";
 import { SCORE_OPTIONS } from "./scoreOptions";
@@ -26,7 +27,10 @@ export function ScorePanel({
   return (
     <div className="p-2">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-md font-bold">Score for {participantLabel}</div>
+        <div className="flex items-center gap-2 text-md font-bold">
+          <span>Score for {participantLabel}</span>
+          {selectedParticipantUser?.isGuest && <GuestBadge />}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {SCORE_OPTIONS.map((option) => (

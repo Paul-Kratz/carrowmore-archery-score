@@ -7,8 +7,11 @@ import { Trash2 } from "lucide-react";
 
 type ParticipantsCardProps = {
   currentUserId: string;
+  newGuestName: string;
   newParticipantId: string;
+  onAddGuest: () => void;
   onAddParticipant: () => void;
+  onGuestNameChange: (guestName: string) => void;
   onNewParticipantChange: (participantId: string) => void;
   onRemoveParticipant: (participantId: string) => void;
   participants: IUser[];
@@ -17,8 +20,11 @@ type ParticipantsCardProps = {
 
 export function ParticipantsCard({
   currentUserId,
+  newGuestName,
   newParticipantId,
+  onAddGuest,
   onAddParticipant,
+  onGuestNameChange,
   onNewParticipantChange,
   onRemoveParticipant,
   participants,
@@ -57,6 +63,29 @@ export function ParticipantsCard({
         </Button>
       </div>
 
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="col-span-3">
+          <input
+            aria-label="Guest name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            onChange={(event) => onGuestNameChange(event.target.value)}
+            placeholder="Add a guest by name"
+            value={newGuestName}
+          />
+        </div>
+        <Button
+          onClick={onAddGuest}
+          size="3"
+          disabled={!newGuestName.trim()}
+          className="col-span-1"
+        >
+          Add guest
+        </Button>
+      </div>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Guests are tracked only in this shoot and do not get site access.
+      </p>
+
       {participants.length > 0 ? (
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground mb-2">
@@ -68,9 +97,16 @@ export function ParticipantsCard({
               key={participant.id}
               className="flex items-center justify-between p-3 bg-muted rounded-lg"
             >
-              <span className="font-medium">
-                {getUserLabel(participant, currentUserId)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">
+                  {getUserLabel(participant, currentUserId)}
+                </span>
+                {participant.isGuest && (
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Guest
+                  </span>
+                )}
+              </div>
               <Button
                 onClick={() => onRemoveParticipant(participant.id)}
                 variant="ghost"

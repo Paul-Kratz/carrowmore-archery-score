@@ -152,6 +152,30 @@ describe("SummaryPage", () => {
       expect(screen.getByText("You")).toBeInTheDocument();
     });
 
+    it("shows a guest badge for guest participants", () => {
+      render(
+        <SummaryPage
+          currentUser={mockCurrentUser}
+          shootInfo={createShootInfo({
+            participants: [
+              {
+                id: "guest-1",
+                shoot: asObjectId("shoot1"),
+                user: null,
+                guestName: "Charlie",
+                joinedAt: new Date(),
+                userInfo: { name: "Charlie", isGuest: true },
+                roundScores: [10, 8, 4],
+                totalScore: 22,
+              },
+            ],
+          })}
+        />,
+      );
+
+      expect(screen.getAllByText("Guest").length).toBeGreaterThan(0);
+    });
+
     it("should render participant name", () => {
       render(
         <SummaryPage

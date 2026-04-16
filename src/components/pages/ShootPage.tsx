@@ -44,13 +44,13 @@ export function ShootPage({
     : null;
 
   const handleSetScore = async (value: number | null) => {
-    if (!shoot.id || !selectedParticipant?.userInfo.id) {
+    if (!shoot.id || !selectedParticipant?.id) {
       return;
     }
 
     await updateScore({
       shootId: shoot.id,
-      participantId: selectedParticipant?.userInfo.id,
+      participantId: selectedParticipant.id,
       roundNumber: currentStation,
       score: value,
     });
