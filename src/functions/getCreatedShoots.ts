@@ -48,7 +48,6 @@ export const getCreatedShoots = async (userId: string) => {
       let: {
         shootId: "$_id",
         participantId: "$participants._id",
-        userId: "$participants.user",
       },
       pipeline: [
         {
@@ -56,17 +55,7 @@ export const getCreatedShoots = async (userId: string) => {
             $expr: {
               $and: [
                 { $eq: ["$shoot", "$$shootId"] },
-                {
-                  $or: [
-                    { $eq: ["$participant", "$$participantId"] },
-                    {
-                      $and: [
-                        { $ne: ["$$userId", null] },
-                        { $eq: ["$user", "$$userId"] },
-                      ],
-                    },
-                  ],
-                },
+                { $eq: ["$participant", "$$participantId"] },
               ],
             },
           },

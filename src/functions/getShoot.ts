@@ -46,7 +46,6 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
       let: {
         shootId: "$_id",
         participantId: "$participants._id",
-        userId: "$participants.user",
       },
       pipeline: [
         {
@@ -54,17 +53,7 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
             $expr: {
               $and: [
                 { $eq: ["$shoot", "$$shootId"] },
-                {
-                  $or: [
-                    { $eq: ["$participant", "$$participantId"] },
-                    {
-                      $and: [
-                        { $ne: ["$$userId", null] },
-                        { $eq: ["$user", "$$userId"] },
-                      ],
-                    },
-                  ],
-                },
+                { $eq: ["$participant", "$$participantId"] },
               ],
             },
           },
@@ -84,7 +73,6 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
       let: {
         shootId: "$_id",
         participantId: "$participants._id",
-        userId: "$participants.user",
       },
       pipeline: [
         {
@@ -92,17 +80,7 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
             $expr: {
               $and: [
                 { $eq: ["$shoot", "$$shootId"] },
-                {
-                  $or: [
-                    { $eq: ["$participant", "$$participantId"] },
-                    {
-                      $and: [
-                        { $ne: ["$$userId", null] },
-                        { $eq: ["$user", "$$userId"] },
-                      ],
-                    },
-                  ],
-                },
+                { $eq: ["$participant", "$$participantId"] },
               ],
             },
           },

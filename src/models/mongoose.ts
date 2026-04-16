@@ -60,13 +60,13 @@ const ShootParticipantSchema = new Schema<IShootParticipant>(
 );
 ShootParticipantSchema.index(
   { shoot: 1, user: 1 },
-  { unique: true, partialFilterExpression: { user: { $exists: true } } },
+  { unique: true, partialFilterExpression: { user: { $type: "objectId" } } },
 );
 ShootParticipantSchema.index(
   { shoot: 1, guestNameNormalized: 1 },
   {
     unique: true,
-    partialFilterExpression: { guestNameNormalized: { $exists: true } },
+    partialFilterExpression: { guestNameNormalized: { $type: "string" } },
   },
 );
 
@@ -97,13 +97,13 @@ const RoundScoreSchema = new Schema<IRoundScore>(
 );
 RoundScoreSchema.index(
   { shoot: 1, user: 1, roundNumber: 1 },
-  { unique: true, partialFilterExpression: { user: { $exists: true } } },
+  { unique: true, partialFilterExpression: { user: { $type: "objectId" } } },
 );
 RoundScoreSchema.index(
   { shoot: 1, participant: 1, roundNumber: 1 },
   {
     unique: true,
-    partialFilterExpression: { participant: { $exists: true } },
+    partialFilterExpression: { participant: { $type: "objectId" } },
   },
 );
 

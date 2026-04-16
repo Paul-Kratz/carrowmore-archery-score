@@ -137,9 +137,6 @@ export const createNewShoot = async ({
         ROUNDS.map((roundNumber) => ({
           shoot: shootDoc._id,
           participant: participantDoc._id,
-          user: participantDoc.user
-            ? new Types.ObjectId(participantDoc.user.toString())
-            : undefined,
           roundNumber,
           score: null,
         })),

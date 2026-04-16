@@ -11,7 +11,6 @@ export const updateRound = async (
   await connectMongoose();
   const participant = await ShootParticipant.findById(participantId, {
     _id: 1,
-    user: 1,
   }).lean();
 
   if (!participant) {
@@ -28,24 +27,11 @@ export const updateRound = async (
     {
       shoot: new Types.ObjectId(shootId),
       roundNumber,
-      $or: [
-        {
-          participant: new Types.ObjectId(participantId),
-        },
-        ...(participant.user
-          ? [
-              {
-                user: new Types.ObjectId(participant.user.toString()),
-                participant: { $exists: false },
-              },
-            ]
-          : []),
-      ],
+      participant: new Types.ObjectId(participantId),
     },
     {
       $set: {
         score,
-        participant: new Types.ObjectId(participantId),
       },
     },
   );

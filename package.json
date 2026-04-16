@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "backup:db": "bash scripts/backup-db.sh",
+    "repair:participant-indexes": "tsx scripts/repair-participant-indexes.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

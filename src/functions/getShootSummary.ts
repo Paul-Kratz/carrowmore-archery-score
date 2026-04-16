@@ -52,7 +52,6 @@ export const getShootSummary = async ({
       let: {
         shootId: "$_id",
         participantId: "$participants._id",
-        userId: "$participants.user",
       },
       pipeline: [
         {
@@ -60,17 +59,7 @@ export const getShootSummary = async ({
             $expr: {
               $and: [
                 { $eq: ["$shoot", "$$shootId"] },
-                {
-                  $or: [
-                    { $eq: ["$participant", "$$participantId"] },
-                    {
-                      $and: [
-                        { $ne: ["$$userId", null] },
-                        { $eq: ["$user", "$$userId"] },
-                      ],
-                    },
-                  ],
-                },
+                { $eq: ["$participant", "$$participantId"] },
               ],
             },
           },
