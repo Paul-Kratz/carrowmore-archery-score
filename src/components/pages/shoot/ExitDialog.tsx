@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { ACTIVE_SHOOT_COOKIE } from "@/constants";
+import { ForestLoader } from "@/components/shared/ForestLoader";
+import { TreePine } from "lucide-react";
 
 type ExitDialogProps = {
   isShootFinished?: boolean;
@@ -69,6 +71,7 @@ export const ExitDialog = ({
             <TextArea
               size={"3"}
               value={notes}
+              disabled={isSaving}
               placeholder="Do you want to add any notes about this shoot?"
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -76,12 +79,24 @@ export const ExitDialog = ({
         </Flex>
         <Flex gap="3" mt="4" justify="end">
           <Dialog.Close>
-            <Button variant="soft" color="gray" size={"3"}>
+            <Button variant="soft" color="gray" size={"3"} disabled={isSaving}>
               Cancel
             </Button>
           </Dialog.Close>
-          <Button onClick={saveShoot} size={"3"} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save & Exit"}
+          <Button
+            onClick={saveShoot}
+            size={"3"}
+            disabled={isSaving}
+            className="forest-primary-button"
+          >
+            {isSaving ? (
+              <ForestLoader label="Saving shoot" size="sm" tone="light" />
+            ) : (
+              <>
+                <TreePine className="w-5 h-5 mr-1" />
+                Save & Exit
+              </>
+            )}
           </Button>
         </Flex>
       </Dialog.Content>

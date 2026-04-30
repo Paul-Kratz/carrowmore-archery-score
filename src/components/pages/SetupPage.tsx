@@ -9,11 +9,12 @@ import {
 } from "@/helpers/participantDisplay";
 import { IShoot, IUser, Mode } from "@/models";
 import { Button } from "@radix-ui/themes";
-import { History, Play } from "lucide-react";
+import { History, Sprout, TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { AddUsernameDialog } from "@/components/pages/setup/AddUsernameDialog";
+import { ForestLoader } from "@/components/shared/ForestLoader";
 import { ModeSelectorCard } from "./setup/ModeSelectorCard";
 import { ParticipantsCard } from "./setup/ParticipantsCard";
 import { SetupHeader } from "./setup/SetupHeader";
@@ -26,25 +27,25 @@ type SetupPageProps = {
 export function SetupPage({ users, currentUser }: SetupPageProps) {
   const [mode, setMode] = useState<Mode>(Mode.yellow);
   const [participants, setParticipants] = useState<IUser[]>([]);
-  const [newParticipantId, setNewParticipantId] = useState<string>("");
-  const [newGuestName, setNewGuestName] = useState("");
+  const [archerQuery, setArcherQuery] = useState("");
+  const [isCreatingShoot, setIsCreatingShoot] = useState(false);
   const router = useRouter();
 
-  const canStartShoot = participants.length > 0;
+  const canStartShoot = Boolean(currentUser?.id) && !isCreatingShoot;
 
-  const handleAddParticipant = () => {
-    const newParticipant = users.find((u) => u.id === newParticipantId);
+  const handleAddParticipant = (participantId: string) => {
+    const newParticipant = users.find((u) => u.id === participantId);
     if (
       newParticipant &&
+      newParticipant.id !== currentUser.id &&
       !participants.find((p) => p.id === newParticipant.id)
     ) {
       setParticipants([...participants, newParticipant]);
-      setNewParticipantId("");
     }
   };
 
-  const handleAddGuest = () => {
-    const trimmedName = newGuestName.trim();
+  const handleAddGuest = (guestName: string) => {
+    const trimmedName = guestName.trim();
     const normalizedGuestName = normalizeParticipantName(trimmedName);
 
     if (!trimmedName || trimmedName.length > MAX_GUEST_NAME_LENGTH) {
@@ -73,7 +74,6 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
         updatedAt: new Date(),
       },
     ]);
-    setNewGuestName("");
   };
 
   const handleRemoveParticipant = (id: string) => {
@@ -82,6 +82,11 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
   };
 
   const createNewShoot = async () => {
+    if (isCreatingShoot) {
+      return;
+    }
+
+    setIsCreatingShoot(true);
     const body = {
       mode,
       participantIds: participants
@@ -92,73 +97,94 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
         .map((participant) => participant.name ?? ""),
     };
 
-    const response = await fetch("/api/shoot", {
-      method: "post",
-      body: JSON.stringify(body),
-    });
+    try {
+      const response = await fetch("/api/shoot", {
+        method: "post",
+        body: JSON.stringify(body),
+      });
 
-    if (!response.ok) {
-      throw new Error("Failed to create shoot");
+      if (!response.ok) {
+        throw new Error("Failed to create shoot");
+      }
+
+      const newShoot = formatResponse<IShoot>(await response.json()) as IShoot;
+
+      Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
+
+      router.push("/shoot/1");
+    } finally {
+      setIsCreatingShoot(false);
     }
-
-    const newShoot = formatResponse<IShoot>(await response.json()) as IShoot;
-
-    Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
-
-    router.push("/shoot/1");
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="forest-page bg-background min-h-screen">
       <SetupHeader />
-      <main className="container max-w-2xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">Start a New Shoot</h2>
+      <main className="container max-w-2xl mx-auto px-4 py-5 pb-28">
+        <div className="mb-5 rounded-2xl border border-border bg-[linear-gradient(135deg,#fbf7e8,#dfe9cb)] p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-[var(--club-red-dark)] text-primary-foreground">
+              <Sprout className="h-5 w-5 text-[var(--club-gold)]" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold leading-tight">
+                Start a New Shoot
+              </h2>
+              <p className="text-sm text-muted-foreground">Forest round setup</p>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-6 ">
-          <ModeSelectorCard mode={mode} onModeChange={setMode} />
+        <div className="space-y-4">
+          <ModeSelectorCard
+            disabled={isCreatingShoot}
+            mode={mode}
+            onModeChange={setMode}
+          />
 
           <ParticipantsCard
-            currentUserId={currentUser.id}
-            newGuestName={newGuestName}
-            newParticipantId={newParticipantId}
+            archerQuery={archerQuery}
+            currentUser={currentUser}
+            disabled={isCreatingShoot}
             onAddGuest={handleAddGuest}
             onAddParticipant={handleAddParticipant}
-            onGuestNameChange={setNewGuestName}
-            onNewParticipantChange={setNewParticipantId}
+            onArcherQueryChange={setArcherQuery}
             onRemoveParticipant={handleRemoveParticipant}
             participants={participants}
             users={users}
           />
-
-          {/* Start Button */}
-          <div className="flex flex-col items-center">
-            <Button onClick={createNewShoot} disabled={!canStartShoot} size="4">
-              <Play className="w-5 h-5 mr-1" />
-              Start Shoot
-            </Button>
-          </div>
-
-          {!canStartShoot && (
-            <p className="text-center text-sm text-muted-foreground">
-              Add at least one participant to start the shoot
-            </p>
-          )}
-
-          <div className="flex flex-col items-center">
-            <Button
-              variant="surface"
-              onClick={() => router.push("/history")}
-              size="4"
-            >
-              <History className="w-5 h-5 mr-1" />
-              History
-            </Button>
-          </div>
         </div>
         {currentUser && !currentUser.name && <AddUsernameDialog />}
       </main>
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-[var(--card)]/95 px-4 py-3 shadow-[0_-10px_24px_rgba(30,38,28,0.12)] backdrop-blur">
+        <div className="mx-auto grid max-w-2xl grid-cols-[1fr_auto] gap-3">
+          <Button
+            onClick={createNewShoot}
+            disabled={!canStartShoot}
+            size="4"
+            className="forest-primary-button"
+            style={{ width: "100%" }}
+          >
+            {isCreatingShoot ? (
+              <ForestLoader label="Starting shoot" size="sm" tone="light" />
+            ) : (
+              <>
+                <TreePine className="w-5 h-5 mr-1" />
+                Start Shoot
+              </>
+            )}
+          </Button>
+          <Button
+            variant="surface"
+            onClick={() => router.push("/history")}
+            size="4"
+            aria-label="History"
+            disabled={isCreatingShoot}
+          >
+            <History className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

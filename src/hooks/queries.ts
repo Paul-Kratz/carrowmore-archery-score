@@ -43,18 +43,20 @@ export const useUpdateShoot = () => {
 };
 
 export const useUpdateScore = () => {
+  type UpdateScoreInput = {
+    shootId: string;
+    participantId: string;
+    roundNumber: number;
+    score: number | null;
+  };
+
   return useMutation({
     mutationFn: async ({
       shootId,
       participantId,
       roundNumber,
       score,
-    }: {
-      shootId: string;
-      participantId: string;
-      roundNumber: number;
-      score: number | null;
-    }) => {
+    }: UpdateScoreInput) => {
       const response = await fetch(`/api/roundScore`, {
         method: "PATCH",
         headers: {
@@ -65,8 +67,57 @@ export const useUpdateScore = () => {
       if (!response.ok) {
         throw new Error("Error updating round score");
       }
-      queryClient.invalidateQueries({ queryKey: ["shoot", shootId] });
       return response;
+    },
+    onMutate: async ({ shootId, participantId, roundNumber, score }) => {
+      await queryClient.cancelQueries({ queryKey: ["shoot", shootId] });
+
+      const previousShoot =
+        queryClient.getQueryData<IShootWithParticipants>(["shoot", shootId]);
+
+      queryClient.setQueryData<IShootWithParticipants>(
+        ["shoot", shootId],
+        (currentShoot) => {
+          if (!currentShoot) {
+            return currentShoot;
+          }
+
+          return {
+            ...currentShoot,
+            participants: currentShoot.participants.map((participant) => {
+              if (participant.id !== participantId) {
+                return participant;
+              }
+
+              const nextRoundScores = [...participant.roundScores];
+              nextRoundScores[roundNumber - 1] = score;
+              const nextTotalScore = nextRoundScores.reduce<number>(
+                (total, roundScore) => total + (roundScore ?? 0),
+                0,
+              );
+
+              return {
+                ...participant,
+                roundScores: nextRoundScores,
+                totalScore: nextTotalScore,
+              };
+            }),
+          };
+        },
+      );
+
+      return { previousShoot };
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previousShoot) {
+        queryClient.setQueryData(
+          ["shoot", variables.shootId],
+          context.previousShoot,
+        );
+      }
+    },
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["shoot", variables.shootId] });
     },
   });
 };

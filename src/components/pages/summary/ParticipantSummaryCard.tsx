@@ -38,7 +38,9 @@ export function ParticipantSummaryCard({
           </div>
         </div>
         <div className="flex flex-col gap-1 items-center">
-          <h3 className="font-bold">{participant.totalScore}</h3>
+          <h3 className="font-bold text-[var(--club-red-dark)]">
+            {participant.totalScore}
+          </h3>
           <p className="text-sm text-muted-foreground">points</p>
         </div>
       </div>

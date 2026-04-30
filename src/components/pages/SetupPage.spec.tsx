@@ -109,13 +109,13 @@ describe("SetupPage", () => {
     }) as typeof fetch;
   });
 
-  it("creates a shoot and navigates with the client router", async () => {
+  it("creates a shoot with a registered archer and navigates with the client router", async () => {
     render(<SetupPage users={mockUsers} currentUser={mockCurrentUser} />);
 
-    fireEvent.change(screen.getByLabelText("Select a participant"), {
-      target: { value: "user-2" },
+    fireEvent.change(screen.getByLabelText("Add archer by name"), {
+      target: { value: "Bob" },
     });
-    fireEvent.click(screen.getByText("Add"));
+    fireEvent.click(screen.getByText("Bob"));
     fireEvent.click(screen.getByText("Start Shoot"));
 
     await waitFor(() => {
@@ -138,10 +138,10 @@ describe("SetupPage", () => {
   it("includes guest names when creating a shoot", async () => {
     render(<SetupPage users={mockUsers} currentUser={mockCurrentUser} />);
 
-    fireEvent.change(screen.getByLabelText("Guest name"), {
+    fireEvent.change(screen.getByLabelText("Add archer by name"), {
       target: { value: "Charlie" },
     });
-    fireEvent.click(screen.getByText("Add guest"));
+    fireEvent.click(screen.getByText('Add guest "Charlie"'));
     fireEvent.click(screen.getByText("Start Shoot"));
 
     await waitFor(() => {
@@ -153,6 +153,26 @@ describe("SetupPage", () => {
             mode: Mode.yellow,
             participantIds: [],
             guestNames: ["Charlie"],
+          }),
+        }),
+      );
+    });
+  });
+
+  it("allows the signed-in archer to start a solo shoot", async () => {
+    render(<SetupPage users={mockUsers} currentUser={mockCurrentUser} />);
+
+    fireEvent.click(screen.getByText("Start Shoot"));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/shoot",
+        expect.objectContaining({
+          method: "post",
+          body: JSON.stringify({
+            mode: Mode.yellow,
+            participantIds: [],
+            guestNames: [],
           }),
         }),
       );

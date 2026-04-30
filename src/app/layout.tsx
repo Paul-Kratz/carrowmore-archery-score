@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
-import "./globals.css";
 import "@radix-ui/themes/styles.css";
+import "./globals.css";
 import { Theme } from "@radix-ui/themes";
 
 import { QueryProvider } from "@/contexts/QueryContext";
@@ -26,7 +26,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-full">
         <QueryProvider>
-          <Theme accentColor="green">
+          <Theme accentColor="green" grayColor="sage" radius="medium">
             <SessionProvider>{children}</SessionProvider>
           </Theme>
         </QueryProvider>

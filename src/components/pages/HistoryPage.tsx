@@ -9,6 +9,7 @@ import { DeleteShootDialog } from "./history/DeleteShootDialog";
 import { HistoryEmptyState } from "./history/HistoryEmptyState";
 import { HistoryHeader } from "./history/HistoryHeader";
 import { ShootHistoryCard } from "./history/ShootHistoryCard";
+import { ForestLoader } from "../shared/ForestLoader";
 
 const ShootsLineChart = dynamic(
   () =>
@@ -17,7 +18,11 @@ const ShootsLineChart = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <div className="p-4 text-center">Loading statistics...</div>,
+    loading: () => (
+      <div className="flex justify-center p-4">
+        <ForestLoader label="Loading statistics" size="lg" />
+      </div>
+    ),
   },
 );
 
@@ -33,7 +38,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   const [deleteShootId, setDeleteShootId] = useState<string | null>(null);
   const { participatedShoots, trackedShoots, isLoading } =
     useGetParticipatedShoots(currentUser.id); // Refetch participated shoots to get latest data after deletion
-  const { mutateAsync } = useDeleteShoot();
+  const { mutateAsync, isPending: isDeletingShoot } = useDeleteShoot();
   const onBack = () => {
     window.history.back();
   };
@@ -45,6 +50,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   };
 
   const finaliseDeleteShoot = async () => {
+    if (isDeletingShoot) return;
     if (!deleteShootId) return;
     const shootToDelete = trackedShoots.find((s) => s.id === deleteShootId);
     if (currentUser.id !== shootToDelete?.createdBy) return; // Extra safety check to ensure only creator can delete
@@ -61,7 +67,9 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     <div className="min-h-screen bg-background">
       <HistoryHeader onBack={onBack} />
       {isLoading ? (
-        <div className="p-4 text-center">Loading your shoot history...</div>
+        <div className="flex min-h-64 items-center justify-center p-4">
+          <ForestLoader label="Loading your shoot history" size="lg" />
+        </div>
       ) : (
         <main className="container max-w-2xl mx-auto px-4 py-2">
           {participatedShoots.length === 0 ? (
@@ -143,9 +151,14 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
       )}
 
       <DeleteShootDialog
+        isDeleting={isDeletingShoot}
         open={deleteShootId !== null}
         onConfirm={finaliseDeleteShoot}
-        onOpenChange={() => setDeleteShootId(null)}
+        onOpenChange={() => {
+          if (!isDeletingShoot) {
+            setDeleteShootId(null);
+          }
+        }}
       />
     </div>
   );

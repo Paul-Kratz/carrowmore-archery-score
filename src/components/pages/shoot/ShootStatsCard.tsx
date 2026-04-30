@@ -17,18 +17,22 @@ export function ShootStatsCard({ selectedParticipant }: ShootStatsCardProps) {
   ).toFixed(1);
 
   return (
-    <Card className="m-2 p-4 bg-muted/50">
+    <Card className="m-2 p-4 bg-[var(--card)]">
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
-          <div className="text-2xl font-bold">{selectedParticipant?.totalScore}</div>
+          <div className="text-2xl font-bold text-[var(--club-red-dark)]">
+            {selectedParticipant?.totalScore}
+          </div>
           <div className="text-xs text-muted-foreground">Total Score</div>
         </div>
         <div>
-          <div className="text-2xl font-bold">{completedCount}</div>
+          <div className="text-2xl font-bold text-[var(--forest)]">
+            {completedCount}
+          </div>
           <div className="text-xs text-muted-foreground">Completed</div>
         </div>
         <div>
-          <div className="text-2xl font-bold">{average}</div>
+          <div className="text-2xl font-bold text-[var(--leather)]">{average}</div>
           <div className="text-xs text-muted-foreground">Average</div>
         </div>
       </div>

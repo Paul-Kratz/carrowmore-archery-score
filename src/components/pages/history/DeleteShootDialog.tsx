@@ -1,14 +1,17 @@
 "use client";
 
+import { ForestLoader } from "@/components/shared/ForestLoader";
 import { AlertDialog, Button, Flex } from "@radix-ui/themes";
 
 type DeleteShootDialogProps = {
+  isDeleting?: boolean;
   open: boolean;
   onConfirm: () => Promise<void> | void;
   onOpenChange: () => void;
 };
 
 export function DeleteShootDialog({
+  isDeleting = false,
   open,
   onConfirm,
   onOpenChange,
@@ -28,13 +31,22 @@ export function DeleteShootDialog({
 
         <Flex gap="3" mt="4" justify="end">
           <AlertDialog.Cancel>
-            <Button variant="soft" color="gray">
+            <Button variant="soft" color="gray" disabled={isDeleting}>
               Cancel
             </Button>
           </AlertDialog.Cancel>
 
-          <Button variant="solid" color="red" onClick={onConfirm}>
-            Delete Shoot
+          <Button
+            variant="solid"
+            color="red"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <ForestLoader label="Deleting shoot" size="sm" tone="light" />
+            ) : (
+              "Delete Shoot"
+            )}
           </Button>
         </Flex>
       </AlertDialog.Content>

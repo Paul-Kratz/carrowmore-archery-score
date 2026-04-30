@@ -92,18 +92,18 @@ export function ShootHistoryCard({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-muted/50 rounded-lg p-3">
+        <div className="bg-[var(--card)] border border-border rounded-lg p-3">
           <div className="text-xs text-muted-foreground mb-1">Progress</div>
           <div className="font-semibold">{completedStations} / 18 stations</div>
         </div>
         {userScore ? (
-          <div className="bg-muted/50 rounded-lg p-3">
+          <div className="bg-[var(--card)] border border-border rounded-lg p-3">
             <div className="text-xs text-muted-foreground mb-1">Your Score</div>
             <div className="font-semibold">{userScore.score} pts</div>
           </div>
         ) : (
           topScorer && (
-            <div className="bg-muted/50 rounded-lg p-3">
+            <div className="bg-[var(--card)] border border-border rounded-lg p-3">
               <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                 <Trophy className="w-3 h-3" />
                 Top Score

@@ -18,7 +18,7 @@ export function SummaryHeaderCard({
 
   return (
     <Card className="p-6 space-y-2">
-      <h2 className="text-2xl font-bold">
+      <h2 className="text-2xl font-bold text-[var(--club-red-dark)]">
         {formatSummaryDate(createdAtTimestamp, false)}
       </h2>
       <Badge
