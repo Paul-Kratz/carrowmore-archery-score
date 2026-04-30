@@ -5,6 +5,16 @@ export enum Mode {
   red = "red",
 }
 
+export enum CompetitionStatus {
+  open = "open",
+  finished = "finished",
+}
+
+export enum CompetitionRoundKey {
+  morning = "morning",
+  afternoon = "afternoon",
+}
+
 type ObjectId = Types.ObjectId;
 
 export interface IUser {
@@ -66,4 +76,45 @@ export interface IShootChartData {
   createdAt: string;
   roundScores: (number | null)[];
   totalScore: number;
+}
+
+export interface ICompetition {
+  id: string;
+  title: string;
+  date: Date;
+  mode: Mode;
+  createdBy: ObjectId | IUser | string;
+  code: string;
+  status: CompetitionStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ICompetitionParticipant {
+  id: string;
+  competition: ObjectId | ICompetition;
+  displayName: string;
+  normalizedName: string;
+  tokenHash: string;
+  checkedInAt: Date;
+}
+
+export interface ICompetitionScore {
+  id: string;
+  competition: ObjectId | ICompetition;
+  participant: ObjectId | ICompetitionParticipant;
+  roundKey: CompetitionRoundKey;
+  stationNumber: number;
+  score?: number | null;
+}
+
+export interface ICompetitionParticipantWithScores
+  extends ICompetitionParticipant {
+  scores: Record<CompetitionRoundKey, (number | null)[]>;
+  totals: Record<CompetitionRoundKey | "overall", number>;
+  completed: Record<CompetitionRoundKey | "overall", number>;
+}
+
+export interface ICompetitionWithParticipants extends ICompetition {
+  participants: ICompetitionParticipantWithScores[];
 }

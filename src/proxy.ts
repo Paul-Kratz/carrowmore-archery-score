@@ -8,6 +8,10 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasGateCode = request.cookies.has(GATE_CODE_COOKIE);
 
+  if (pathname.startsWith("/competition/")) {
+    return NextResponse.next();
+  }
+
   if (pathname === "/gate") {
     if (hasGateCode) {
       return NextResponse.redirect(new URL("/", request.url));

@@ -33,7 +33,7 @@ function createRequest(url: string, cookies: Record<string, string> = {}) {
         cookieMap.has(name) ? { name, value: cookieMap.get(name)! } : undefined,
       set: (name: string, value: string) => cookieMap.set(name, value),
     },
-  } as Parameters<typeof proxy>[0];
+  } as unknown as Parameters<typeof proxy>[0];
 }
 
 describe("Proxy", () => {
@@ -87,6 +87,15 @@ describe("Proxy", () => {
 
     it("should allow /gate page when no gate code cookie is present", async () => {
       const req = createRequest("http://localhost:3000/gate");
+
+      const response = await proxy(req);
+
+      expect(response.status).toBe(200);
+      expect(mockAuth).not.toHaveBeenCalled();
+    });
+
+    it("should allow public competition routes without gate code or auth", async () => {
+      const req = createRequest("http://localhost:3000/competition/spring-123");
 
       const response = await proxy(req);
 

@@ -9,7 +9,7 @@ import {
 } from "@/helpers/participantDisplay";
 import { IShoot, IUser, Mode } from "@/models";
 import { Button } from "@radix-ui/themes";
-import { History, Play } from "lucide-react";
+import { History, Play, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
@@ -154,6 +154,16 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
             >
               <History className="w-5 h-5 mr-1" />
               History
+            </Button>
+          </div>
+          <div className="flex flex-col items-center">
+            <Button
+              variant="surface"
+              onClick={() => router.push("/competitions")}
+              size="4"
+            >
+              <Trophy className="w-5 h-5 mr-1" />
+              Competitions
             </Button>
           </div>
         </div>

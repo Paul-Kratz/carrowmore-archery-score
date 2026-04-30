@@ -172,6 +172,6 @@ describe("getShootSummary", () => {
       userId: "user123",
     });
 
-    expect(result.participants).toHaveLength(2);
+    expect((result as typeof mockData).participants).toHaveLength(2);
   });
 });
