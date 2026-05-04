@@ -104,6 +104,29 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
         ],
       },
     })
+    .lookup({
+      from: "roundscores",
+      let: {
+        shootId: "$_id",
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $eq: ["$shoot", "$$shootId"] },
+                { $ne: ["$score", null] },
+                { $ne: ["$scoredAt", null] },
+              ],
+            },
+          },
+        },
+        { $sort: { scoredAt: 1 } },
+        { $limit: 1 },
+        { $project: { scoredAt: 1, _id: 0 } },
+      ],
+      as: "firstScoredRound",
+    })
     .group({
       _id: "$_id",
       mode: { $first: "$mode" },
@@ -112,6 +135,9 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
       notes: { $first: "$notes" },
       participants: { $push: "$participants" },
       createdAt: { $first: "$createdAt" },
+      firstScoredAt: {
+        $first: { $arrayElemAt: ["$firstScoredRound.scoredAt", 0] },
+      },
     });
 
   return formatResponse<

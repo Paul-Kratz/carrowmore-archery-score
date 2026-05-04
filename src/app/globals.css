@@ -313,6 +313,40 @@
       inset 0 1px 0 rgba(251, 247, 232, 0.12) !important;
   }
 
+  .forest-chart-panel {
+    background:
+      linear-gradient(180deg, rgba(251, 247, 232, 0.94), rgba(223, 231, 199, 0.9)),
+      var(--card);
+  }
+
+  .forest-chart-surface {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid rgba(18, 52, 38, 0.14);
+    background:
+      linear-gradient(180deg, rgba(251, 247, 232, 0.78), rgba(223, 231, 199, 0.82) 65%, rgba(196, 211, 160, 0.56)),
+      var(--parchment);
+  }
+
+  .forest-chart-surface::before {
+    content: "";
+    position: absolute;
+    inset: auto -1rem -0.5rem;
+    height: 42%;
+    pointer-events: none;
+    opacity: 0.16;
+    background-image: url("data:image/svg+xml,%3Csvg width='420' height='110' viewBox='0 0 420 110' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23123426'%3E%3Cpath opacity='.25' d='M0 72c38-23 73-27 105-12 28 13 56 9 89-13 42-28 82-23 122 8 31 24 67 26 104 8v47H0z'/%3E%3Cpath opacity='.42' d='M22 76l18-38 18 38h-7l13 22H16l13-22zM92 79l14-29 14 29h-5l10 18H87l10-18zM173 74l22-47 22 47h-8l14 24h-56l14-24zM276 79l16-34 16 34h-6l11 19h-42l11-19zM350 75l20-43 20 43h-8l14 24h-52l14-24z'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-position: center bottom;
+    background-size: 420px 110px;
+  }
+
+  .forest-chart-surface > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .forest-loader svg {
     overflow: visible;
   }

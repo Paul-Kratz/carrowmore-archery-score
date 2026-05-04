@@ -53,8 +53,9 @@ export function ParticipantsCard({
           .slice(0, 4);
   const exactMatch = availableUsers.find(
     (user) =>
-      normalizeParticipantName(getParticipantDisplayName(user, currentUserId)) ===
-      normalizedQuery,
+      normalizeParticipantName(
+        getParticipantDisplayName(user, currentUserId),
+      ) === normalizedQuery,
   );
   const canAddGuest =
     archerQuery.trim().length > 0 &&
@@ -95,13 +96,13 @@ export function ParticipantsCard({
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-border bg-[#dfe9cb] px-4 py-3">
+      <div className="border-b border-border bg-(--club-red-dark) rounded-sm px-4 py-3 text-primary-foreground">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <UsersRound className="h-5 w-5 text-[var(--club-red-dark)]" />
+            <UsersRound className="h-5 w-5 text-(--club-gold)" />
             <h2 className="text-base font-bold">Gather archers</h2>
           </div>
-          <span className="rounded-full bg-[var(--club-red-dark)] px-3 py-1 text-xs font-bold text-primary-foreground">
+          <span className="rounded-full bg-(--club-gold) px-3 py-1 text-xs font-bold text-primary-foreground">
             {selectedParticipants.length}
           </span>
         </div>
@@ -121,7 +122,7 @@ export function ParticipantsCard({
               <input
                 id="archer-search"
                 aria-label="Add archer by name"
-                className="w-full rounded-md border border-border bg-[var(--card)] py-2 pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={disabled}
                 onChange={(event) => onArcherQueryChange(event.target.value)}
                 placeholder="Type a name"
@@ -182,7 +183,7 @@ export function ParticipantsCard({
             Starting line
           </p>
           <div className="grid gap-2">
-            <div className="flex min-h-12 items-center justify-between rounded-xl border border-[var(--club-gold-dark)] bg-[#eef4d7] px-3 py-2 shadow-sm">
+            <div className="flex min-h-10 items-center justify-between rounded-xl border border-(--club-gold-dark) bg-[#eef4d7] px-3 py-2 shadow-sm">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="truncate font-semibold">
                   {getUserLabel(currentUser, currentUserId)}
@@ -192,7 +193,7 @@ export function ParticipantsCard({
             {participants.map((participant) => (
               <div
                 key={participant.id}
-                className="flex min-h-12 items-center justify-between rounded-xl border border-border bg-[var(--card)] px-3 py-2 shadow-sm"
+                className="flex min-h-10 items-center justify-between rounded-xl border border-border bg-card px-3 py-2 shadow-sm"
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate font-semibold">

@@ -74,6 +74,7 @@ export const useUpdateScore = () => {
 
       const previousShoot =
         queryClient.getQueryData<IShootWithParticipants>(["shoot", shootId]);
+      const scoredAt = score === null ? null : new Date();
 
       queryClient.setQueryData<IShootWithParticipants>(
         ["shoot", shootId],
@@ -84,6 +85,8 @@ export const useUpdateScore = () => {
 
           return {
             ...currentShoot,
+            firstScoredAt:
+              currentShoot.firstScoredAt ?? scoredAt ?? currentShoot.firstScoredAt,
             participants: currentShoot.participants.map((participant) => {
               if (participant.id !== participantId) {
                 return participant;

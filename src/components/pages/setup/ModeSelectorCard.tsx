@@ -17,9 +17,9 @@ export function ModeSelectorCard({
 }: ModeSelectorCardProps) {
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-border bg-[var(--club-red-dark)] px-4 py-3 text-primary-foreground">
+      <div className="border-b border-border bg-(--club-red-dark) rounded-sm px-4 py-3 text-primary-foreground">
         <div className="flex items-center gap-2">
-          <Map className="h-5 w-5 text-[var(--club-gold)]" />
+          <Map className="h-5 w-5 text-(--club-gold)" />
           <h2 className="text-base font-bold">Choose trail</h2>
         </div>
       </div>
@@ -33,8 +33,8 @@ export function ModeSelectorCard({
             htmlFor="red"
             className={`min-h-28 cursor-pointer rounded-xl border-2 p-4 transition-colors ${
               mode === "red"
-                ? "border-[var(--club-red-dark)] bg-[#dbe8d1] shadow-sm"
-                : "border-border bg-[var(--card)] hover:border-[var(--club-red-dark)]"
+                ? "border-(--club-red-dark) bg-[#dbe8d1] shadow-sm"
+                : "border-border bg-card hover:border-(--club-red-dark)"
             }`}
           >
             <div className="flex h-full flex-col justify-between gap-3">
@@ -44,7 +44,9 @@ export function ModeSelectorCard({
               </div>
               <div>
                 <div className="text-lg font-bold">Red</div>
-                <div className="text-xs text-muted-foreground">Route markers</div>
+                <div className="text-xs text-muted-foreground">
+                  Route markers
+                </div>
               </div>
             </div>
           </label>
@@ -53,8 +55,8 @@ export function ModeSelectorCard({
             htmlFor="yellow"
             className={`min-h-28 cursor-pointer rounded-xl border-2 p-4 transition-colors ${
               mode === "yellow"
-                ? "border-[var(--club-red-dark)] bg-[#dbe8d1] shadow-sm"
-                : "border-border bg-[var(--card)] hover:border-[var(--club-red-dark)]"
+                ? "border-(--club-red-dark) bg-[#dbe8d1] shadow-sm"
+                : "border-border bg-card hover:border-(--club-red-dark)"
             }`}
           >
             <div className="flex h-full flex-col justify-between gap-3">
@@ -64,7 +66,9 @@ export function ModeSelectorCard({
               </div>
               <div>
                 <div className="text-lg font-bold">Yellow</div>
-                <div className="text-xs text-muted-foreground">Route markers</div>
+                <div className="text-xs text-muted-foreground">
+                  Route markers
+                </div>
               </div>
             </div>
           </label>

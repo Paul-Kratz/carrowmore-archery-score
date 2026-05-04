@@ -2,47 +2,113 @@
 
 import { IShootParticipantWithScores } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
-import { Card, Table } from "@radix-ui/themes";
-import { getColourForScore } from "./summaryUtils";
 
 type StationBreakdownCardProps = {
   participants: IShootParticipantWithScores[];
+};
+
+const getStationScoreTone = (score: number | null) => {
+  if (score === null) {
+    return {
+      accent: "bg-border",
+      className: "border-border/50 bg-card/55 text-muted-foreground",
+    };
+  }
+
+  if (score >= 16) {
+    return {
+      accent: "bg-(--club-gold-dark)",
+      className:
+        "border-[#b9c899] bg-[#eef3df]/85 text-(--club-red-dark)",
+    };
+  }
+
+  if (score >= 10) {
+    return {
+      accent: "bg-(--club-gold)",
+      className:
+        "border-[#cad8a9] bg-[#f2f5e8]/85 text-(--club-red-dark)",
+    };
+  }
+
+  if (score >= 4) {
+    return {
+      accent: "bg-(--leather)",
+      className: "border-[#d7c69f] bg-[#f7efd9]/85 text-(--leather)",
+    };
+  }
+
+  return {
+    accent: "bg-[#a25a4d]",
+    className: "border-[#d9b2aa] bg-[#f5e3dd]/85 text-[#7d2d25]",
+  };
 };
 
 export function StationBreakdownCard({
   participants,
 }: StationBreakdownCardProps) {
   return (
-    <Card className="p-6 space-y-4">
-      <Table.Root>
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-            {Array.from({ length: 18 }, (_, index) => (
-              <Table.ColumnHeaderCell key={index}>{index + 1}</Table.ColumnHeaderCell>
-            ))}
-            <Table.ColumnHeaderCell>Total</Table.ColumnHeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {participants.map((participant) => (
-            <Table.Row key={participant.id}>
-              <Table.Cell className="font-bold">
-                <div className="flex items-center gap-2">
-                  <span>{participant.userInfo.name}</span>
-                  {participant.userInfo.isGuest && <GuestBadge />}
+    <article className="forest-chart-panel overflow-hidden rounded-xl border border-border p-3 shadow-sm">
+      <div className="space-y-3">
+        {participants.map((participant) => {
+          const completedStations = participant.roundScores.filter(
+            (score) => score !== null,
+          ).length;
+
+          return (
+            <section
+              key={participant.id}
+              className="rounded-lg border border-border/70 bg-card/75 p-3"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 font-bold text-(--club-red-dark)">
+                    <span className="truncate">{participant.userInfo.name}</span>
+                    {participant.userInfo.isGuest && <GuestBadge />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {completedStations} / 18 stations scored
+                  </p>
                 </div>
-              </Table.Cell>
-              {participant.roundScores.map((score, index) => (
-                <Table.Cell key={index} className={getColourForScore(score)}>
-                  {score}
-                </Table.Cell>
-              ))}
-              <Table.Cell className="font-bold">{participant.totalScore}</Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
-    </Card>
+                <div className="shrink-0 text-right">
+                  <div className="text-xl font-bold leading-none text-(--club-red-dark)">
+                    {participant.totalScore}
+                  </div>
+                  <div className="text-[10px] uppercase text-muted-foreground">
+                    Total
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-6 gap-1.5" aria-label="Station scores">
+                {participant.roundScores.map((score, index) => {
+                  const tone = getStationScoreTone(score);
+
+                  return (
+                    <div
+                      key={index}
+                      aria-label={`${participant.userInfo.name} station ${
+                        index + 1
+                      } score ${score ?? "not scored"}`}
+                      className={`min-h-12 overflow-hidden rounded-md border text-center ${tone.className}`}
+                    >
+                      <div className={`h-1 w-full ${tone.accent}`} />
+                      <div className="px-1 py-1">
+                        <div className="text-[10px] font-bold leading-tight text-muted-foreground">
+                          {index + 1}
+                        </div>
+                        <div className="text-sm font-bold leading-tight">
+                          {score ?? "-"}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </article>
   );
 }

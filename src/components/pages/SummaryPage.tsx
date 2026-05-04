@@ -1,10 +1,9 @@
 "use client";
 import { IShootWithParticipants, IUser } from "@/models";
-import { Button } from "@radix-ui/themes";
-import { ArrowLeft } from "lucide-react";
 import { ParticipantSummaryCard } from "./summary/ParticipantSummaryCard";
 import { StationBreakdownCard } from "./summary/StationBreakdownCard";
 import { SummaryHeaderCard } from "./summary/SummaryHeaderCard";
+import { Header } from "../shared/Header";
 
 export const SummaryPage = ({
   currentUser,
@@ -18,39 +17,54 @@ export const SummaryPage = ({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-[var(--club-red)] text-primary-foreground border-b-4 border-[var(--club-gold)] shadow-lg">
-        <div className="container max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={onBack}
-              variant="ghost"
-              className="text-primary-foreground"
-              size="4"
-            >
-              <ArrowLeft className="w-5 h-5 mr-1" />
-            </Button>
-            <h1 className="text-xl font-bold">Shoot Details</h1>
-          </div>
-        </div>
-      </header>
-      <main className="container max-w-2xl mx-auto px-4 py-2">
+    <div className="forest-page min-h-screen bg-background">
+      <Header
+        onBack={onBack}
+        title="Shoot Details"
+        subtitle="Summary of your shoot"
+      />
+      <main className="container max-w-2xl mx-auto px-4 py-3 pb-10">
         <SummaryHeaderCard
           currentUserId={currentUser.id}
           shootInfo={shootInfo}
         />
 
-        <h3 className="text-lg font-semibold mt-6">Participants</h3>
-        {shootInfo.participants.map((participant) => (
-          <ParticipantSummaryCard
-            key={participant.id}
-            currentUserId={currentUser.id}
-            participant={participant}
-          />
-        ))}
-        <h3 className="text-lg font-semibold mt-6">Station Breakdown</h3>
-        <StationBreakdownCard participants={shootInfo.participants} />
+        <section className="mt-5">
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-(--club-red-dark)">
+                Participants
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Totals and score pattern for each archer
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-muted-foreground">
+              {shootInfo.participants.length} total
+            </span>
+          </div>
+          <div className="space-y-2.5">
+            {shootInfo.participants.map((participant) => (
+              <ParticipantSummaryCard
+                key={participant.id}
+                currentUserId={currentUser.id}
+                participant={participant}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-5">
+          <div className="mb-2">
+            <h3 className="text-lg font-bold text-(--club-red-dark)">
+              Station Breakdown
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Per-station score detail for this shoot
+            </p>
+          </div>
+          <StationBreakdownCard participants={shootInfo.participants} />
+        </section>
       </main>
     </div>
   );

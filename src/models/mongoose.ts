@@ -92,6 +92,7 @@ const RoundScoreSchema = new Schema<IRoundScore>(
     },
     roundNumber: { type: Number, required: true },
     score: { type: Number, required: false },
+    scoredAt: { type: Date, required: false },
   },
   { timestamps: false }
 );

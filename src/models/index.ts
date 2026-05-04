@@ -25,6 +25,7 @@ export interface IShoot {
   createdAt: Date;
   updatedAt: Date;
   completed: boolean;
+  firstScoredAt?: Date | string | null;
   notes?: string | null;
 }
 
@@ -44,6 +45,7 @@ export interface IRoundScore {
   user?: ObjectId | IUser | null;
   roundNumber: number;
   score?: number | null;
+  scoredAt?: Date | null;
 }
 export interface IShootParticipantWithScores extends IShootParticipant {
   roundScores: (number | null)[];

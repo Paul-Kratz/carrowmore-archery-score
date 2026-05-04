@@ -23,16 +23,29 @@ export const updateRound = async (
     };
   }
 
+  const scoreUpdate =
+    score === null
+      ? {
+          $set: {
+            score,
+          },
+          $unset: {
+            scoredAt: "",
+          },
+        }
+      : {
+          $set: {
+            score,
+            scoredAt: new Date(),
+          },
+        };
+
   return RoundScore.updateOne(
     {
       shoot: new Types.ObjectId(shootId),
       roundNumber,
       participant: new Types.ObjectId(participantId),
     },
-    {
-      $set: {
-        score,
-      },
-    },
+    scoreUpdate,
   );
 };

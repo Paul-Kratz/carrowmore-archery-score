@@ -199,25 +199,17 @@ describe("SummaryPage", () => {
     });
   });
 
-  describe("Score Distribution Table", () => {
-    it("should render column headers for all possible scores", () => {
+  describe("Score Breakdown", () => {
+    it("should render score total cells", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo()}
         />,
       );
-      // Headers appear in score distribution and station breakdown tables
-      // Check that the possible score values appear as headers
-      const headers = screen.getAllByRole("columnheader");
-      const headerTexts = headers.map((h) => h.textContent);
-      expect(headerTexts).toContain("0");
-      expect(headerTexts).toContain("4");
-      expect(headerTexts).toContain("8");
-      expect(headerTexts).toContain("10");
-      expect(headerTexts).toContain("14");
-      expect(headerTexts).toContain("16");
-      expect(headerTexts).toContain("20");
+      [20, 16, 14, 10, 8, 4, 0].forEach((score) => {
+        expect(screen.getByLabelText(new RegExp(`Score ${score} count`))).toBeInTheDocument();
+      });
     });
 
     it("should count score occurrences correctly", () => {
@@ -229,12 +221,13 @@ describe("SummaryPage", () => {
           shootInfo={createShootInfo()}
         />,
       );
-      const cells = screen.getAllByRole("cell");
-      // The score distribution table row should contain the counts
-      // Find cells with the expected count values in order
-      const distributionCells = cells.slice(0, 7); // first table body row has 7 cells
-      const counts = distributionCells.map((c) => c.textContent);
-      expect(counts).toEqual(["2", "3", "3", "3", "3", "2", "2"]);
+      expect(screen.getByLabelText("Score 20 count 2")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 16 count 2")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 14 count 3")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 10 count 3")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 8 count 3")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 4 count 3")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 0 count 2")).toBeInTheDocument();
     });
 
     it("should show 0 count for scores not achieved", () => {
@@ -256,14 +249,13 @@ describe("SummaryPage", () => {
           })}
         />,
       );
-      const cells = screen.getAllByRole("cell");
-      const distributionCells = cells.slice(0, 7);
-      const counts = distributionCells.map((c) => c.textContent);
-      // Only score 20 has count 3, rest are 0
-      expect(counts).toEqual(["0", "0", "0", "0", "0", "0", "3"]);
+      expect(screen.getByLabelText("Score 20 count 3")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 16 count 0")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 14 count 0")).toBeInTheDocument();
+      expect(screen.getByLabelText("Score 0 count 0")).toBeInTheDocument();
     });
 
-    it("should apply gray class for zero-count cells", () => {
+    it("should apply score total tone classes", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
@@ -282,68 +274,42 @@ describe("SummaryPage", () => {
           })}
         />,
       );
-      const cells = screen.getAllByRole("cell");
-      // First 6 cells (scores 0,4,8,10,14,16) should have gray class
-      for (let i = 0; i < 6; i++) {
-        expect(cells[i].className).toContain("text-gray-300");
-      }
-    });
-
-    it("should apply score color class for non-zero count cells", () => {
-      render(
-        <SummaryPage
-          currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({
-            participants: [
-              {
-                id: "p1",
-                shoot: asObjectId("shoot1"),
-                user: asObjectId("user1"),
-                joinedAt: new Date(),
-                userInfo: { id: "user1", name: "Alice" },
-                roundScores: [0, 4, 20],
-                totalScore: 24,
-              },
-            ],
-          })}
-        />,
+      expect(screen.getByLabelText("Score 20 count 1").className).toContain(
+        "bg-[#eef3df]",
       );
-      const cells = screen.getAllByRole("cell");
-      // Score 0 → text-red-600
-      expect(cells[0].className).toContain("text-red-600");
-      // Score 4 → text-orange-500
-      expect(cells[1].className).toContain("text-orange-500");
-      // Score 20 → text-green-700
-      expect(cells[6].className).toContain("text-green-700");
+      expect(screen.getByLabelText("Score 0 count 0").className).toContain(
+        "bg-[#f5e3dd]",
+      );
     });
   });
 
-  describe("Station Breakdown Table", () => {
-    it("should render station numbers 1-18 as column headers", () => {
+  describe("Station Breakdown", () => {
+    it("should render station numbers 1-18 as score tiles", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo()}
         />,
       );
-      const headers = screen.getAllByRole("columnheader");
-      const headerTexts = headers.map((h) => h.textContent);
       for (let i = 1; i <= 18; i++) {
-        expect(headerTexts).toContain(String(i));
+        expect(
+          screen.getByLabelText(`Alice station ${i} score ${
+            createShootInfo().participants[0].roundScores[i - 1]
+          }`),
+        ).toBeInTheDocument();
       }
     });
 
-    it("should render Name and Total column headers", () => {
+    it("should render participant name and total in the station breakdown", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo()}
         />,
       );
-      const headers = screen.getAllByRole("columnheader");
-      const headerTexts = headers.map((h) => h.textContent);
-      expect(headerTexts).toContain("Name");
-      expect(headerTexts).toContain("Total");
+      expect(screen.getAllByText("Alice").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("180").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("18 / 18 stations scored")).toBeInTheDocument();
     });
   });
 });

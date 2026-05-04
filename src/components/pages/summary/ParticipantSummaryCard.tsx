@@ -1,9 +1,17 @@
 "use client";
 
 import { IShootParticipantWithScores } from "@/models";
-import { Badge, Card, Table } from "@radix-ui/themes";
 import { GuestBadge } from "@/components/shared/GuestBadge";
-import { POSSIBLE_SCORES, getColourForScore, getScoreCounts } from "./summaryUtils";
+import { getScoreCounts } from "./summaryUtils";
+
+const SCORE_TOTALS = [20, 16, 14, 10, 8, 4, 0];
+
+const getScoreCountTone = (score: number) => {
+  if (score >= 16) return "border-[#b9c899] bg-[#eef3df] text-(--club-red-dark)";
+  if (score >= 10) return "border-[#cad8a9] bg-[#f2f5e8] text-(--club-red-dark)";
+  if (score >= 4) return "border-[#d7c69f] bg-[#f7efd9] text-(--leather)";
+  return "border-[#d9b2aa] bg-[#f5e3dd] text-[#7d2d25]";
+};
 
 type ParticipantSummaryCardProps = {
   currentUserId: string;
@@ -15,63 +23,81 @@ export function ParticipantSummaryCard({
   participant,
 }: ParticipantSummaryCardProps) {
   const counts = getScoreCounts(participant.roundScores);
+  const completedStations = participant.roundScores.filter(
+    (score) => score !== null,
+  ).length;
+  const averageScore =
+    completedStations === 0
+      ? "0.00"
+      : (participant.totalScore / completedStations).toFixed(2);
 
   return (
-    <Card className="p-4">
-      <div className="flex flex-row items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-row gap-3">
-            <span className="font-bold">{participant.userInfo.name}</span>
-            {participant.userInfo.isGuest && <GuestBadge />}
-            {participant.userInfo.id === currentUserId &&
-              !participant.userInfo.isGuest && (
-              <Badge size="2" color="green" variant="surface">
-                You
-              </Badge>
-              )}
-          </div>
-          <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              {participant.roundScores.length} / 18 stations | Avg:{" "}
-              {(participant.totalScore / participant.roundScores.length).toFixed(2)}
+    <article className="w-full overflow-hidden rounded-xl border border-border bg-card/95 p-0 shadow-sm">
+      <div className="p-4">
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="mb-1 flex flex-wrap items-center gap-2">
+              <span className="truncate font-bold text-(--club-red-dark)">
+                {participant.userInfo.name}
+              </span>
+              {participant.userInfo.isGuest && <GuestBadge />}
+              {participant.userInfo.id === currentUserId &&
+                !participant.userInfo.isGuest && (
+                  <span className="rounded-full border border-border bg-[#dfe7c7] px-2 py-0.5 text-xs font-bold text-(--club-red-dark)">
+                    You
+                  </span>
+                )}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span>{completedStations} / 18 stations</span>
+              <span>Avg {averageScore}</span>
             </div>
           </div>
+          <div className="shrink-0 text-right">
+            <div className="text-3xl font-bold leading-none text-(--club-red-dark)">
+              {participant.totalScore}
+            </div>
+            <p className="text-xs text-muted-foreground">points</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-1 items-center">
-          <h3 className="font-bold text-[var(--club-red-dark)]">
-            {participant.totalScore}
-          </h3>
-          <p className="text-sm text-muted-foreground">points</p>
+
+        <div
+          aria-label="Score totals"
+          className="overflow-hidden rounded-lg border border-border/70 bg-[#fbf7e8]/80"
+        >
+          <div className="grid grid-cols-[1fr_auto] border-b border-border/60 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+            <span>Score</span>
+            <span>Times</span>
+          </div>
+          {SCORE_TOTALS.map((score) => {
+            const count = counts.get(score) || 0;
+            const countLabel = count === 1 ? "time" : "times";
+
+            return (
+              <div
+                key={score}
+                aria-label={`Score ${score} count ${count}`}
+                className={`grid grid-cols-[minmax(0,1fr)_minmax(92px,auto)] items-center gap-3 border-b px-3 py-2.5 last:border-b-0 ${getScoreCountTone(score)}`}
+              >
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Score
+                  </div>
+                  <div className="font-bold leading-tight">{score} points</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Times scored
+                  </div>
+                  <div className="text-lg font-bold leading-tight">
+                    {count} {countLabel}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      <hr className="my-4" />
-
-      <Table.Root>
-        <Table.Header>
-          <Table.Row>
-            {POSSIBLE_SCORES.map((score) => (
-              <Table.ColumnHeaderCell key={score}>{score}</Table.ColumnHeaderCell>
-            ))}
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          <Table.Row>
-            {POSSIBLE_SCORES.map((score) => {
-              const count = counts.get(score) || 0;
-
-              return (
-                <Table.Cell
-                  key={score}
-                  className={count > 0 ? getColourForScore(score) : "text-gray-300"}
-                >
-                  {count}
-                </Table.Cell>
-              );
-            })}
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>
-    </Card>
+    </article>
   );
 }

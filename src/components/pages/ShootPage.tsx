@@ -9,8 +9,8 @@ import { useGetShoot, useUpdateScore } from "@/hooks/queries";
 import { ExitDialog } from "@/components/pages/shoot/ExitDialog";
 import { ParticipantSelector } from "./shoot/ParticipantSelector";
 import { ScorePanel } from "./shoot/ScorePanel";
-import { ShootHeader } from "./shoot/ShootHeader";
 import { StationNavigationCard } from "./shoot/StationNavigationCard";
+import { Header } from "../shared/Header";
 
 type ShootPageProps = {
   currentStation: number;
@@ -48,10 +48,12 @@ export function ShootPage({
           (participant) => participant.id === selectedParticipant.id,
         )
       : -1;
-  const stationCompletionCounts = Array.from({ length: 18 }, (_, index) =>
-    (participants ?? []).filter(
-      (participant) => participant.roundScores[index] !== null,
-    ).length,
+  const stationCompletionCounts = Array.from(
+    { length: 18 },
+    (_, index) =>
+      (participants ?? []).filter(
+        (participant) => participant.roundScores[index] !== null,
+      ).length,
   );
   const participantCount = participants?.length ?? 0;
   const remainingScoreCount = (participants ?? []).reduce(
@@ -80,7 +82,8 @@ export function ShootPage({
     const nextUnscoredParticipant = Array.from(
       { length: Math.max(participants.length - 1, 0) },
       (_, offset) => {
-        const nextIndex = (selectedParticipantIndex + offset + 1) % participants.length;
+        const nextIndex =
+          (selectedParticipantIndex + offset + 1) % participants.length;
         return participants[nextIndex];
       },
     ).find(
@@ -104,43 +107,12 @@ export function ShootPage({
   const canGoPrevious = currentStation - 1 > 0;
   const canGoNext = currentStation < 18;
 
-  const onPreviousParticipant = () => {
-    if (!participants?.length) {
-      return;
-    }
-
-    const previousIndex =
-      selectedParticipantIndex <= 0
-        ? participants.length - 1
-        : selectedParticipantIndex - 1;
-
-    setSelectedParticipantId(participants[previousIndex].id);
-  };
-
-  const onNextParticipant = () => {
-    if (!participants?.length) {
-      return;
-    }
-
-    const nextIndex =
-      selectedParticipantIndex < 0 ||
-      selectedParticipantIndex >= participants.length - 1
-        ? 0
-        : selectedParticipantIndex + 1;
-
-    setSelectedParticipantId(participants[nextIndex].id);
-  };
-
-  const allParticipantsCompleted = () => {
-    return participants?.every(
-      (participant) =>
-        participant.roundScores.every((score) => score !== null),
-    );
-  };
-
   return (
     <div className="forest-page bg-background flex min-h-screen w-full max-w-full flex-col justify-between overflow-x-hidden">
-      <ShootHeader
+      <Header
+        title="In the Forest"
+        subtitle="Score round"
+        showBackButton={false}
         exitTrigger={
           <ExitDialog
             isShootFinished={false}
@@ -151,7 +123,7 @@ export function ShootPage({
                 size="1"
                 className="p-4 text-primary-foreground"
               >
-                <Home className="w-5 h-5" />
+                <Home className="w-6 h-6 text-(--club-gold)" />
               </Button>
             }
           />
@@ -167,8 +139,6 @@ export function ShootPage({
             currentStation={currentStation}
             currentUserId={currentUser.id}
             disabled={isUpdatingScore}
-            onNextParticipant={onNextParticipant}
-            onPreviousParticipant={onPreviousParticipant}
             onSelect={setSelectedParticipantId}
             participants={participants || []}
             selectedParticipantId={selectedParticipant?.id ?? null}
@@ -188,7 +158,13 @@ export function ShootPage({
           </div>
 
           {currentStation === 18 && (
-            <div className="justify-center flex mx-4 my-2">
+            <div className="justify-center flex flex-col mx-4 my-2">
+              {remainingScoreCount > 0 && (
+                <p className="text-xs text-red-700 mb-2 text-center">
+                  You have {remainingScoreCount} scores left to track. Are you
+                  sure you want to finish the shoot?
+                </p>
+              )}
               <ExitDialog
                 isShootFinished={true}
                 shoot={shoot}
@@ -197,16 +173,12 @@ export function ShootPage({
                     size="3"
                     className="forest-primary-button"
                     style={{ width: "100%" }}
-                    disabled={!allParticipantsCompleted() || isUpdatingScore}
+                    disabled={isUpdatingScore}
                   >
-                    {remainingScoreCount === 0 ? (
-                      <>
-                        <TreePine className="w-5 h-5 mr-1" />
-                        Finish shoot
-                      </>
-                    ) : (
-                      `${remainingScoreCount} scores left`
-                    )}
+                    <>
+                      <TreePine className="w-5 h-5 mr-1" />
+                      Finish shoot
+                    </>
                   </Button>
                 }
               />

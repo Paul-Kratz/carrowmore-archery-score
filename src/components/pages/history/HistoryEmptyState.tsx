@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy } from "lucide-react";
+import { TreePine } from "lucide-react";
 
 type HistoryEmptyStateProps = {
   title: string;
@@ -14,11 +14,23 @@ export function HistoryEmptyState({
   compact = false,
 }: HistoryEmptyStateProps) {
   return (
-    <div className={`text-center ${compact ? "py-12" : "py-12"}`}>
-      <Trophy
-        className={`${compact ? "w-12 h-12 mb-3" : "w-16 h-16 mb-4"} mx-auto text-muted-foreground`}
-      />
-      <h3 className={`${compact ? "font-semibold mb-2" : "font-semibold text-lg mb-2"}`}>
+    <div
+      className={`rounded-xl border border-dashed border-border bg-[var(--card)]/80 text-center ${
+        compact ? "px-4 py-10" : "px-4 py-12"
+      }`}
+    >
+      <div
+        className={`mx-auto mb-3 grid place-items-center rounded-full bg-[#edf4e9] text-[var(--club-red-dark)] ${
+          compact ? "h-12 w-12" : "h-16 w-16"
+        }`}
+      >
+        <TreePine className={compact ? "h-7 w-7" : "h-9 w-9"} />
+      </div>
+      <h3
+        className={`text-[var(--club-red-dark)] ${
+          compact ? "font-semibold mb-2" : "font-semibold text-lg mb-2"
+        }`}
+      >
         {title}
       </h3>
       <p className={`${compact ? "text-sm" : ""} text-muted-foreground`}>
