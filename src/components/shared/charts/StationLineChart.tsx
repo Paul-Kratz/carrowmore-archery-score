@@ -1,5 +1,6 @@
 "use client";
 
+import { CLUBS } from "@/constants";
 import { IShootChartData } from "@/models";
 import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -14,7 +15,6 @@ import {
   YAxis,
 } from "recharts";
 
-const STATIONS = Array.from({ length: 18 }, (_, i) => i);
 const FOREST = "#123426";
 const MOSS = "#6d7f47";
 const PARCHMENT_LINE = "#d8cfb8";
@@ -110,6 +110,14 @@ const StationStat = ({
 
 export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
   const [selectedStation, setSelectedStation] = useState(0);
+  const stationCount = Math.max(
+    1,
+    ...data.map(
+      (shoot) => CLUBS[shoot.clubId || "carrowmore"]?.totalStations ?? 18,
+    ),
+  );
+  const stations = Array.from({ length: stationCount }, (_, i) => i);
+  const activeStation = Math.min(selectedStation, stationCount - 1);
 
   const sorted = useMemo(
     () =>
@@ -122,7 +130,7 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
 
   const chartData = sorted.map((shoot) => ({
     date: formatShortDate(shoot.createdAt),
-    score: shoot.roundScores[selectedStation] ?? null,
+    score: shoot.roundScores[activeStation] ?? null,
     mode: shoot.mode,
   }));
   const stationScores = chartData
@@ -153,14 +161,14 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
       </div>
 
       <div className="mb-2 grid grid-cols-3 gap-x-4">
-        <StationStat label="Station" value={selectedStation + 1} />
+        <StationStat label="Station" value={activeStation + 1} />
         <StationStat label="Best" value={bestScore ?? "-"} />
         <StationStat label="Average" value={averageScore ?? "-"} />
       </div>
 
       <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
-        {STATIONS.map((station) => {
-          const selected = station === selectedStation;
+        {stations.map((station) => {
+          const selected = station === activeStation;
 
           return (
             <button

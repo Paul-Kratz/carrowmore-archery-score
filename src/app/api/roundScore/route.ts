@@ -1,5 +1,4 @@
 import { updateRound } from "@/functions/updateRound";
-import { validRoundNumber, validScore } from "@/helpers";
 import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { NextRequest, NextResponse } from "next/server";
 import { getShoot } from "@/functions/getShoot";
@@ -30,20 +29,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (!validScore(score)) {
-      return NextResponse.json(
-        { error: "Invalid score value passed" },
-        { status: 400 },
-      );
-    }
-
-    if (!validRoundNumber(roundNumber)) {
-      return NextResponse.json(
-        { error: "Invalid roundNumber value passed" },
-        { status: 400 },
-      );
-    }
-
     const access = await getShootAccess({
       shootId,
       userId: session.user.id,
@@ -57,7 +42,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const result = await updateRound(participantId, shootId, roundNumber, score);
+    const result = await updateRound(
+      participantId,
+      shootId,
+      roundNumber,
+      score,
+    );
 
     if (result && "matchedCount" in result && result.matchedCount === 0) {
       return NextResponse.json(

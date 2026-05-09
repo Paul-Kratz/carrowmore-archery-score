@@ -72,6 +72,7 @@ export const getCreatedShoots = async (userId: string) => {
     .group({
       _id: "$_id",
       mode: { $first: "$mode" },
+      clubId: { $first: "$clubId" },
       createdBy: { $first: "$createdBy" },
       completed: { $first: "$completed" },
       notes: { $first: "$notes" },

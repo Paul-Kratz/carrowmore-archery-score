@@ -33,7 +33,7 @@ function createRequest(url: string, cookies: Record<string, string> = {}) {
         cookieMap.has(name) ? { name, value: cookieMap.get(name)! } : undefined,
       set: (name: string, value: string) => cookieMap.set(name, value),
     },
-  } as Parameters<typeof proxy>[0];
+  } as unknown as Parameters<typeof proxy>[0];
 }
 
 describe("Proxy", () => {

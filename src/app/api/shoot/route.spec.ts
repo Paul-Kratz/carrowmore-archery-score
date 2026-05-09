@@ -43,6 +43,7 @@ describe("/api/shoot", () => {
         body: JSON.stringify({
           mode: "yellow",
           participantIds: [validParticipantId],
+          clubId: "carrowmore",
         }),
       });
 
@@ -63,6 +64,7 @@ describe("/api/shoot", () => {
           userId: "spoofed-user",
           mode: "yellow",
           participantIds: [validParticipantId],
+          clubId: "carrowmore",
         }),
       });
 
@@ -73,6 +75,7 @@ describe("/api/shoot", () => {
         mode: "yellow",
         participantIds: [validParticipantId],
         guestNames: [],
+        clubId: "carrowmore",
       });
       expect(response.status).toBe(201);
     });
@@ -87,6 +90,7 @@ describe("/api/shoot", () => {
           mode: "yellow",
           participantIds: [validParticipantId],
           guestNames: ["Charlie"],
+          clubId: "carrowmore",
         }),
       });
 
@@ -97,6 +101,7 @@ describe("/api/shoot", () => {
         mode: "yellow",
         participantIds: [validParticipantId],
         guestNames: ["Charlie"],
+        clubId: "carrowmore",
       });
       expect(response.status).toBe(201);
     });
@@ -109,6 +114,7 @@ describe("/api/shoot", () => {
         body: JSON.stringify({
           mode: "yellow",
           participantIds: ["not-an-object-id"],
+          clubId: "carrowmore",
         }),
       });
 
@@ -116,7 +122,49 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: "Invalid mode, participantIds, or guestNames",
+        error: "Invalid mode, participantIds, guestNames, or clubId",
+      });
+      expect(mockCreateNewShoot).not.toHaveBeenCalled();
+    });
+
+    it("returns 400 for unknown clubs", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "yellow",
+          participantIds: [validParticipantId],
+          clubId: "unknown-club",
+        }),
+      });
+
+      const response = await POST(request as never);
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: "Invalid mode, participantIds, guestNames, or clubId",
+      });
+      expect(mockCreateNewShoot).not.toHaveBeenCalled();
+    });
+
+    it("returns 400 for modes not supported by the selected club", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "blue",
+          participantIds: [validParticipantId],
+          clubId: "carrowmore",
+        }),
+      });
+
+      const response = await POST(request as never);
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: "Invalid mode, participantIds, guestNames, or clubId",
       });
       expect(mockCreateNewShoot).not.toHaveBeenCalled();
     });
@@ -133,6 +181,7 @@ describe("/api/shoot", () => {
           mode: "yellow",
           participantIds: [],
           guestNames: [""],
+          clubId: "carrowmore",
         }),
       });
 

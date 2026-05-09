@@ -8,12 +8,14 @@ type ModeSelectorCardProps = {
   disabled?: boolean;
   mode: Mode;
   onModeChange: (mode: Mode) => void;
+  availableModes: Mode[];
 };
 
 export function ModeSelectorCard({
   disabled = false,
   mode,
   onModeChange,
+  availableModes,
 }: ModeSelectorCardProps) {
   return (
     <Card className="overflow-hidden p-0">
@@ -29,49 +31,32 @@ export function ModeSelectorCard({
         disabled={disabled}
       >
         <div className="grid grid-cols-2 gap-3 p-4">
-          <label
-            htmlFor="red"
-            className={`min-h-28 cursor-pointer rounded-xl border-2 p-4 transition-colors ${
-              mode === "red"
-                ? "border-(--club-red-dark) bg-[#dbe8d1] shadow-sm"
-                : "border-border bg-card hover:border-(--club-red-dark)"
-            }`}
-          >
-            <div className="flex h-full flex-col justify-between gap-3">
-              <div className="flex items-center justify-between">
-                <RadioGroup.Item value={Mode.red} id="red" />
-                <CircleDot className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <div className="text-lg font-bold">Red</div>
-                <div className="text-xs text-muted-foreground">
-                  Route markers
+          {availableModes.map((availableMode) => (
+            <label
+              key={availableMode}
+              htmlFor={availableMode}
+              className={`min-h-28 cursor-pointer rounded-xl border-2 p-4 transition-colors ${
+                mode === availableMode
+                  ? "border-(--club-red-dark) bg-[#dbe8d1] shadow-sm"
+                  : "border-border bg-card hover:border-(--club-red-dark)"
+              }`}
+            >
+              <div className="flex h-full flex-col justify-between gap-3">
+                <div className="flex items-center justify-between">
+                  <RadioGroup.Item value={availableMode} id={availableMode} />
+                  <CircleDot className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <div className="text-lg font-bold capitalize">
+                    {availableMode}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Route markers
+                  </div>
                 </div>
               </div>
-            </div>
-          </label>
-
-          <label
-            htmlFor="yellow"
-            className={`min-h-28 cursor-pointer rounded-xl border-2 p-4 transition-colors ${
-              mode === "yellow"
-                ? "border-(--club-red-dark) bg-[#dbe8d1] shadow-sm"
-                : "border-border bg-card hover:border-(--club-red-dark)"
-            }`}
-          >
-            <div className="flex h-full flex-col justify-between gap-3">
-              <div className="flex items-center justify-between">
-                <RadioGroup.Item value={Mode.yellow} id="yellow" />
-                <CircleDot className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <div className="text-lg font-bold">Yellow</div>
-                <div className="text-xs text-muted-foreground">
-                  Route markers
-                </div>
-              </div>
-            </div>
-          </label>
+            </label>
+          ))}
         </div>
       </RadioGroup.Root>
     </Card>

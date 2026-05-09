@@ -1,6 +1,7 @@
 "use client";
 
 import { GuestBadge } from "@/components/shared/GuestBadge";
+import { CLUBS } from "@/constants";
 import { IShootWithParticipants } from "@/models";
 import { Button } from "@radix-ui/themes";
 import { ChevronRight, Notebook, Trash2 } from "lucide-react";
@@ -37,6 +38,7 @@ export function ShootHistoryCard({
     : null;
   const completionStats = getShootCompletionStats(shoot);
   const modeColor = shoot.mode === "red" ? "#9f1418" : "#b8871a";
+  const clubName = CLUBS[shoot.clubId || "carrowmore"]?.name ?? shoot.clubId;
   const primaryMetric = userScore
     ? {
         label: "Your score",
@@ -71,6 +73,10 @@ export function ShootHistoryCard({
               )}
               <span>
                 {formatHistoryDate(new Date(shoot.createdAt).getTime())}
+              </span>
+              <span aria-hidden="true">-</span>
+              <span className="rounded-full border border-(--club-gold-dark)/50 bg-[#eef4d7] px-2 py-0.5 font-semibold text-(--club-red-dark)">
+                {clubName}
               </span>
               <span aria-hidden="true">-</span>
               <span className="inline-flex items-center gap-1 uppercase">

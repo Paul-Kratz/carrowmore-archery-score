@@ -1,11 +1,6 @@
-import { NUM_STATIONS, SCORING_TABLE } from "@/constants";
+import { CLUBS } from "@/constants";
 
-// Only accept a score included in the scoring table
-export const validScore = (score: number | null) => {
-  return score === null || SCORING_TABLE.flat().includes(score) || score === 0;
-};
-
-// Only accept numbers between 0 & 18 as rounds
-export const validRoundNumber = (roundNumber: number) => {
-  return roundNumber > 0 && roundNumber <= NUM_STATIONS;
+// Only accept numbers between 1 and the total number of stations for the club
+export const validRoundNumber = (roundNumber: number, clubId: string) => {
+  return roundNumber > 0 && roundNumber <= CLUBS?.[clubId]?.totalStations;
 };

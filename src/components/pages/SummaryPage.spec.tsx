@@ -37,6 +37,7 @@ const createShootInfo = (
     },
   ],
   ...overrides,
+  clubId: overrides.clubId ?? "carrowmore",
 });
 
 describe("SummaryPage", () => {
@@ -59,6 +60,19 @@ describe("SummaryPage", () => {
         />,
       );
       expect(screen.getByText("red")).toBeInTheDocument();
+    });
+
+    it("should render the club name", () => {
+      render(
+        <SummaryPage
+          currentUser={mockCurrentUser}
+          shootInfo={createShootInfo()}
+        />,
+      );
+
+      expect(screen.getAllByText("Carrowmore Archery").length).toBeGreaterThan(
+        0,
+      );
     });
 
     it("should render notes when present", () => {

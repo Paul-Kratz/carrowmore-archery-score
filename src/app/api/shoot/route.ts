@@ -5,8 +5,9 @@ import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { updateShoot } from "@/functions/updateShoot";
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { CLUBS } from "@/constants";
+import { Mode } from "@/models";
 
-const VALID_MODES = new Set(["yellow", "red"]);
 const CREATE_SHOOT_VALIDATION_ERRORS = new Set([
   "Guest names cannot be empty",
   "Guest names must be unique",
@@ -23,18 +24,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { mode, participantIds, guestNames = [] } = body;
+    const { mode, participantIds, guestNames = [], clubId } = body;
+    const club = CLUBS[clubId];
 
-    if (!mode || !Array.isArray(participantIds) || !Array.isArray(guestNames)) {
+    if (
+      !mode ||
+      !Array.isArray(participantIds) ||
+      !Array.isArray(guestNames) ||
+      !clubId
+    ) {
       return NextResponse.json(
-        { error: "Missing required fields: mode, participantIds, guestNames" },
+        {
+          error:
+            "Missing required fields: mode, participantIds, guestNames, clubId",
+        },
         { status: 400 },
       );
     }
 
     if (
       typeof mode !== "string" ||
-      !VALID_MODES.has(mode) ||
+      !club ||
+      !club.modes.includes(mode as Mode) ||
       !participantIds.every(
         (participantId) =>
           typeof participantId === "string" && isValidObjectId(participantId),
@@ -42,7 +53,7 @@ export async function POST(request: NextRequest) {
       !guestNames.every((guestName) => typeof guestName === "string")
     ) {
       return NextResponse.json(
-        { error: "Invalid mode, participantIds, or guestNames" },
+        { error: "Invalid mode, participantIds, guestNames, or clubId" },
         { status: 400 },
       );
     }
@@ -52,6 +63,7 @@ export async function POST(request: NextRequest) {
       mode: mode as "yellow" | "red",
       participantIds,
       guestNames,
+      clubId,
     });
 
     return NextResponse.json(shoot, { status: 201 });

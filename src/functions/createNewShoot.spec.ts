@@ -59,7 +59,11 @@ jest.mock("@/helpers/formatResponse", () => ({
 }));
 
 jest.mock("@/constants", () => ({
-  NUM_STATIONS: 10,
+  CLUBS: {
+    carrowmore: {
+      totalStations: 10,
+    },
+  },
 }));
 
 import { createNewShoot } from "./createNewShoot";
@@ -68,6 +72,13 @@ const USER_ID = "507f1f77bcf86cd799439001";
 const USER_TWO_ID = "507f1f77bcf86cd799439002";
 const USER_THREE_ID = "507f1f77bcf86cd799439003";
 const SHOOT_ID = "507f1f77bcf86cd799439011";
+const CLUB_ID = "carrowmore";
+
+const createShoot = (
+  input: Omit<Parameters<typeof createNewShoot>[0], "clubId"> & {
+    clubId?: string;
+  },
+) => createNewShoot({ clubId: CLUB_ID, ...input });
 
 describe("createNewShoot", () => {
   beforeEach(() => {
@@ -88,7 +99,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [USER_TWO_ID],
@@ -107,7 +118,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    const result = await createNewShoot({
+    const result = await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [],
@@ -118,6 +129,7 @@ describe("createNewShoot", () => {
         expect.objectContaining({
           mode: "yellow",
           completed: false,
+          clubId: CLUB_ID,
         }),
       ],
       expect.objectContaining({
@@ -137,7 +149,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "red",
       participantIds: [],
@@ -161,7 +173,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [USER_TWO_ID],
@@ -188,7 +200,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [USER_TWO_ID, USER_TWO_ID, USER_ID],
@@ -204,7 +216,7 @@ describe("createNewShoot", () => {
     mockUserFind.mockResolvedValue(mockUsers);
 
     await expect(
-      createNewShoot({
+      createShoot({
         userId: USER_ID,
         mode: "yellow",
         participantIds: [USER_TWO_ID],
@@ -222,7 +234,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [USER_TWO_ID],
@@ -230,6 +242,23 @@ describe("createNewShoot", () => {
 
     // 2 participants * 10 rounds = 20 round scores
     expect(mockRoundScoreInsertMany.mock.calls[0][0]).toHaveLength(20);
+  });
+
+  it("rejects unknown club ids", async () => {
+    const mockUsers = [{ _id: USER_ID }];
+
+    mockUserFind.mockResolvedValue(mockUsers);
+
+    await expect(
+      createShoot({
+        userId: USER_ID,
+        mode: "yellow",
+        participantIds: [],
+        clubId: "unknown-club",
+      }),
+    ).rejects.toThrow("Invalid clubId");
+
+    expect(mockShootCreate).not.toHaveBeenCalled();
   });
 
   it("should create round scores with correct structure", async () => {
@@ -242,7 +271,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [],
@@ -273,7 +302,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(mockShoot);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [USER_TWO_ID],
@@ -303,7 +332,7 @@ describe("createNewShoot", () => {
 
   it("rejects duplicate guest names after normalization", async () => {
     await expect(
-      createNewShoot({
+      createShoot({
         userId: USER_ID,
         mode: "yellow",
         participantIds: [],
@@ -317,7 +346,7 @@ describe("createNewShoot", () => {
     mockUserFind.mockResolvedValue(mockUsers);
 
     await expect(
-      createNewShoot({
+      createShoot({
         userId: USER_ID,
         mode: "yellow",
         participantIds: [],
@@ -330,7 +359,7 @@ describe("createNewShoot", () => {
 
   it("rejects overly long guest names", async () => {
     await expect(
-      createNewShoot({
+      createShoot({
         userId: USER_ID,
         mode: "yellow",
         participantIds: [],
@@ -350,7 +379,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue(formattedShoot);
 
-    const result = await createNewShoot({
+    const result = await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [],
@@ -365,7 +394,7 @@ describe("createNewShoot", () => {
 
     mockUserFind.mockResolvedValue(mockUsers);
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [USER_TWO_ID, USER_THREE_ID],
@@ -384,7 +413,7 @@ describe("createNewShoot", () => {
     mockRoundScoreInsertMany.mockResolvedValue([]);
     mockFormatResponse.mockReturnValue({ id: "shoot1" });
 
-    await createNewShoot({
+    await createShoot({
       userId: USER_ID,
       mode: "yellow",
       participantIds: [],
@@ -404,7 +433,7 @@ describe("createNewShoot", () => {
     mockShootParticipantInsertMany.mockRejectedValue(new Error("Write failed"));
 
     await expect(
-      createNewShoot({
+      createShoot({
         userId: USER_ID,
         mode: "yellow",
         participantIds: [],

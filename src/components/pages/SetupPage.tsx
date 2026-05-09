@@ -1,6 +1,6 @@
 "use client";
 
-import { ACTIVE_SHOOT_COOKIE } from "@/constants";
+import { ACTIVE_SHOOT_COOKIE, CLUBS } from "@/constants";
 import { formatResponse } from "@/helpers/formatResponse";
 import {
   getParticipantDisplayName,
@@ -18,6 +18,7 @@ import { ForestLoader } from "@/components/shared/ForestLoader";
 import { ModeSelectorCard } from "./setup/ModeSelectorCard";
 import { ParticipantsCard } from "./setup/ParticipantsCard";
 import { Header } from "../shared/Header";
+import { ClubSelectorCard } from "./setup/ClubSelectorCard";
 
 type SetupPageProps = {
   users: IUser[];
@@ -25,10 +26,11 @@ type SetupPageProps = {
 };
 
 export function SetupPage({ users, currentUser }: SetupPageProps) {
-  const [mode, setMode] = useState<Mode>(Mode.yellow);
+  const [mode, setMode] = useState<Mode>(Mode.red);
   const [participants, setParticipants] = useState<IUser[]>([]);
   const [archerQuery, setArcherQuery] = useState("");
   const [isCreatingShoot, setIsCreatingShoot] = useState(false);
+  const [selectedClub, setSelectedClub] = useState("carrowmore");
   const router = useRouter();
 
   const canStartShoot = Boolean(currentUser?.id) && !isCreatingShoot;
@@ -89,6 +91,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
     setIsCreatingShoot(true);
     const body = {
       mode,
+      clubId: selectedClub,
       participantIds: participants
         .filter((participant) => !participant.isGuest)
         .map((participant) => participant.id),
@@ -121,7 +124,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
     <div className="forest-page bg-background min-h-screen">
       <Header
         title="In the Forest"
-        subtitle="Carrowmore Archers"
+        subtitle="Setup your shoot"
         showBackButton={false}
       />
       <main className="container max-w-2xl mx-auto px-4 py-5 pb-28">
@@ -142,10 +145,18 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
         </div>
 
         <div className="space-y-4">
-          <ModeSelectorCard
+          <ClubSelectorCard
             disabled={isCreatingShoot}
+            selectedClub={selectedClub}
+            onClubChange={setSelectedClub}
+            setMode={setMode}
+          />
+
+          <ModeSelectorCard
+            disabled={isCreatingShoot || !selectedClub}
             mode={mode}
             onModeChange={setMode}
+            availableModes={CLUBS[selectedClub].modes}
           />
 
           <ParticipantsCard

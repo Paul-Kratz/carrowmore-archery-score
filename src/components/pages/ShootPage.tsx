@@ -11,6 +11,7 @@ import { ParticipantSelector } from "./shoot/ParticipantSelector";
 import { ScorePanel } from "./shoot/ScorePanel";
 import { StationNavigationCard } from "./shoot/StationNavigationCard";
 import { Header } from "../shared/Header";
+import { CLUBS } from "@/constants";
 
 type ShootPageProps = {
   currentStation: number;
@@ -34,6 +35,8 @@ export function ShootPage({
   >(null);
   const router = useRouter();
 
+  const clubData = CLUBS[shoot.clubId || "carrowmore"];
+
   const selectedParticipant =
     participants?.find((p) => p.id === selectedParticipantId) ??
     participants?.[0] ??
@@ -42,6 +45,7 @@ export function ShootPage({
   const currentScore = selectedParticipant
     ? selectedParticipant.roundScores[currentStation - 1]
     : null;
+
   const selectedParticipantIndex =
     selectedParticipant && participants
       ? participants.findIndex(
@@ -49,7 +53,7 @@ export function ShootPage({
         )
       : -1;
   const stationCompletionCounts = Array.from(
-    { length: 18 },
+    { length: clubData.totalStations },
     (_, index) =>
       (participants ?? []).filter(
         (participant) => participant.roundScores[index] !== null,
@@ -95,7 +99,7 @@ export function ShootPage({
       return;
     }
 
-    if (currentStation < 18) {
+    if (currentStation < clubData.totalStations) {
       setSelectedParticipantId(participants[0]?.id ?? null);
       router.replace(`/shoot/${currentStation + 1}`);
     }
@@ -105,13 +109,13 @@ export function ShootPage({
     router.replace(`/shoot/${station}`);
   };
   const canGoPrevious = currentStation - 1 > 0;
-  const canGoNext = currentStation < 18;
+  const canGoNext = currentStation < clubData.totalStations;
 
   return (
     <div className="forest-page bg-background flex min-h-screen w-full max-w-full flex-col justify-between overflow-x-hidden">
       <Header
         title="In the Forest"
-        subtitle="Score round"
+        subtitle={"at " + clubData.name}
         showBackButton={false}
         exitTrigger={
           <ExitDialog
@@ -154,10 +158,11 @@ export function ShootPage({
               selectedParticipantUser={
                 (selectedParticipant?.userInfo as IUser) || null
               }
+              clubId={shoot.clubId}
             />
           </div>
 
-          {currentStation === 18 && (
+          {currentStation === clubData.totalStations && (
             <div className="justify-center flex flex-col mx-4 my-2">
               {remainingScoreCount > 0 && (
                 <p className="text-xs text-red-700 mb-2 text-center">
@@ -195,6 +200,7 @@ export function ShootPage({
         onStationChange={onStationChange}
         participantCount={participantCount}
         stationCompletionCounts={stationCompletionCounts}
+        totalStations={clubData.totalStations}
       />
     </div>
   );

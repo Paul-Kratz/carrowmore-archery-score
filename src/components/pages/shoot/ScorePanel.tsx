@@ -2,38 +2,7 @@
 
 import { getUserLabel } from "@/helpers/getUserLabel";
 import { IUser } from "@/models";
-import { SCORE_OPTIONS } from "./scoreOptions";
-
-const SCORING_ROWS = [
-  {
-    label: "1st arrow",
-    peg: "Furthest peg",
-    scores: [
-      { score: 20, result: "Kill" },
-      { score: 16, result: "Wound" },
-    ],
-  },
-  {
-    label: "2nd arrow",
-    peg: "Middle peg",
-    scores: [
-      { score: 14, result: "Kill" },
-      { score: 10, result: "Wound" },
-    ],
-  },
-  {
-    label: "3rd arrow",
-    peg: "Closest peg",
-    scores: [
-      { score: 8, result: "Kill" },
-      { score: 4, result: "Wound" },
-    ],
-  },
-] as const;
-
-const scoreOptionsByValue = new Map(
-  SCORE_OPTIONS.map((option) => [option.value, option]),
-);
+import { CLUBS } from "@/constants";
 
 type ScorePanelProps = {
   currentScore: number | null;
@@ -42,6 +11,7 @@ type ScorePanelProps = {
   onClear: () => void;
   onSetScore: (score: number) => void;
   selectedParticipantUser: IUser | null;
+  clubId: string;
 };
 
 export function ScorePanel({
@@ -51,10 +21,13 @@ export function ScorePanel({
   onClear,
   onSetScore,
   selectedParticipantUser,
+  clubId = "carrowmore",
 }: ScorePanelProps) {
   const participantLabel = selectedParticipantUser
     ? getUserLabel(selectedParticipantUser, currentUserId)
     : "Unknown participant";
+
+  const clubData = CLUBS[clubId];
 
   return (
     <div className="max-w-full overflow-hidden p-2 pt-0">
@@ -63,32 +36,28 @@ export function ScorePanel({
         {selectedParticipantUser?.isGuest ? " guest" : ""}
       </div>
       <div className="max-w-full space-y-2">
-        {SCORING_ROWS.map((row) => (
+        {clubData.scoringRows.map((row) => (
           <div
             key={row.label}
-            className="rounded-lg border border-border bg-[var(--card)] p-2"
+            className="rounded-lg border border-border bg-card p-2"
           >
             <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-[var(--club-red-dark)]">
+              <span className="font-bold text-(--club-red-dark)">
                 {row.label}
               </span>
-              <span className="text-muted-foreground">{row.peg}</span>
+              {row.peg && (
+                <span className="text-muted-foreground">{row.peg}</span>
+              )}
             </div>
-            <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
-              {row.scores.map(({ score, result }) => {
-                const option = scoreOptionsByValue.get(score);
-
-                if (!option) {
-                  return null;
-                }
-
+            <div className="grid grid-cols-2 gap-2">
+              {row.scores.map(({ score, result, color }) => {
                 return (
                   <button
                     key={score}
                     disabled={disabled}
-                    onClick={() => onSetScore(option.value)}
-                    className={`min-h-16 min-w-0 w-full overflow-hidden rounded-lg p-2 transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${option.color} ${
-                      currentScore === option.value
+                    onClick={() => onSetScore(score)}
+                    className={`min-h-16 min-w-0 w-full rounded-lg p-2 border-2 ${color} ${
+                      currentScore === score
                         ? "ring-3 ring-offset-2 ring-black/80"
                         : ""
                     }`}
@@ -97,7 +66,7 @@ export function ScorePanel({
                       {result}
                     </div>
                     <div className="text-3xl font-bold leading-none">
-                      {option.label}
+                      {score}
                     </div>
                   </button>
                 );
@@ -106,26 +75,16 @@ export function ScorePanel({
           </div>
         ))}
         {(() => {
-          const missOption = scoreOptionsByValue.get(0);
-
-          if (!missOption) {
-            return null;
-          }
-
           return (
             <button
               disabled={disabled}
-              onClick={() => onSetScore(missOption.value)}
-              className={`min-h-14 min-w-0 w-full overflow-hidden rounded-lg p-2 transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${missOption.color} ${
-                currentScore === missOption.value
-                  ? "ring-3 ring-offset-2 ring-black/80"
-                  : ""
+              onClick={() => onSetScore(0)}
+              className={`min-h-14 min-w-0 w-full overflow-hidden rounded-lg p-2 transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 bg-[#2d211d] text-white border-2 border-[#2d211d] ${
+                currentScore === 0 ? "ring-3 ring-offset-2 ring-black/80" : ""
               }`}
             >
               <span className="mr-2 text-sm font-semibold uppercase">Miss</span>
-              <span className="text-2xl font-bold leading-none">
-                {missOption.label}
-              </span>
+              <span className="text-2xl font-bold leading-none">0</span>
             </button>
           );
         })()}
@@ -133,7 +92,7 @@ export function ScorePanel({
           <button
             disabled={disabled}
             onClick={onClear}
-            className="min-h-10 min-w-0 w-full overflow-hidden rounded-lg border-2 border-dashed border-[var(--leather)] bg-[var(--card)] p-2 text-sm font-semibold text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-10 min-w-0 w-full overflow-hidden rounded-lg border-2 border-dashed border-(--leather) bg-card p-2 text-sm font-semibold text-(--ink) disabled:cursor-not-allowed disabled:opacity-60"
           >
             Clear
           </button>

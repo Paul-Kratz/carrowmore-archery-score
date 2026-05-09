@@ -8,7 +8,7 @@ const UserSchema = new Schema<IUser>(
     emailVerified: { type: Date, required: false },
     image: { type: String, required: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const ShootSchema = new Schema<IShoot>(
@@ -22,12 +22,13 @@ const ShootSchema = new Schema<IShoot>(
     },
     completed: { type: Boolean, required: true, default: false },
     notes: { type: String, required: false },
+    clubId: { type: String, required: true },
   },
   {
     timestamps: true,
     toObject: { virtuals: true },
     toJSON: { virtuals: true },
-  }
+  },
 );
 
 // Virtual for roundScores
@@ -56,7 +57,7 @@ const ShootParticipantSchema = new Schema<IShootParticipant>(
     guestNameNormalized: { type: String, required: false, index: true },
     joinedAt: { type: Date, required: true, default: () => new Date() },
   },
-  { timestamps: false }
+  { timestamps: false },
 );
 ShootParticipantSchema.index(
   { shoot: 1, user: 1 },
@@ -94,7 +95,7 @@ const RoundScoreSchema = new Schema<IRoundScore>(
     score: { type: Number, required: false },
     scoredAt: { type: Date, required: false },
   },
-  { timestamps: false }
+  { timestamps: false },
 );
 RoundScoreSchema.index(
   { shoot: 1, user: 1, roundNumber: 1 },

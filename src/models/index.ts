@@ -5,6 +5,22 @@ export enum Mode {
   red = "red",
 }
 
+export type ClubData = {
+  id: string;
+  name: string;
+  totalStations: number;
+  modes: Mode[];
+  scoringRows: readonly {
+    label: string;
+    peg?: string;
+    scores: readonly {
+      score: number;
+      result: string;
+      color: string;
+    }[];
+  }[];
+};
+
 type ObjectId = Types.ObjectId;
 
 export interface IUser {
@@ -25,6 +41,7 @@ export interface IShoot {
   createdAt: Date;
   updatedAt: Date;
   completed: boolean;
+  clubId: string;
   firstScoredAt?: Date | string | null;
   notes?: string | null;
 }
@@ -64,6 +81,7 @@ export interface IShootWithParticipants extends IShoot {
 
 export interface IShootChartData {
   id: string;
+  clubId: string;
   mode: Mode;
   createdAt: string;
   roundScores: (number | null)[];

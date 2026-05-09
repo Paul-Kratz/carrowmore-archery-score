@@ -1,7 +1,9 @@
 "use client";
 
+import { CLUBS } from "@/constants";
 import { IShootChartData } from "@/models";
 import { Target, TrendingUp, TreePine } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   CartesianGrid,
   Dot,
@@ -30,6 +32,8 @@ const formatShortDate = (createdAt: string) => {
 
 const getModeColor = (mode?: string) =>
   mode === "red" ? RED_MODE : YELLOW_MODE;
+
+const getShootClubId = (shoot: IShootChartData) => shoot.clubId || "carrowmore";
 
 type ModeDotProps = {
   cx?: number;
@@ -111,7 +115,19 @@ const TrendStat = ({
 );
 
 export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
-  const sorted = [...data].sort(
+  const [selectedClubId, setSelectedClubId] = useState("all");
+  const clubIds = useMemo(
+    () =>
+      Array.from(new Set(data.map(getShootClubId))).filter(
+        (clubId) => CLUBS[clubId],
+      ),
+    [data],
+  );
+  const filteredData =
+    selectedClubId === "all"
+      ? data
+      : data.filter((shoot) => getShootClubId(shoot) === selectedClubId);
+  const sorted = [...filteredData].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
   const latestShoot = sorted.at(-1);
@@ -178,6 +194,36 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
         </div>
       </div>
 
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          aria-pressed={selectedClubId === "all"}
+          onClick={() => setSelectedClubId("all")}
+          className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+            selectedClubId === "all"
+              ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
+              : "border-border bg-card/80 text-(--club-red-dark)"
+          }`}
+        >
+          All clubs
+        </button>
+        {clubIds.map((clubId) => (
+          <button
+            key={clubId}
+            type="button"
+            aria-pressed={selectedClubId === clubId}
+            onClick={() => setSelectedClubId(clubId)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+              selectedClubId === clubId
+                ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
+                : "border-border bg-card/80 text-(--club-red-dark)"
+            }`}
+          >
+            {CLUBS[clubId].name}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 gap-x-5 gap-y-3 border-b border-border/70 pb-3">
         <TrendStat label="Rounds" value={sorted.length} />
         <TrendStat label="Best" value={bestScore ?? "-"} />
@@ -234,7 +280,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
         </div>
       </div>
 
-      <StationLineChart data={data} />
+      <StationLineChart data={filteredData} />
     </div>
   );
 };

@@ -27,34 +27,31 @@ jest.mock("@radix-ui/themes", () => {
     ...actual,
     Select: {
       Root: ({
-        value,
+        defaultValue,
         onValueChange,
         children,
       }: {
-        value: string;
+        defaultValue: string;
         onValueChange: (value: string) => void;
         children: ReactNode;
       }) => (
-        <div>
-          <select
-            aria-label="Select a participant"
-            value={value}
-            onChange={(event) => onValueChange(event.target.value)}
-          >
-            <option value="">Select a participant</option>
-            {children}
-          </select>
+        <div data-value={defaultValue} data-testid="select-root">
+          <button type="button" onClick={() => onValueChange(defaultValue)}>
+            Select club
+          </button>
+          {children}
         </div>
       ),
       Trigger: () => null,
       Content: ({ children }: { children: ReactNode }) => <>{children}</>,
+      Group: ({ children }: { children: ReactNode }) => <>{children}</>,
       Item: ({
         value,
         children,
       }: {
         value: string;
         children: ReactNode;
-      }) => <option value={value}>{children}</option>,
+      }) => <button type="button" value={value}>{children}</button>,
     },
     RadioGroup: {
       Root: ({
@@ -124,7 +121,8 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.yellow,
+            mode: Mode.red,
+            clubId: "carrowmore",
             participantIds: ["user-2"],
             guestNames: [],
           }),
@@ -150,7 +148,8 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.yellow,
+            mode: Mode.red,
+            clubId: "carrowmore",
             participantIds: [],
             guestNames: ["Charlie"],
           }),
@@ -170,7 +169,8 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.yellow,
+            mode: Mode.red,
+            clubId: "carrowmore",
             participantIds: [],
             guestNames: [],
           }),

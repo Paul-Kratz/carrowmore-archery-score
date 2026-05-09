@@ -1,4 +1,4 @@
-import { NUM_STATIONS } from "@/constants";
+import { CLUBS } from "@/constants";
 import { formatResponse } from "@/helpers/formatResponse";
 import {
   getRegisteredParticipantDisplayName,
@@ -24,17 +24,20 @@ export const createNewShoot = async ({
   mode,
   participantIds,
   guestNames = [],
+  clubId,
 }: {
   userId: string;
   mode: "yellow" | "red";
   participantIds: string[];
   guestNames?: string[];
+  clubId: string;
 }) => {
   await connectMongoose();
   const session = await mongoose.startSession();
 
   try {
     session.startTransaction();
+    // Participant validation
     const sanitizedGuestNames = guestNames.map((guestName) => guestName.trim());
 
     if (sanitizedGuestNames.some((guestName) => !guestName)) {
@@ -98,7 +101,17 @@ export const createNewShoot = async ({
       );
     }
 
-    const ROUNDS = Array.from({ length: NUM_STATIONS }, (_, i) => i + 1);
+    // Rounds created with null scores, to be updated as shoot progresses
+    const clubData = CLUBS[clubId];
+
+    if (!clubData) {
+      throw new Error("Invalid clubId");
+    }
+
+    const ROUNDS = Array.from(
+      { length: clubData.totalStations },
+      (_, i) => i + 1,
+    );
 
     // Create shoot
     const [shootDoc] = await Shoot.create(
@@ -107,6 +120,7 @@ export const createNewShoot = async ({
           mode,
           createdBy: new Types.ObjectId(userId),
           completed: false,
+          clubId,
         },
       ],
       { session },

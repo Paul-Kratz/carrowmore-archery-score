@@ -52,6 +52,7 @@ export const getShootChartData = async (userId: string) => {
     })
     .group({
       _id: "$_id",
+      clubId: { $first: "$clubId" },
       mode: { $first: "$mode" },
       createdAt: { $first: "$createdAt" },
       roundScores: { $first: "$participants.roundScores" },

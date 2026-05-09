@@ -1,4 +1,5 @@
 "use client";
+import { CLUBS } from "@/constants";
 import { IShootWithParticipants, IUser } from "@/models";
 import { ParticipantSummaryCard } from "./summary/ParticipantSummaryCard";
 import { StationBreakdownCard } from "./summary/StationBreakdownCard";
@@ -15,13 +16,15 @@ export const SummaryPage = ({
   const onBack = () => {
     window.history.back();
   };
+  const clubName =
+    CLUBS[shootInfo.clubId || "carrowmore"]?.name ?? shootInfo.clubId;
 
   return (
     <div className="forest-page min-h-screen bg-background">
       <Header
         onBack={onBack}
         title="Shoot Details"
-        subtitle="Summary of your shoot"
+        subtitle={clubName}
       />
       <main className="container max-w-2xl mx-auto px-4 py-3 pb-10">
         <SummaryHeaderCard

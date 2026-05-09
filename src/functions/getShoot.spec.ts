@@ -64,6 +64,18 @@ describe("getShoot", () => {
     expect(mockAggregatePipeline.lookup).toHaveBeenCalled();
   });
 
+  it("includes clubId in the shoot aggregation result", async () => {
+    mockFormatResponse.mockResolvedValue({});
+
+    await getShoot({ shootId: "shoot123" });
+
+    expect(mockAggregatePipeline.group).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clubId: { $first: "$clubId" },
+      }),
+    );
+  });
+
   it("should format response", async () => {
     const mockData = {
       _id: "shoot123",

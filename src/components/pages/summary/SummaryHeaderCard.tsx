@@ -1,7 +1,8 @@
 "use client";
 
+import { CLUBS } from "@/constants";
 import { IShootWithParticipants } from "@/models";
-import { Calendar, Notebook, Target, Trophy, Users } from "lucide-react";
+import { Calendar, MapPin, Notebook, Target, Trophy, Users } from "lucide-react";
 import { formatSummaryDate } from "./summaryUtils";
 
 type SummaryHeaderCardProps = {
@@ -27,6 +28,8 @@ export function SummaryHeaderCard({
   const completion =
     totalStations === 0 ? 0 : Math.round((scoredStations / totalStations) * 100);
   const modeColor = shootInfo.mode === "red" ? "#9f1418" : "#b8871a";
+  const clubName =
+    CLUBS[shootInfo.clubId || "carrowmore"]?.name ?? shootInfo.clubId;
 
   return (
     <section className="forest-chart-panel overflow-hidden rounded-xl border border-border p-4 shadow-sm">
@@ -77,6 +80,12 @@ export function SummaryHeaderCard({
       </div>
 
       <div className="space-y-2 border-t border-border/70 pt-3 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4" />
+          <span className="rounded-full border border-(--club-gold-dark)/50 bg-[#eef4d7] px-2.5 py-1 text-xs font-bold text-(--club-red-dark)">
+            {clubName}
+          </span>
+        </div>
         <div className="flex items-start gap-2">
           <Notebook className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{shootInfo.notes ? shootInfo.notes : "No notes"}</span>
