@@ -6,7 +6,7 @@ import {
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
 import { connectMongoose } from "@/lib/mongoose";
-import { IShoot } from "@/models";
+import { IShoot, Mode } from "@/models";
 import { User, Shoot, ShootParticipant, RoundScore } from "@/models/mongoose";
 import mongoose, { Types } from "mongoose";
 
@@ -27,7 +27,7 @@ export const createNewShoot = async ({
   clubId,
 }: {
   userId: string;
-  mode: "yellow" | "red";
+  mode: Mode;
   participantIds: string[];
   guestNames?: string[];
   clubId: string;

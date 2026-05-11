@@ -2,7 +2,14 @@
 
 import { CLUBS } from "@/constants";
 import { IShootWithParticipants } from "@/models";
-import { Calendar, MapPin, Notebook, Target, Trophy, Users } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  Notebook,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { formatSummaryDate } from "./summaryUtils";
 
 type SummaryHeaderCardProps = {
@@ -24,12 +31,15 @@ export function SummaryHeaderCard({
       total + participant.roundScores.filter((score) => score !== null).length,
     0,
   );
-  const totalStations = shootInfo.participants.length * 18;
+  const clubData = CLUBS[shootInfo.clubId];
+
+  const totalStations = shootInfo.participants.length * clubData.totalStations;
   const completion =
-    totalStations === 0 ? 0 : Math.round((scoredStations / totalStations) * 100);
+    totalStations === 0
+      ? 0
+      : Math.round((scoredStations / totalStations) * 100);
   const modeColor = shootInfo.mode === "red" ? "#9f1418" : "#b8871a";
-  const clubName =
-    CLUBS[shootInfo.clubId || "carrowmore"]?.name ?? shootInfo.clubId;
+  const clubName = clubData?.name ?? shootInfo.clubId;
 
   return (
     <section className="forest-chart-panel overflow-hidden rounded-xl border border-border p-4 shadow-sm">

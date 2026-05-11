@@ -31,7 +31,7 @@ export function ClubSelectorCard({
         defaultValue={selectedClub}
         onValueChange={(value) => {
           onClubChange(value);
-          setMode(CLUBS[value].modes[0]);
+          setMode(CLUBS[value].modes[0].value);
         }}
         disabled={disabled}
       >

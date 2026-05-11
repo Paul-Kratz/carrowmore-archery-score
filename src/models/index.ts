@@ -3,13 +3,15 @@ import { Types } from "mongoose";
 export enum Mode {
   yellow = "yellow",
   red = "red",
+  blue = "blue",
+  black = "black",
 }
 
 export type ClubData = {
   id: string;
   name: string;
   totalStations: number;
-  modes: Mode[];
+  modes: { label: string; value: Mode }[];
   scoringRows: readonly {
     label: string;
     peg?: string;

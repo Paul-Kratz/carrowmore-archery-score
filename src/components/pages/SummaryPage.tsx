@@ -21,11 +21,7 @@ export const SummaryPage = ({
 
   return (
     <div className="forest-page min-h-screen bg-background">
-      <Header
-        onBack={onBack}
-        title="Shoot Details"
-        subtitle={clubName}
-      />
+      <Header onBack={onBack} title="Shoot Details" subtitle={clubName} />
       <main className="container max-w-2xl mx-auto px-4 py-3 pb-10">
         <SummaryHeaderCard
           currentUserId={currentUser.id}
@@ -52,6 +48,7 @@ export const SummaryPage = ({
                 key={participant.id}
                 currentUserId={currentUser.id}
                 participant={participant}
+                clubId={shootInfo.clubId}
               />
             ))}
           </div>
@@ -66,7 +63,10 @@ export const SummaryPage = ({
               Per-station score detail for this shoot
             </p>
           </div>
-          <StationBreakdownCard participants={shootInfo.participants} />
+          <StationBreakdownCard
+            participants={shootInfo.participants}
+            clubId={shootInfo.clubId}
+          />
         </section>
       </main>
     </div>

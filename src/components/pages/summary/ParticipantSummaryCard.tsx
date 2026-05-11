@@ -3,12 +3,13 @@
 import { IShootParticipantWithScores } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getScoreCounts } from "./summaryUtils";
-
-const SCORE_TOTALS = [20, 16, 14, 10, 8, 4, 0];
+import { CLUBS } from "@/constants";
 
 const getScoreCountTone = (score: number) => {
-  if (score >= 16) return "border-[#b9c899] bg-[#eef3df] text-(--club-red-dark)";
-  if (score >= 10) return "border-[#cad8a9] bg-[#f2f5e8] text-(--club-red-dark)";
+  if (score >= 16)
+    return "border-[#b9c899] bg-[#eef3df] text-(--club-red-dark)";
+  if (score >= 10)
+    return "border-[#cad8a9] bg-[#f2f5e8] text-(--club-red-dark)";
   if (score >= 4) return "border-[#d7c69f] bg-[#f7efd9] text-(--leather)";
   return "border-[#d9b2aa] bg-[#f5e3dd] text-[#7d2d25]";
 };
@@ -16,16 +17,24 @@ const getScoreCountTone = (score: number) => {
 type ParticipantSummaryCardProps = {
   currentUserId: string;
   participant: IShootParticipantWithScores;
+  clubId: string;
 };
 
 export function ParticipantSummaryCard({
   currentUserId,
   participant,
+  clubId,
 }: ParticipantSummaryCardProps) {
   const counts = getScoreCounts(participant.roundScores);
   const completedStations = participant.roundScores.filter(
     (score) => score !== null,
   ).length;
+  const clubScoreTotals = CLUBS[clubId].scoringRows
+    .map((row) => row.scores)
+    .flat()
+    .map((score) => score.score);
+  clubScoreTotals.push(0); // Ensure 0 is included as a possible score
+
   const averageScore =
     completedStations === 0
       ? "0.00"
@@ -49,7 +58,9 @@ export function ParticipantSummaryCard({
                 )}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-              <span>{completedStations} / 18 stations</span>
+              <span>
+                {completedStations} / {CLUBS[clubId].totalStations} stations
+              </span>
               <span>Avg {averageScore}</span>
             </div>
           </div>
@@ -69,7 +80,7 @@ export function ParticipantSummaryCard({
             <span>Score</span>
             <span>Times</span>
           </div>
-          {SCORE_TOTALS.map((score) => {
+          {clubScoreTotals.map((score) => {
             const count = counts.get(score) || 0;
             const countLabel = count === 1 ? "time" : "times";
 

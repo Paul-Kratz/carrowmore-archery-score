@@ -169,6 +169,31 @@ describe("/api/shoot", () => {
       expect(mockCreateNewShoot).not.toHaveBeenCalled();
     });
 
+    it("accepts modes supported by the selected club", async () => {
+      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+      mockCreateNewShoot.mockResolvedValue({ id: "shoot-1" });
+
+      const request = new Request("http://localhost:3000/api/shoot", {
+        method: "POST",
+        body: JSON.stringify({
+          mode: "blue",
+          participantIds: [validParticipantId],
+          clubId: "marbleArchers",
+        }),
+      });
+
+      const response = await POST(request as never);
+
+      expect(mockCreateNewShoot).toHaveBeenCalledWith({
+        userId: "session-user",
+        mode: "blue",
+        participantIds: [validParticipantId],
+        guestNames: [],
+        clubId: "marbleArchers",
+      });
+      expect(response.status).toBe(201);
+    });
+
     it("returns 400 for guest validation errors from creation", async () => {
       mockAuth.mockResolvedValue({ user: { id: "session-user" } });
       mockCreateNewShoot.mockRejectedValue(

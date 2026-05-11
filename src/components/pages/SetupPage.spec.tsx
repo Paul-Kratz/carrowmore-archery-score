@@ -121,7 +121,7 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.red,
+            mode: Mode.yellow,
             clubId: "carrowmore",
             participantIds: ["user-2"],
             guestNames: [],
@@ -148,7 +148,7 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.red,
+            mode: Mode.yellow,
             clubId: "carrowmore",
             participantIds: [],
             guestNames: ["Charlie"],
@@ -169,7 +169,7 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.red,
+            mode: Mode.yellow,
             clubId: "carrowmore",
             participantIds: [],
             guestNames: [],

@@ -63,9 +63,13 @@ jest.mock("@/constants", () => ({
     carrowmore: {
       totalStations: 10,
     },
+    marbleArchers: {
+      totalStations: 14,
+    },
   },
 }));
 
+import { Mode } from "@/models";
 import { createNewShoot } from "./createNewShoot";
 
 const USER_ID = "507f1f77bcf86cd799439001";
@@ -101,7 +105,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
     });
 
@@ -120,7 +124,7 @@ describe("createNewShoot", () => {
 
     const result = await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -151,7 +155,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "red",
+      mode: Mode.red,
       participantIds: [],
     });
 
@@ -161,6 +165,37 @@ describe("createNewShoot", () => {
         session: expect.any(Object),
       }),
     );
+  });
+
+  it("creates shoots with modes from other clubs", async () => {
+    const mockUsers = [{ _id: USER_ID }];
+    const mockShoot = { _id: SHOOT_ID, mode: "blue", createdBy: USER_ID };
+
+    mockUserFind.mockResolvedValue(mockUsers);
+    mockShootCreate.mockResolvedValue([mockShoot]);
+    mockShootParticipantInsertMany.mockResolvedValue([]);
+    mockRoundScoreInsertMany.mockResolvedValue([]);
+    mockFormatResponse.mockReturnValue(mockShoot);
+
+    await createShoot({
+      userId: USER_ID,
+      mode: Mode.blue,
+      participantIds: [],
+      clubId: "marbleArchers",
+    });
+
+    expect(mockShootCreate).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          mode: Mode.blue,
+          clubId: "marbleArchers",
+        }),
+      ],
+      expect.objectContaining({
+        session: expect.any(Object),
+      }),
+    );
+    expect(mockRoundScoreInsertMany.mock.calls[0][0]).toHaveLength(14);
   });
 
   it("should include userId in participants list", async () => {
@@ -175,7 +210,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
     });
 
@@ -202,7 +237,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [USER_TWO_ID, USER_TWO_ID, USER_ID],
     });
 
@@ -218,7 +253,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: "yellow",
+        mode: Mode.yellow,
         participantIds: [USER_TWO_ID],
       }),
     ).rejects.toThrow("One or more participant userIds do not exist");
@@ -236,7 +271,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
     });
 
@@ -252,7 +287,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: "yellow",
+        mode: Mode.yellow,
         participantIds: [],
         clubId: "unknown-club",
       }),
@@ -273,7 +308,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -304,7 +339,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
       guestNames: ["Charlie"],
     });
@@ -334,7 +369,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: "yellow",
+        mode: Mode.yellow,
         participantIds: [],
         guestNames: ["Charlie", " charlie "],
       }),
@@ -348,7 +383,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: "yellow",
+        mode: Mode.yellow,
         participantIds: [],
         guestNames: ["charlie"],
       }),
@@ -361,7 +396,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: "yellow",
+        mode: Mode.yellow,
         participantIds: [],
         guestNames: ["x".repeat(51)],
       }),
@@ -381,7 +416,7 @@ describe("createNewShoot", () => {
 
     const result = await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -396,7 +431,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [USER_TWO_ID, USER_THREE_ID],
     }).catch(() => {});
 
@@ -415,7 +450,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: "yellow",
+      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -435,7 +470,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: "yellow",
+        mode: Mode.yellow,
         participantIds: [],
       }),
     ).rejects.toThrow("Write failed");

@@ -26,11 +26,11 @@ type SetupPageProps = {
 };
 
 export function SetupPage({ users, currentUser }: SetupPageProps) {
-  const [mode, setMode] = useState<Mode>(Mode.red);
   const [participants, setParticipants] = useState<IUser[]>([]);
   const [archerQuery, setArcherQuery] = useState("");
   const [isCreatingShoot, setIsCreatingShoot] = useState(false);
   const [selectedClub, setSelectedClub] = useState("carrowmore");
+  const [mode, setMode] = useState<Mode>(CLUBS[selectedClub].modes[0].value);
   const router = useRouter();
 
   const canStartShoot = Boolean(currentUser?.id) && !isCreatingShoot;

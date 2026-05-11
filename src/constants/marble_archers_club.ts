@@ -3,7 +3,6 @@ import { ClubData, Mode } from "@/models";
 const SCORING_ROWS = [
   {
     label: "1st arrow",
-    peg: "Furthest peg",
     scores: [
       {
         score: 20,
@@ -11,7 +10,7 @@ const SCORING_ROWS = [
         color: "bg-[#2F5D43] border-[#2F5D43] text-white",
       },
       {
-        score: 16,
+        score: 18,
         result: "Wound",
         color: "border-[#2F5D43] text-[var(--ink)]",
       },
@@ -19,15 +18,14 @@ const SCORING_ROWS = [
   },
   {
     label: "2nd arrow",
-    peg: "Middle peg",
     scores: [
       {
-        score: 14,
+        score: 16,
         result: "Kill",
         color: "bg-[#9A9B73] text-white border-[#9A9B73]",
       },
       {
-        score: 10,
+        score: 14,
         result: "Wound",
         color: "border-[#9A9B73] text-[var(--ink)]",
       },
@@ -35,15 +33,14 @@ const SCORING_ROWS = [
   },
   {
     label: "3rd arrow",
-    peg: "Closest peg",
     scores: [
       {
-        score: 8,
+        score: 12,
         result: "Kill",
         color: "bg-[#A5402D] text-white border-[#A5402D]",
       },
       {
-        score: 4,
+        score: 10,
         result: "Wound",
         color: "border-[#A5402D] text-[var(--ink)]",
       },
@@ -51,13 +48,14 @@ const SCORING_ROWS = [
   },
 ] as const;
 
-export const carrowmoreArcheryClub: ClubData = {
-  id: "carrowmore",
-  name: "Carrowmore Archery",
-  totalStations: 18,
+export const marbleArchersClub: ClubData = {
+  id: "marble_archers",
+  name: "Marble Archers",
+  totalStations: 14,
   modes: [
     { label: "Yellow", value: Mode.yellow },
-    { label: "Red", value: Mode.red },
+    { label: "Blue", value: Mode.blue },
+    { label: "Black", value: Mode.black },
   ],
   scoringRows: SCORING_ROWS,
 };

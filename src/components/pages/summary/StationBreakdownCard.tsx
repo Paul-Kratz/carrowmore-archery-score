@@ -2,9 +2,11 @@
 
 import { IShootParticipantWithScores } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
+import { CLUBS } from "@/constants";
 
 type StationBreakdownCardProps = {
   participants: IShootParticipantWithScores[];
+  clubId: string;
 };
 
 const getStationScoreTone = (score: number | null) => {
@@ -18,16 +20,14 @@ const getStationScoreTone = (score: number | null) => {
   if (score >= 16) {
     return {
       accent: "bg-(--club-gold-dark)",
-      className:
-        "border-[#b9c899] bg-[#eef3df]/85 text-(--club-red-dark)",
+      className: "border-[#b9c899] bg-[#eef3df]/85 text-(--club-red-dark)",
     };
   }
 
   if (score >= 10) {
     return {
       accent: "bg-(--club-gold)",
-      className:
-        "border-[#cad8a9] bg-[#f2f5e8]/85 text-(--club-red-dark)",
+      className: "border-[#cad8a9] bg-[#f2f5e8]/85 text-(--club-red-dark)",
     };
   }
 
@@ -46,6 +46,7 @@ const getStationScoreTone = (score: number | null) => {
 
 export function StationBreakdownCard({
   participants,
+  clubId,
 }: StationBreakdownCardProps) {
   return (
     <article className="forest-chart-panel overflow-hidden rounded-xl border border-border p-3 shadow-sm">
@@ -63,11 +64,14 @@ export function StationBreakdownCard({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 font-bold text-(--club-red-dark)">
-                    <span className="truncate">{participant.userInfo.name}</span>
+                    <span className="truncate">
+                      {participant.userInfo.name}
+                    </span>
                     {participant.userInfo.isGuest && <GuestBadge />}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {completedStations} / 18 stations scored
+                    {completedStations} / {CLUBS[clubId].totalStations} stations
+                    scored
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -80,7 +84,10 @@ export function StationBreakdownCard({
                 </div>
               </div>
 
-              <div className="grid grid-cols-6 gap-1.5" aria-label="Station scores">
+              <div
+                className="grid grid-cols-6 gap-1.5"
+                aria-label="Station scores"
+              >
                 {participant.roundScores.map((score, index) => {
                   const tone = getStationScoreTone(score);
 

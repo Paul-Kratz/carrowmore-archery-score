@@ -6,7 +6,6 @@ import { updateShoot } from "@/functions/updateShoot";
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { CLUBS } from "@/constants";
-import { Mode } from "@/models";
 
 const CREATE_SHOOT_VALIDATION_ERRORS = new Set([
   "Guest names cannot be empty",
@@ -26,6 +25,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { mode, participantIds, guestNames = [], clubId } = body;
     const club = CLUBS[clubId];
+    const selectedMode =
+      typeof mode === "string" && club
+        ? club.modes.find((clubMode) => clubMode.value === mode)?.value
+        : undefined;
 
     if (
       !mode ||
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (
       typeof mode !== "string" ||
       !club ||
-      !club.modes.includes(mode as Mode) ||
+      !selectedMode ||
       !participantIds.every(
         (participantId) =>
           typeof participantId === "string" && isValidObjectId(participantId),
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     const shoot = await createNewShoot({
       userId: session.user.id,
-      mode: mode as "yellow" | "red",
+      mode: selectedMode,
       participantIds,
       guestNames,
       clubId,
