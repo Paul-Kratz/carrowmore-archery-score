@@ -79,7 +79,6 @@ describe("loadHistoricalData", () => {
     expect(mockShootCreate).toHaveBeenCalledWith(
       [
         expect.objectContaining({
-          mode: "yellow",
           completed: false,
         }),
       ],

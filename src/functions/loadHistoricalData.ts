@@ -17,7 +17,6 @@ export const loadHistoricalData = async (shoots: any[]) => {
       const shootDoc = await Shoot.create(
         [
           {
-            mode: shoot.mode,
             createdAt: new Date(shoot.createdAt),
             createdBy: new mongoose.Types.ObjectId(shoot.createdBy),
             completed: shoot.completed,
@@ -34,6 +33,7 @@ export const loadHistoricalData = async (shoots: any[]) => {
             {
               shoot: shootId,
               user: new mongoose.Types.ObjectId(participant.user),
+              pegColor: shoot.mode,
               joinedAt: new Date(participant.joinedAt),
             },
           ],

@@ -53,7 +53,7 @@ export const getShootChartData = async (userId: string) => {
     .group({
       _id: "$_id",
       clubId: { $first: "$clubId" },
-      mode: { $first: "$mode" },
+      pegColor: { $first: "$participants.pegColor" },
       createdAt: { $first: "$createdAt" },
       roundScores: { $first: "$participants.roundScores" },
       totalScore: { $first: "$participants.totalScore" },

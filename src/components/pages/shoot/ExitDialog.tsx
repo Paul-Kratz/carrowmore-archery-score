@@ -5,9 +5,9 @@ import { Button, Dialog, TextArea } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
-import { ACTIVE_SHOOT_COOKIE } from "@/constants";
+import { ACTIVE_SHOOT_COOKIE, CLUBS } from "@/constants";
 import { ForestLoader } from "@/components/shared/ForestLoader";
-import { Clock, Map, NotebookPen, TreePine, X } from "lucide-react";
+import { Clock, MapPin, NotebookPen, TreePine, X } from "lucide-react";
 
 type ExitDialogProps = {
   isShootFinished?: boolean;
@@ -46,9 +46,7 @@ export const ExitDialog = ({
       : "-";
   const dialogTitle = isShootFinished ? "Finish shoot" : "Leave shoot";
   const actionLabel = isShootFinished ? "Save & Finish" : "Save & Exit";
-  const modeLabel = shoot.mode
-    ? shoot.mode.charAt(0).toUpperCase() + shoot.mode.slice(1)
-    : "-";
+  const clubName = CLUBS[shoot.clubId]?.name ?? shoot.clubId;
 
   const saveShoot = async () => {
     try {
@@ -127,11 +125,11 @@ export const ExitDialog = ({
             </div>
             <div className="rounded-lg border border-border bg-[#edf4e9] px-3 py-2">
               <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                <Map className="h-3.5 w-3.5" />
-                Trail
+                <MapPin className="h-3.5 w-3.5" />
+                Club
               </div>
               <div className="text-base font-bold text-(--club-red-dark)">
-                {modeLabel}
+                {clubName}
               </div>
             </div>
           </div>

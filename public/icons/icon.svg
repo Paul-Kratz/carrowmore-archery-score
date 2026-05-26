@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="In The Forest icon">
+  <rect width="512" height="512" rx="112" fill="#f4f4f1"/>
+  <path d="M126 384h260c18 0 32 14 32 32H94c0-18 14-32 32-32Z" fill="#7fca8e"/>
+  <path d="M151 116 91 237h26l-41 78h31l-34 74c54 17 110 17 164 0l-34-74h31l-41-78h26l-68-121Z" fill="#3f7d77"/>
+  <path d="M361 90 292 224h29l-49 92h36l-41 80c61 20 126 20 187 0l-41-80h36l-49-92h29L361 90Z" fill="#3b746e"/>
+  <path d="M256 42 172 205h37l-61 115h44l-51 100c76 26 154 26 230 0l-51-100h44l-61-115h37L256 42Z" fill="#82c990"/>
+  <path d="M256 42 340 205h-37l61 115h-44l51 100c-38 13-77 19-115 19V42Z" fill="#5cae98" opacity=".72"/>
+  <path d="M214 172c16 3 32 5 48 5" stroke="#5cae98" stroke-width="12" stroke-linecap="round" opacity=".8"/>
+  <path d="M237 252c16-1 31-3 47-7" stroke="#5cae98" stroke-width="12" stroke-linecap="round" opacity=".8"/>
+  <path d="M140 294c9 3 18 5 27 6" stroke="#326964" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+  <path d="M337 276c13 2 26 1 39-2" stroke="#326964" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+  <path d="m217 405-35 58h33l31-58Z" fill="#a9653e" stroke="#123426" stroke-width="10" stroke-linejoin="round"/>
+  <path d="m295 405 35 58h-33l-31-58Z" fill="#a9653e" stroke="#123426" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M238 406h36v42h-36z" fill="#6a5138" stroke="#123426" stroke-width="10" stroke-linejoin="round"/>
+  <circle cx="256" cy="360" r="68" fill="#123426"/>
+  <circle cx="256" cy="360" r="56" fill="#34474d"/>
+  <circle cx="256" cy="360" r="44" fill="#1fb6c4"/>
+  <circle cx="256" cy="360" r="30" fill="#fbf7e8"/>
+  <circle cx="256" cy="360" r="20" fill="#ef463c"/>
+  <circle cx="256" cy="360" r="10" fill="#f6d33b"/>
+</svg>

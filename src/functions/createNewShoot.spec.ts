@@ -59,17 +59,19 @@ jest.mock("@/helpers/formatResponse", () => ({
 }));
 
 jest.mock("@/constants", () => ({
+  getClubPegColors: (clubData: { pegColors: string[] }) => clubData.pegColors,
   CLUBS: {
     carrowmore: {
       totalStations: 10,
+      pegColors: ["yellow", "red"],
     },
     marbleArchers: {
       totalStations: 14,
+      pegColors: ["yellow", "blue", "black"],
     },
   },
 }));
 
-import { Mode } from "@/models";
 import { createNewShoot } from "./createNewShoot";
 
 const USER_ID = "507f1f77bcf86cd799439001";
@@ -95,7 +97,7 @@ describe("createNewShoot", () => {
 
   it("should connect to mongoose", async () => {
     const mockUsers = [{ _id: USER_ID }, { _id: USER_TWO_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -105,16 +107,15 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
     });
 
     expect(mockConnectMongoose).toHaveBeenCalled();
   });
 
-  it("should create shoot with yellow mode", async () => {
+  it("should create shoot without a legacy mode", async () => {
     const mockUsers = [{ _id: USER_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -124,14 +125,12 @@ describe("createNewShoot", () => {
 
     const result = await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [],
     });
 
     expect(mockShootCreate).toHaveBeenCalledWith(
       [
         expect.objectContaining({
-          mode: "yellow",
           completed: false,
           clubId: CLUB_ID,
         }),
@@ -140,12 +139,13 @@ describe("createNewShoot", () => {
         session: expect.any(Object),
       }),
     );
+    expect(mockShootCreate.mock.calls[0][0][0]).not.toHaveProperty("mode");
     expect(result).toEqual(mockShoot);
   });
 
-  it("should create shoot with red mode", async () => {
+  it("does not write shoot mode for explicit participant peg colors", async () => {
     const mockUsers = [{ _id: USER_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "red", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -155,21 +155,15 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.red,
-      participantIds: [],
+      participants: [{ userId: USER_ID, pegColor: "red" }],
     });
 
-    expect(mockShootCreate).toHaveBeenCalledWith(
-      [expect.objectContaining({ mode: "red" })],
-      expect.objectContaining({
-        session: expect.any(Object),
-      }),
-    );
+    expect(mockShootCreate.mock.calls[0][0][0]).not.toHaveProperty("mode");
   });
 
-  it("creates shoots with modes from other clubs", async () => {
+  it("creates shoots with station counts from other clubs", async () => {
     const mockUsers = [{ _id: USER_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "blue", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -179,7 +173,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.blue,
       participantIds: [],
       clubId: "marbleArchers",
     });
@@ -187,7 +180,6 @@ describe("createNewShoot", () => {
     expect(mockShootCreate).toHaveBeenCalledWith(
       [
         expect.objectContaining({
-          mode: Mode.blue,
           clubId: "marbleArchers",
         }),
       ],
@@ -200,7 +192,7 @@ describe("createNewShoot", () => {
 
   it("should include userId in participants list", async () => {
     const mockUsers = [{ _id: USER_ID }, { _id: USER_TWO_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -210,7 +202,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
     });
 
@@ -227,7 +218,7 @@ describe("createNewShoot", () => {
 
   it("should deduplicate participant IDs", async () => {
     const mockUsers = [{ _id: USER_ID }, { _id: USER_TWO_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -237,7 +228,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [USER_TWO_ID, USER_TWO_ID, USER_ID],
     });
 
@@ -253,7 +243,6 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: Mode.yellow,
         participantIds: [USER_TWO_ID],
       }),
     ).rejects.toThrow("One or more participant userIds do not exist");
@@ -261,7 +250,7 @@ describe("createNewShoot", () => {
 
   it("should create round scores for all participants and rounds", async () => {
     const mockUsers = [{ _id: USER_ID }, { _id: USER_TWO_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -271,7 +260,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
     });
 
@@ -287,7 +275,6 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: Mode.yellow,
         participantIds: [],
         clubId: "unknown-club",
       }),
@@ -298,7 +285,7 @@ describe("createNewShoot", () => {
 
   it("should create round scores with correct structure", async () => {
     const mockUsers = [{ _id: USER_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -308,7 +295,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -329,7 +315,7 @@ describe("createNewShoot", () => {
       { _id: USER_ID, name: "Alice", email: "alice@example.com" },
       { _id: USER_TWO_ID, name: "Bob", email: "bob@example.com" },
     ];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -339,7 +325,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [USER_TWO_ID],
       guestNames: ["Charlie"],
     });
@@ -365,11 +350,63 @@ describe("createNewShoot", () => {
     ).toBe(true);
   });
 
+  it("stores peg colors for explicit registered and guest participants", async () => {
+    const mockUsers = [
+      { _id: USER_ID, name: "Alice", email: "alice@example.com" },
+      { _id: USER_TWO_ID, name: "Bob", email: "bob@example.com" },
+    ];
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
+
+    mockUserFind.mockResolvedValue(mockUsers);
+    mockShootCreate.mockResolvedValue([mockShoot]);
+    mockShootParticipantInsertMany.mockResolvedValue([]);
+    mockRoundScoreInsertMany.mockResolvedValue([]);
+    mockFormatResponse.mockReturnValue(mockShoot);
+
+    await createShoot({
+      userId: USER_ID,
+      participants: [
+        { userId: USER_ID, pegColor: "red" },
+        { userId: USER_TWO_ID, pegColor: "yellow" },
+        { guestName: "Charlie", pegColor: "red" },
+      ],
+    });
+
+    expect(mockShootCreate.mock.calls[0][0][0]).not.toHaveProperty("mode");
+
+    expect(mockShootParticipantInsertMany.mock.calls[0][0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          user: expect.objectContaining({ value: USER_ID }),
+          pegColor: "red",
+        }),
+        expect.objectContaining({
+          user: expect.objectContaining({ value: USER_TWO_ID }),
+          pegColor: "yellow",
+        }),
+        expect.objectContaining({
+          guestName: "Charlie",
+          pegColor: "red",
+        }),
+      ]),
+    );
+  });
+
+  it("rejects peg colors not supported by the selected club", async () => {
+    await expect(
+      createShoot({
+        userId: USER_ID,
+        participants: [{ userId: USER_ID, pegColor: "blue" }],
+      }),
+    ).rejects.toThrow(
+      "Participant peg colors are not supported by the selected club",
+    );
+  });
+
   it("rejects duplicate guest names after normalization", async () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: Mode.yellow,
         participantIds: [],
         guestNames: ["Charlie", " charlie "],
       }),
@@ -383,7 +420,6 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: Mode.yellow,
         participantIds: [],
         guestNames: ["charlie"],
       }),
@@ -396,7 +432,6 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: Mode.yellow,
         participantIds: [],
         guestNames: ["x".repeat(51)],
       }),
@@ -405,8 +440,8 @@ describe("createNewShoot", () => {
 
   it("should format response before returning", async () => {
     const mockUsers = [{ _id: USER_ID }];
-    const mockShoot = { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID };
-    const formattedShoot = { id: SHOOT_ID, mode: "yellow" };
+    const mockShoot = { _id: SHOOT_ID, createdBy: USER_ID };
+    const formattedShoot = { id: SHOOT_ID };
 
     mockUserFind.mockResolvedValue(mockUsers);
     mockShootCreate.mockResolvedValue([mockShoot]);
@@ -416,7 +451,6 @@ describe("createNewShoot", () => {
 
     const result = await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -431,7 +465,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [USER_TWO_ID, USER_THREE_ID],
     }).catch(() => {});
 
@@ -442,7 +475,7 @@ describe("createNewShoot", () => {
   it("commits the transaction on success", async () => {
     mockUserFind.mockResolvedValue([{ _id: USER_ID }]);
     mockShootCreate.mockResolvedValue([
-      { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID },
+      { _id: SHOOT_ID, createdBy: USER_ID },
     ]);
     mockShootParticipantInsertMany.mockResolvedValue([]);
     mockRoundScoreInsertMany.mockResolvedValue([]);
@@ -450,7 +483,6 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      mode: Mode.yellow,
       participantIds: [],
     });
 
@@ -463,14 +495,13 @@ describe("createNewShoot", () => {
   it("aborts the transaction if a write fails", async () => {
     mockUserFind.mockResolvedValue([{ _id: USER_ID }]);
     mockShootCreate.mockResolvedValue([
-      { _id: SHOOT_ID, mode: "yellow", createdBy: USER_ID },
+      { _id: SHOOT_ID, createdBy: USER_ID },
     ]);
     mockShootParticipantInsertMany.mockRejectedValue(new Error("Write failed"));
 
     await expect(
       createShoot({
         userId: USER_ID,
-        mode: Mode.yellow,
         participantIds: [],
       }),
     ).rejects.toThrow("Write failed");

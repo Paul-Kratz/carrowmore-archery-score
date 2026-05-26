@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { Mode, type IShootChartData } from "@/models";
+import { type IShootChartData } from "@/models";
 import { ShootsLineChart } from "./ShootsLineChart";
 
 jest.mock("@/constants", () => ({
@@ -44,7 +44,6 @@ const chartData: IShootChartData[] = [
   {
     id: "shoot-1",
     clubId: "carrowmore",
-    mode: Mode.red,
     createdAt: "2026-01-01T00:00:00.000Z",
     roundScores: [20, 16, 14],
     totalScore: 50,
@@ -52,7 +51,6 @@ const chartData: IShootChartData[] = [
   {
     id: "shoot-2",
     clubId: "testclub",
-    mode: Mode.yellow,
     createdAt: "2026-01-02T00:00:00.000Z",
     roundScores: [10, 8],
     totalScore: 18,

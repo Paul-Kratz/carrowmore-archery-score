@@ -112,7 +112,6 @@ describe("getShootSummary", () => {
   it("should return formatted data when shoot is found", async () => {
     const mockData = {
       id: "shoot123",
-      mode: "yellow",
       participants: [
         {
           userInfo: { name: "Test User" },
@@ -150,7 +149,6 @@ describe("getShootSummary", () => {
   it("should handle multiple participants in result", async () => {
     const mockData = {
       id: "shoot123",
-      mode: "red",
       participants: [
         {
           userInfo: { name: "User A" },

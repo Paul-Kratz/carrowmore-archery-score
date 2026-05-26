@@ -1,7 +1,6 @@
 "use client";
 
 import { CLUBS } from "@/constants";
-import { Mode } from "@/models";
 import { Card, Select } from "@radix-ui/themes";
 import { MapPin } from "lucide-react";
 
@@ -9,14 +8,12 @@ type ClubSelectorCardProps = {
   disabled?: boolean;
   selectedClub: string;
   onClubChange: (clubId: string) => void;
-  setMode: (mode: Mode) => void;
 };
 
 export function ClubSelectorCard({
   disabled = false,
   selectedClub,
   onClubChange,
-  setMode,
 }: ClubSelectorCardProps) {
   return (
     <Card className="overflow-hidden p-0">
@@ -29,10 +26,7 @@ export function ClubSelectorCard({
 
       <Select.Root
         defaultValue={selectedClub}
-        onValueChange={(value) => {
-          onClubChange(value);
-          setMode(CLUBS[value].modes[0].value);
-        }}
+        onValueChange={onClubChange}
         disabled={disabled}
       >
         <div className="p-4">

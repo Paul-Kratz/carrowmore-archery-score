@@ -1,6 +1,7 @@
 "use client";
 
 import { GuestBadge } from "@/components/shared/GuestBadge";
+import { getPegColorHex, getPegColorLabel } from "@/constants";
 import { getUserLabel } from "@/helpers/getUserLabel";
 import { IShootParticipantWithScores, IUser } from "@/models";
 
@@ -46,6 +47,15 @@ export function ParticipantSelector({
               </span>
               {selectedParticipant.userInfo.isGuest && <GuestBadge />}
             </div>
+            <span
+              aria-label={`${getPegColorLabel(
+                selectedParticipant.pegColor,
+              )} peg colour`}
+              className="h-3 w-3 shrink-0 rounded-full border border-border"
+              style={{
+                backgroundColor: getPegColorHex(selectedParticipant.pegColor),
+              }}
+            />
             <span>|</span>
             <span>Station: {currentStation}</span>
           </div>
@@ -76,6 +86,13 @@ export function ParticipantSelector({
               }`}
             >
               <div className="truncate text-xs font-bold">
+                <span
+                  aria-hidden="true"
+                  className="mr-1 inline-block h-2.5 w-2.5 rounded-full border border-border align-[-1px]"
+                  style={{
+                    backgroundColor: getPegColorHex(participant.pegColor),
+                  }}
+                />
                 {participantLabel}
               </div>
               <div className="mt-1 flex items-center justify-between gap-2 text-[11px] leading-tight">

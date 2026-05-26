@@ -160,7 +160,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     >
       <Header
         onBack={onBack}
-        title="Trail Log"
+        title="Shoot Log"
         subtitle="Past rounds and scores"
         showBackButton={true}
       />

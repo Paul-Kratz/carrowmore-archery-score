@@ -81,7 +81,6 @@ describe("getParticipatedShoots", () => {
     const mockData = [
       {
         _id: "shoot1",
-        mode: "yellow",
         participants: [],
       },
     ];
@@ -98,7 +97,6 @@ describe("getParticipatedShoots", () => {
     const mockShoots = [
       {
         id: "shoot1",
-        mode: "yellow",
         participants: [
           {
             user: "user123",
@@ -130,8 +128,8 @@ describe("getParticipatedShoots", () => {
 
   it("should handle multiple shoots", async () => {
     const mockShoots = [
-      { id: "shoot1", mode: "yellow", participants: [] },
-      { id: "shoot2", mode: "red", participants: [] },
+      { id: "shoot1", participants: [] },
+      { id: "shoot2", participants: [] },
     ];
 
     mockFormatResponseArray.mockResolvedValue(

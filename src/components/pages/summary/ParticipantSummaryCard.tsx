@@ -3,7 +3,7 @@
 import { IShootParticipantWithScores } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getScoreCounts } from "./summaryUtils";
-import { CLUBS } from "@/constants";
+import { CLUBS, getPegColorHex, getPegColorLabel } from "@/constants";
 
 const getScoreCountTone = (score: number) => {
   if (score >= 16)
@@ -56,6 +56,18 @@ export function ParticipantSummaryCard({
                     You
                   </span>
                 )}
+              {participant.pegColor && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs font-bold text-(--club-red-dark)">
+                  <span
+                    aria-hidden="true"
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      backgroundColor: getPegColorHex(participant.pegColor),
+                    }}
+                  />
+                  {getPegColorLabel(participant.pegColor)}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span>

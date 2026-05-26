@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Cookies from "js-cookie";
 import { SetupPage } from "./SetupPage";
-import { Mode, type IUser } from "@/models";
+import type { IUser } from "@/models";
 
 const mockPush = jest.fn();
 
@@ -45,35 +45,11 @@ jest.mock("@radix-ui/themes", () => {
       Trigger: () => null,
       Content: ({ children }: { children: ReactNode }) => <>{children}</>,
       Group: ({ children }: { children: ReactNode }) => <>{children}</>,
-      Item: ({
-        value,
-        children,
-      }: {
-        value: string;
-        children: ReactNode;
-      }) => <button type="button" value={value}>{children}</button>,
-    },
-    RadioGroup: {
-      Root: ({
-        value,
-        onValueChange,
-        children,
-      }: {
-        value: string;
-        onValueChange: (value: string) => void;
-        children: ReactNode;
-      }) => (
-        <div role="radiogroup" data-value={value}>
-          <button type="button" onClick={() => onValueChange(Mode.red)}>
-            red
-          </button>
-          <button type="button" onClick={() => onValueChange(Mode.yellow)}>
-            yellow
-          </button>
+      Item: ({ value, children }: { value: string; children: ReactNode }) => (
+        <button type="button" value={value}>
           {children}
-        </div>
+        </button>
       ),
-      Item: () => null,
     },
   };
 });
@@ -121,10 +97,11 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.yellow,
             clubId: "carrowmore",
-            participantIds: ["user-2"],
-            guestNames: [],
+            participants: [
+              { userId: "user-1", pegColor: "red" },
+              { userId: "user-2", pegColor: "red" },
+            ],
           }),
         }),
       );
@@ -148,10 +125,11 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.yellow,
             clubId: "carrowmore",
-            participantIds: [],
-            guestNames: ["Charlie"],
+            participants: [
+              { userId: "user-1", pegColor: "red" },
+              { guestName: "Charlie", pegColor: "red" },
+            ],
           }),
         }),
       );
@@ -169,10 +147,30 @@ describe("SetupPage", () => {
         expect.objectContaining({
           method: "post",
           body: JSON.stringify({
-            mode: Mode.yellow,
             clubId: "carrowmore",
-            participantIds: [],
-            guestNames: [],
+            participants: [{ userId: "user-1", pegColor: "red" }],
+          }),
+        }),
+      );
+    });
+  });
+
+  it("includes the current user's selected peg colour", async () => {
+    render(<SetupPage users={mockUsers} currentUser={mockCurrentUser} />);
+
+    fireEvent.click(
+      screen.getByLabelText("Change Alice peg colour, currently Red"),
+    );
+    fireEvent.click(screen.getByText("Start Shoot"));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/shoot",
+        expect.objectContaining({
+          method: "post",
+          body: JSON.stringify({
+            clubId: "carrowmore",
+            participants: [{ userId: "user-1", pegColor: "yellow" }],
           }),
         }),
       );

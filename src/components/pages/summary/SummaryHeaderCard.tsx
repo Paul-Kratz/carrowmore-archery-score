@@ -1,6 +1,7 @@
 "use client";
 
-import { CLUBS } from "@/constants";
+import { CLUBS, getPegColorHex } from "@/constants";
+import { getParticipantPegColorSummary } from "@/helpers/pegColors";
 import { IShootWithParticipants } from "@/models";
 import {
   Calendar,
@@ -38,8 +39,10 @@ export function SummaryHeaderCard({
     totalStations === 0
       ? 0
       : Math.round((scoredStations / totalStations) * 100);
-  const modeColor = shootInfo.mode === "red" ? "#9f1418" : "#b8871a";
   const clubName = clubData?.name ?? shootInfo.clubId;
+  const { label: pegLabel, pegColors } = getParticipantPegColorSummary(
+    shootInfo.participants,
+  );
 
   return (
     <section className="forest-chart-panel overflow-hidden rounded-xl border border-border p-4 shadow-sm">
@@ -54,11 +57,14 @@ export function SummaryHeaderCard({
           </h2>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-1 text-xs font-bold uppercase text-(--club-red-dark)">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: modeColor }}
-          />
-          {shootInfo.mode}
+          {pegColors.slice(0, 3).map((pegColor) => (
+            <span
+              key={pegColor}
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: getPegColorHex(pegColor) }}
+            />
+          ))}
+          {pegLabel}
         </span>
       </div>
 

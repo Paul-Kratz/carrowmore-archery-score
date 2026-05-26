@@ -1,17 +1,10 @@
 import { Types } from "mongoose";
 
-export enum Mode {
-  yellow = "yellow",
-  red = "red",
-  blue = "blue",
-  black = "black",
-}
-
 export type ClubData = {
   id: string;
   name: string;
   totalStations: number;
-  modes: { label: string; value: Mode }[];
+  pegColors: string[];
   scoringRows: readonly {
     label: string;
     peg?: string;
@@ -36,9 +29,14 @@ export interface IUser {
   updatedAt: Date;
 }
 
+export type ShootParticipantInput = {
+  userId?: string;
+  guestName?: string;
+  pegColor?: string;
+};
+
 export interface IShoot {
   id: string;
-  mode: Mode;
   createdBy: ObjectId | IUser | string;
   createdAt: Date;
   updatedAt: Date;
@@ -54,6 +52,7 @@ export interface IShootParticipant {
   user?: ObjectId | IUser | null;
   guestName?: string | null;
   guestNameNormalized?: string | null;
+  pegColor?: string | null;
   joinedAt: Date;
 }
 
@@ -84,7 +83,7 @@ export interface IShootWithParticipants extends IShoot {
 export interface IShootChartData {
   id: string;
   clubId: string;
-  mode: Mode;
+  pegColor?: string | null;
   createdAt: string;
   roundScores: (number | null)[];
   totalScore: number;

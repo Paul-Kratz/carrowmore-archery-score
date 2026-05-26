@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { SummaryPage } from "./SummaryPage";
-import { IShootWithParticipants, IUser, Mode } from "@/models";
+import { IShootWithParticipants, IUser } from "@/models";
 import type { Types } from "mongoose";
 
 const asObjectId = (value: string) => value as unknown as Types.ObjectId;
@@ -17,7 +17,6 @@ const createShootInfo = (
   overrides: Partial<IShootWithParticipants> = {},
 ): IShootWithParticipants => ({
   id: "shoot1",
-  mode: Mode.yellow,
   createdBy: "user1",
   createdAt: new Date("2025-06-15T10:30:00Z"),
   updatedAt: new Date("2025-06-15T10:30:00Z"),
@@ -29,6 +28,7 @@ const createShootInfo = (
       shoot: asObjectId("shoot1"),
       user: asObjectId("user1"),
       joinedAt: new Date(),
+      pegColor: "yellow",
       userInfo: { id: "user1", name: "Alice", email: "alice@test.com" },
       roundScores: [
         20, 16, 14, 10, 8, 4, 0, 20, 14, 10, 8, 4, 0, 16, 14, 10, 8, 4,
@@ -52,14 +52,21 @@ describe("SummaryPage", () => {
       expect(screen.getByText("Shoot Details")).toBeInTheDocument();
     });
 
-    it("should render the shoot mode badge", () => {
+    it("should render the peg colour badge", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ mode: Mode.red })}
+          shootInfo={createShootInfo({
+            participants: [
+              {
+                ...createShootInfo().participants[0],
+                pegColor: "red",
+              },
+            ],
+          })}
         />,
       );
-      expect(screen.getByText("red")).toBeInTheDocument();
+      expect(screen.getByText("Red peg")).toBeInTheDocument();
     });
 
     it("should render the club name", () => {

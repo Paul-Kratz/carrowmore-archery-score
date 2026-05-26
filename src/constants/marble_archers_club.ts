@@ -1,4 +1,4 @@
-import { ClubData, Mode } from "@/models";
+import { ClubData } from "@/models";
 
 const SCORING_ROWS = [
   {
@@ -52,10 +52,6 @@ export const marbleArchersClub: ClubData = {
   id: "marble_archers",
   name: "Marble Archers",
   totalStations: 14,
-  modes: [
-    { label: "Yellow", value: Mode.yellow },
-    { label: "Blue", value: Mode.blue },
-    { label: "Black", value: Mode.black },
-  ],
+  pegColors: ["yellow", "blue", "black"],
   scoringRows: SCORING_ROWS,
 };

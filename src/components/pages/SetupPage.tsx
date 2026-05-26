@@ -1,13 +1,13 @@
 "use client";
 
-import { ACTIVE_SHOOT_COOKIE, CLUBS } from "@/constants";
+import { ACTIVE_SHOOT_COOKIE, CLUBS, getClubPegColors } from "@/constants";
 import { formatResponse } from "@/helpers/formatResponse";
 import {
   getParticipantDisplayName,
   MAX_GUEST_NAME_LENGTH,
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
-import { IShoot, IUser, Mode } from "@/models";
+import { IShoot, IUser, ShootParticipantInput } from "@/models";
 import { Button } from "@radix-ui/themes";
 import { History, Sprout, TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,8 +15,10 @@ import { useState } from "react";
 import Cookies from "js-cookie";
 import { AddUsernameDialog } from "@/components/pages/setup/AddUsernameDialog";
 import { ForestLoader } from "@/components/shared/ForestLoader";
-import { ModeSelectorCard } from "./setup/ModeSelectorCard";
-import { ParticipantsCard } from "./setup/ParticipantsCard";
+import {
+  ParticipantsCard,
+  SetupParticipant,
+} from "./setup/ParticipantsCard";
 import { Header } from "../shared/Header";
 import { ClubSelectorCard } from "./setup/ClubSelectorCard";
 
@@ -25,15 +27,46 @@ type SetupPageProps = {
   currentUser: IUser;
 };
 
+const createRegisteredSetupParticipant = (
+  user: IUser,
+  pegColor: string,
+): SetupParticipant => ({
+  id: user.id,
+  userId: user.id,
+  name: user.name ?? null,
+  email: user.email ?? null,
+  isGuest: false,
+  pegColor,
+});
+
 export function SetupPage({ users, currentUser }: SetupPageProps) {
-  const [participants, setParticipants] = useState<IUser[]>([]);
+  const [selectedClub, setSelectedClub] = useState("carrowmore");
+  const [participants, setParticipants] = useState<SetupParticipant[]>(() => [
+    createRegisteredSetupParticipant(
+      currentUser,
+      getClubPegColors(CLUBS.carrowmore)[0],
+    ),
+  ]);
   const [archerQuery, setArcherQuery] = useState("");
   const [isCreatingShoot, setIsCreatingShoot] = useState(false);
-  const [selectedClub, setSelectedClub] = useState("carrowmore");
-  const [mode, setMode] = useState<Mode>(CLUBS[selectedClub].modes[0].value);
   const router = useRouter();
 
   const canStartShoot = Boolean(currentUser?.id) && !isCreatingShoot;
+  const defaultPegColor = getClubPegColors(CLUBS[selectedClub])[0];
+
+  const handleClubChange = (clubId: string) => {
+    const nextPegColors = getClubPegColors(CLUBS[clubId]);
+    const nextDefaultPegColor = nextPegColors[0];
+
+    setSelectedClub(clubId);
+    setParticipants((currentParticipants) =>
+      currentParticipants.map((participant) =>
+        nextPegColors.includes(participant.pegColor)
+          ? participant
+          : { ...participant, pegColor: nextDefaultPegColor },
+      ),
+    );
+  };
 
   const handleAddParticipant = (participantId: string) => {
     const newParticipant = users.find((u) => u.id === participantId);
@@ -42,8 +75,24 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
       newParticipant.id !== currentUser.id &&
       !participants.find((p) => p.id === newParticipant.id)
     ) {
-      setParticipants([...participants, newParticipant]);
+      setParticipants([
+        ...participants,
+        createRegisteredSetupParticipant(newParticipant, defaultPegColor),
+      ]);
     }
+  };
+
+  const handleUpdateParticipantPegColor = (
+    participantId: string,
+    pegColor: string,
+  ) => {
+    setParticipants((currentParticipants) =>
+      currentParticipants.map((participant) =>
+        participant.id === participantId
+          ? { ...participant, pegColor }
+          : participant,
+      ),
+    );
   };
 
   const handleAddGuest = (guestName: string) => {
@@ -69,17 +118,19 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
       ...participants,
       {
         id: `guest:${normalizedGuestName}`,
+        guestName: trimmedName,
         name: trimmedName,
         email: null,
         isGuest: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        pegColor: defaultPegColor,
       },
     ]);
   };
 
   const handleRemoveParticipant = (id: string) => {
-    const updatedParticipants = participants.filter((p) => p.id !== id);
+    const updatedParticipants = participants.filter(
+      (participant) => participant.id !== id || participant.id === currentUser.id,
+    );
     setParticipants(updatedParticipants);
   };
 
@@ -89,15 +140,21 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
     }
 
     setIsCreatingShoot(true);
+    const shootParticipants: ShootParticipantInput[] = participants.map(
+      (participant) =>
+        participant.isGuest
+          ? {
+              guestName: participant.guestName ?? participant.name ?? "",
+              pegColor: participant.pegColor,
+            }
+          : {
+              userId: participant.userId ?? participant.id,
+              pegColor: participant.pegColor,
+            },
+    );
     const body = {
-      mode,
       clubId: selectedClub,
-      participantIds: participants
-        .filter((participant) => !participant.isGuest)
-        .map((participant) => participant.id),
-      guestNames: participants
-        .filter((participant) => participant.isGuest)
-        .map((participant) => participant.name ?? ""),
+      participants: shootParticipants,
     };
 
     try {
@@ -148,15 +205,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
           <ClubSelectorCard
             disabled={isCreatingShoot}
             selectedClub={selectedClub}
-            onClubChange={setSelectedClub}
-            setMode={setMode}
-          />
-
-          <ModeSelectorCard
-            disabled={isCreatingShoot || !selectedClub}
-            mode={mode}
-            onModeChange={setMode}
-            availableModes={CLUBS[selectedClub].modes}
+            onClubChange={handleClubChange}
           />
 
           <ParticipantsCard
@@ -165,10 +214,12 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
             disabled={isCreatingShoot}
             onAddGuest={handleAddGuest}
             onAddParticipant={handleAddParticipant}
+            onUpdateParticipantPegColor={handleUpdateParticipantPegColor}
             onArcherQueryChange={setArcherQuery}
             onRemoveParticipant={handleRemoveParticipant}
             participants={participants}
             users={users}
+            clubId={selectedClub}
           />
         </div>
         {currentUser && !currentUser.name && <AddUsernameDialog />}

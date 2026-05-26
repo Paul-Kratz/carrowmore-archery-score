@@ -1,7 +1,8 @@
 "use client";
 
 import { GuestBadge } from "@/components/shared/GuestBadge";
-import { CLUBS } from "@/constants";
+import { CLUBS, getPegColorHex } from "@/constants";
+import { getParticipantPegColorSummary } from "@/helpers/pegColors";
 import { IShootWithParticipants } from "@/models";
 import { Button } from "@radix-ui/themes";
 import { ChevronRight, Notebook, Trash2 } from "lucide-react";
@@ -37,8 +38,10 @@ export function ShootHistoryCard({
     ? getUserStanding(shoot, currentUserId)
     : null;
   const completionStats = getShootCompletionStats(shoot);
-  const modeColor = shoot.mode === "red" ? "#9f1418" : "#b8871a";
   const clubName = CLUBS[shoot.clubId || "carrowmore"]?.name ?? shoot.clubId;
+  const { label: pegLabel, pegColors } = getParticipantPegColorSummary(
+    shoot.participants,
+  );
   const primaryMetric = userScore
     ? {
         label: "Your score",
@@ -79,12 +82,15 @@ export function ShootHistoryCard({
                 {clubName}
               </span>
               <span aria-hidden="true">-</span>
-              <span className="inline-flex items-center gap-1 uppercase">
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: modeColor }}
-                />
-                {shoot.mode}
+              <span className="inline-flex items-center gap-1">
+                {pegColors.slice(0, 3).map((pegColor) => (
+                  <span
+                    key={pegColor}
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: getPegColorHex(pegColor) }}
+                  />
+                ))}
+                {pegLabel}
               </span>
             </div>
             <h3 className="truncate text-base font-semibold leading-tight text-(--club-red-dark)">

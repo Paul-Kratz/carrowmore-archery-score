@@ -1,15 +1,32 @@
 "use client";
 
+import {
+  CLUBS,
+  getClubPegColors,
+  getPegColorHex,
+  getPegColorLabel,
+} from "@/constants";
 import { getUserLabel } from "@/helpers/getUserLabel";
 import {
   getParticipantDisplayName,
   MAX_GUEST_NAME_LENGTH,
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
+import { getNextPegColor } from "@/helpers/pegColors";
 import { IUser } from "@/models";
 import { Button, Card } from "@radix-ui/themes";
 import { Plus, Search, Trash2, UserPlus, UsersRound } from "lucide-react";
-import { FormEvent } from "react";
+import { FormEvent, KeyboardEvent } from "react";
+
+export type SetupParticipant = {
+  id: string;
+  userId?: string;
+  guestName?: string | null;
+  name?: string | null;
+  email?: string | null;
+  isGuest?: boolean;
+  pegColor: string;
+};
 
 type ParticipantsCardProps = {
   archerQuery: string;
@@ -17,10 +34,12 @@ type ParticipantsCardProps = {
   disabled?: boolean;
   onAddGuest: (guestName: string) => void;
   onAddParticipant: (participantId: string) => void;
+  onUpdateParticipantPegColor: (participantId: string, pegColor: string) => void;
   onArcherQueryChange: (query: string) => void;
   onRemoveParticipant: (participantId: string) => void;
-  participants: IUser[];
+  participants: SetupParticipant[];
   users: IUser[];
+  clubId: string;
 };
 
 export function ParticipantsCard({
@@ -29,17 +48,23 @@ export function ParticipantsCard({
   disabled = false,
   onAddGuest,
   onAddParticipant,
+  onUpdateParticipantPegColor,
   onArcherQueryChange,
   onRemoveParticipant,
   participants,
   users,
+  clubId,
 }: ParticipantsCardProps) {
   const currentUserId = currentUser.id;
-  const selectedParticipants = [currentUser, ...participants];
+  const clubData = CLUBS[clubId];
+  const clubPegColors = getClubPegColors(clubData);
+  const selectedParticipants = participants;
   const normalizedQuery = normalizeParticipantName(archerQuery);
   const availableUsers = users.filter(
     (user) =>
-      !selectedParticipants.some((participant) => participant.id === user.id),
+      !selectedParticipants.some(
+        (participant) => (participant.userId ?? participant.id) === user.id,
+      ),
   );
   const matchingUsers =
     normalizedQuery.length === 0
@@ -92,6 +117,29 @@ export function ParticipantsCard({
     }
 
     addGuestParticipant();
+  };
+
+  const handleParticipantPegColorChange = (participant: SetupParticipant) => {
+    if (disabled) {
+      return;
+    }
+
+    onUpdateParticipantPegColor(
+      participant.id,
+      getNextPegColor(participant.pegColor, clubPegColors),
+    );
+  };
+
+  const handleParticipantKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+    participant: SetupParticipant,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleParticipantPegColorChange(participant);
   };
 
   return (
@@ -179,25 +227,46 @@ export function ParticipantsCard({
         </form>
 
         <div className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            Starting line
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              Starting line
+            </p>
+            <p className="text-xs font-medium text-muted-foreground">
+              Tap an archer to change peg colour
+            </p>
+          </div>
           <div className="grid gap-2">
-            <div className="flex min-h-10 items-center justify-between rounded-xl border border-(--club-gold-dark) bg-[#eef4d7] px-3 py-2 shadow-sm">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate font-semibold">
-                  {getUserLabel(currentUser, currentUserId)}
-                </span>
-              </div>
-            </div>
             {participants.map((participant) => (
               <div
                 key={participant.id}
-                className="flex min-h-10 items-center justify-between rounded-xl border border-border bg-card px-3 py-2 shadow-sm"
+                aria-disabled={disabled}
+                aria-label={`Change ${getParticipantDisplayName(
+                  participant,
+                  currentUserId,
+                )} peg colour, currently ${getPegColorLabel(
+                  participant.pegColor,
+                )}`}
+                className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 shadow-sm border-l-8 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--club-gold) ${
+                  participant.userId === currentUserId
+                    ? "bg-[#eef4d7]"
+                    : "bg-card"
+                } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-(--club-red-dark)"}`}
+                onClick={() => handleParticipantPegColorChange(participant)}
+                onKeyDown={(event) =>
+                  handleParticipantKeyDown(event, participant)
+                }
+                role="button"
+                style={{
+                  borderLeftColor: getPegColorHex(participant.pegColor),
+                }}
+                tabIndex={disabled ? -1 : 0}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate font-semibold">
-                    {getUserLabel(participant, currentUserId)}
+                    {getParticipantDisplayName(participant, currentUserId)}
+                    {participant.userId === currentUserId &&
+                      !participant.isGuest &&
+                      " (you)"}
                   </span>
                   {participant.isGuest && (
                     <span className="shrink-0 rounded-full bg-[#dfe9cb] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
@@ -205,15 +274,32 @@ export function ParticipantsCard({
                     </span>
                   )}
                 </div>
-                <Button
-                  onClick={() => onRemoveParticipant(participant.id)}
-                  variant="ghost"
-                  size="3"
-                  className="text-destructive h-8 w-8 shrink-0 p-0"
-                  disabled={disabled}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-xs font-bold text-(--club-red-dark)">
+                    <span
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{
+                        backgroundColor: getPegColorHex(participant.pegColor),
+                      }}
+                    />
+                    {getPegColorLabel(participant.pegColor)}
+                  </span>
+                  {participant.userId !== currentUserId && (
+                    <Button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onRemoveParticipant(participant.id);
+                      }}
+                      variant="ghost"
+                      size="3"
+                      className="text-destructive h-8 w-8 shrink-0 p-0"
+                      disabled={disabled}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

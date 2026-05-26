@@ -2,18 +2,14 @@ import { createNewShoot } from "@/functions/createNewShoot";
 import { deleteShoot } from "@/functions/deleteShoot";
 import { getShootAccess } from "@/functions/getShootAccess";
 import { isValidObjectId } from "@/helpers/isValidObjectId";
+import {
+  CREATE_SHOOT_VALIDATION_ERRORS,
+  isShootParticipantInput,
+} from "@/helpers/shootParticipantInput";
 import { updateShoot } from "@/functions/updateShoot";
 import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { CLUBS } from "@/constants";
-
-const CREATE_SHOOT_VALIDATION_ERRORS = new Set([
-  "Guest names cannot be empty",
-  "Guest names must be unique",
-  "Guest names cannot match selected registered participant names",
-  "One or more participant userIds do not exist",
-  "Guest names must be 50 characters or fewer",
-]);
+import { CLUBS, getClubPegColors } from "@/constants";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,50 +18,53 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const currentUserId = session.user.id;
     const body = await request.json();
-    const { mode, participantIds, guestNames = [], clubId } = body;
-    const club = CLUBS[clubId];
-    const selectedMode =
-      typeof mode === "string" && club
-        ? club.modes.find((clubMode) => clubMode.value === mode)?.value
-        : undefined;
+    const { participantIds, guestNames = [], clubId, participants } = body;
+    const club = typeof clubId === "string" ? CLUBS[clubId] : undefined;
+    const allowedPegColors = getClubPegColors(club);
+    const participantInputsProvided = Array.isArray(participants);
 
     if (
-      !mode ||
-      !Array.isArray(participantIds) ||
-      !Array.isArray(guestNames) ||
-      !clubId
+      !clubId ||
+      (!participantInputsProvided &&
+        (!Array.isArray(participantIds) || !Array.isArray(guestNames)))
     ) {
       return NextResponse.json(
         {
           error:
-            "Missing required fields: mode, participantIds, guestNames, clubId",
+            "Missing required fields: participants or participantIds, guestNames, clubId",
         },
         { status: 400 },
       );
     }
 
     if (
-      typeof mode !== "string" ||
       !club ||
-      !selectedMode ||
-      !participantIds.every(
-        (participantId) =>
-          typeof participantId === "string" && isValidObjectId(participantId),
-      ) ||
-      !guestNames.every((guestName) => typeof guestName === "string")
+      (participantInputsProvided &&
+        !(participants as unknown[]).every((participant) =>
+          isShootParticipantInput(participant, allowedPegColors),
+        )) ||
+      (!participantInputsProvided &&
+        (!participantIds.every(
+          (participantId: unknown) =>
+            typeof participantId === "string" && isValidObjectId(participantId),
+        ) ||
+          !guestNames.every(
+            (guestName: unknown) => typeof guestName === "string",
+          )))
     ) {
       return NextResponse.json(
-        { error: "Invalid mode, participantIds, guestNames, or clubId" },
+        { error: "Invalid participants, participantIds, guestNames, or clubId" },
         { status: 400 },
       );
     }
 
     const shoot = await createNewShoot({
-      userId: session.user.id,
-      mode: selectedMode,
-      participantIds,
-      guestNames,
+      userId: currentUserId,
+      participantIds: participantInputsProvided ? undefined : participantIds,
+      guestNames: participantInputsProvided ? undefined : guestNames,
+      participants: participantInputsProvided ? participants : undefined,
       clubId,
     });
 

@@ -1,5 +1,5 @@
 import { Schema, model, models } from "mongoose";
-import { IUser, IShoot, IShootParticipant, IRoundScore, Mode } from "./index";
+import { IUser, IShoot, IShootParticipant, IRoundScore } from "./index";
 
 const UserSchema = new Schema<IUser>(
   {
@@ -13,7 +13,6 @@ const UserSchema = new Schema<IUser>(
 
 const ShootSchema = new Schema<IShoot>(
   {
-    mode: { type: String, enum: Object.values(Mode), required: true },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -55,6 +54,7 @@ const ShootParticipantSchema = new Schema<IShootParticipant>(
     },
     guestName: { type: String, required: false },
     guestNameNormalized: { type: String, required: false, index: true },
+    pegColor: { type: String, required: false },
     joinedAt: { type: Date, required: true, default: () => new Date() },
   },
   { timestamps: false },

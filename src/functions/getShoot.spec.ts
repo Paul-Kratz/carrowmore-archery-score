@@ -79,7 +79,6 @@ describe("getShoot", () => {
   it("should format response", async () => {
     const mockData = {
       _id: "shoot123",
-      mode: "yellow",
       participants: [],
     };
 
@@ -94,7 +93,6 @@ describe("getShoot", () => {
   it("should return shoot with participants and scores", async () => {
     const mockShoot = {
       id: "shoot123",
-      mode: "yellow",
       createdBy: "user123",
       completed: false,
       participants: [
@@ -124,7 +122,6 @@ describe("getShoot", () => {
   it("should handle shoot with no participants", async () => {
     const mockShoot = {
       id: "shoot123",
-      mode: "yellow",
       participants: [],
     };
 
@@ -138,7 +135,6 @@ describe("getShoot", () => {
   it("should handle completed shoot", async () => {
     const mockShoot = {
       id: "shoot123",
-      mode: "red",
       completed: true,
       notes: "Great session",
       participants: [],
@@ -161,18 +157,15 @@ describe("getShoot", () => {
     expect(mockConnectMongoose).toHaveBeenCalledTimes(2);
   });
 
-  it("should handle different modes", async () => {
-    const yellowShoot = { id: "shoot1", mode: "yellow" };
-    const redShoot = { id: "shoot2", mode: "red" };
+  it("does not group legacy shoot mode into the result", async () => {
+    mockFormatResponse.mockResolvedValue({});
 
-    mockFormatResponse
-      .mockResolvedValueOnce(yellowShoot)
-      .mockResolvedValueOnce(redShoot);
+    await getShoot({ shootId: "shoot123" });
 
-    const result1 = await getShoot({ shootId: "shoot1" });
-    const result2 = await getShoot({ shootId: "shoot2" });
-
-    expect(result1.mode).toBe("yellow");
-    expect(result2.mode).toBe("red");
+    expect(mockAggregatePipeline.group).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        mode: expect.anything(),
+      }),
+    );
   });
 });

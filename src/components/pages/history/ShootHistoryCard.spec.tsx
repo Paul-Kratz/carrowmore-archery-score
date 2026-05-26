@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Mode, type IShootWithParticipants } from "@/models";
+import { type IShootWithParticipants } from "@/models";
 import { ShootHistoryCard } from "./ShootHistoryCard";
 import type { Types } from "mongoose";
 
@@ -8,7 +8,6 @@ const asObjectId = (value: string) => value as unknown as Types.ObjectId;
 const shoot: IShootWithParticipants = {
   id: "shoot-1",
   clubId: "carrowmore",
-  mode: Mode.red,
   createdBy: "user-1",
   createdAt: new Date("2026-01-01T10:00:00.000Z"),
   updatedAt: new Date("2026-01-01T10:00:00.000Z"),
@@ -20,6 +19,7 @@ const shoot: IShootWithParticipants = {
       shoot: asObjectId("shoot-1"),
       user: asObjectId("user-1"),
       joinedAt: new Date("2026-01-01T10:00:00.000Z"),
+      pegColor: "red",
       roundScores: [20, null],
       totalScore: 20,
       userInfo: {

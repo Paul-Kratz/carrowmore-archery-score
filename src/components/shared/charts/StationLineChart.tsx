@@ -6,7 +6,6 @@ import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   CartesianGrid,
-  Dot,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -14,12 +13,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { PegScoreDot, PegScoreTooltip } from "./PegScoreChartParts";
 
 const FOREST = "#123426";
 const MOSS = "#6d7f47";
 const PARCHMENT_LINE = "#d8cfb8";
-const RED_MODE = "#9f1418";
-const YELLOW_MODE = "#b8871a";
 
 const formatShortDate = (createdAt: string) => {
   const date = new Date(createdAt);
@@ -27,68 +25,6 @@ const formatShortDate = (createdAt: string) => {
     month: "short",
     day: "numeric",
   }).format(date);
-};
-
-const getModeColor = (mode?: string) =>
-  mode === "red" ? RED_MODE : YELLOW_MODE;
-
-type ModeDotProps = {
-  cx?: number;
-  cy?: number;
-  payload?: {
-    mode?: string;
-    score?: number | null;
-  };
-};
-
-const ModeDot = ({ cx, cy, payload }: ModeDotProps) => {
-  if (typeof cx !== "number" || typeof cy !== "number") return null;
-  if (payload?.score === null || payload?.score === undefined) return null;
-
-  return (
-    <Dot
-      cx={cx}
-      cy={cy}
-      r={5}
-      fill={getModeColor(payload.mode)}
-      stroke="#fbf7e8"
-      strokeWidth={2}
-    />
-  );
-};
-
-type StationTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: Array<{
-    value?: number | null;
-    payload?: {
-      mode?: string;
-    };
-  }>;
-};
-
-const StationTooltip = ({ active, label, payload }: StationTooltipProps) => {
-  if (!active || !payload?.length) return null;
-
-  const score = payload[0]?.value;
-  const mode = payload[0]?.payload?.mode;
-
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-md">
-      <div className="font-semibold text-(--club-red-dark)">{label}</div>
-      <div className="text-muted-foreground">
-        {score ?? "No score"} points
-      </div>
-      <div className="mt-1 flex items-center gap-1.5 text-xs uppercase text-muted-foreground">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: getModeColor(mode) }}
-        />
-        {mode ?? "unknown"} peg
-      </div>
-    </div>
-  );
 };
 
 const StationStat = ({
@@ -131,7 +67,7 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
   const chartData = sorted.map((shoot) => ({
     date: formatShortDate(shoot.createdAt),
     score: shoot.roundScores[activeStation] ?? null,
-    mode: shoot.mode,
+    pegColor: shoot.pegColor,
   }));
   const stationScores = chartData
     .map((point) => point.score)
@@ -211,13 +147,16 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
               ticks={[0, 4, 8, 10, 14, 16, 20]}
               width={48}
             />
-            <Tooltip content={<StationTooltip />} cursor={{ stroke: MOSS }} />
+            <Tooltip
+              content={<PegScoreTooltip />}
+              cursor={{ stroke: MOSS }}
+            />
             <Line
               type="monotone"
               dataKey="score"
               stroke={FOREST}
               strokeWidth={2}
-              dot={<ModeDot />}
+              dot={<PegScoreDot />}
               activeDot={{
                 r: 7,
                 fill: FOREST,

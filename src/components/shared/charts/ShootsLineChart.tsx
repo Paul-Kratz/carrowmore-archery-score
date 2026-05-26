@@ -6,7 +6,6 @@ import { Target, TrendingUp, TreePine } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   CartesianGrid,
-  Dot,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -14,13 +13,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { PegScoreDot, PegScoreTooltip } from "./PegScoreChartParts";
 import { StationLineChart } from "./StationLineChart";
 
 const FOREST = "#123426";
 const MOSS = "#6d7f47";
 const PARCHMENT_LINE = "#d8cfb8";
-const RED_MODE = "#9f1418";
-const YELLOW_MODE = "#b8871a";
 
 const formatShortDate = (createdAt: string) => {
   const date = new Date(createdAt);
@@ -30,69 +28,7 @@ const formatShortDate = (createdAt: string) => {
   }).format(date);
 };
 
-const getModeColor = (mode?: string) =>
-  mode === "red" ? RED_MODE : YELLOW_MODE;
-
 const getShootClubId = (shoot: IShootChartData) => shoot.clubId || "carrowmore";
-
-type ModeDotProps = {
-  cx?: number;
-  cy?: number;
-  payload?: {
-    mode?: string;
-    score?: number | null;
-  };
-};
-
-const ModeDot = ({ cx, cy, payload }: ModeDotProps) => {
-  if (typeof cx !== "number" || typeof cy !== "number") return null;
-  if (payload?.score === null || payload?.score === undefined) return null;
-
-  return (
-    <Dot
-      cx={cx}
-      cy={cy}
-      r={5}
-      fill={getModeColor(payload.mode)}
-      stroke="#fbf7e8"
-      strokeWidth={2}
-    />
-  );
-};
-
-type ScoreTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: Array<{
-    value?: number | null;
-    payload?: {
-      mode?: string;
-    };
-  }>;
-};
-
-const ScoreTooltip = ({ active, label, payload }: ScoreTooltipProps) => {
-  if (!active || !payload?.length) return null;
-
-  const score = payload[0]?.value;
-  const mode = payload[0]?.payload?.mode;
-
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-md">
-      <div className="font-semibold text-(--club-red-dark)">{label}</div>
-      <div className="text-muted-foreground">
-        {score ?? "No score"} points
-      </div>
-      <div className="mt-1 flex items-center gap-1.5 text-xs uppercase text-muted-foreground">
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: getModeColor(mode) }}
-        />
-        {mode ?? "unknown"} peg
-      </div>
-    </div>
-  );
-};
 
 const TrendStat = ({
   label,
@@ -155,7 +91,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
   const chartData = sorted.map((shoot) => ({
     date: formatShortDate(shoot.createdAt),
     score: shoot.totalScore,
-    mode: shoot.mode,
+    pegColor: shoot.pegColor,
   }));
 
   if (sorted.length === 0) {
@@ -179,18 +115,8 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
             Trends
           </div>
           <h3 className="text-lg font-bold leading-tight text-(--club-red-dark)">
-            Score trail
+            Score trend
           </h3>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#b8871a]" />
-            Yellow
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#9f1418]" />
-            Red
-          </span>
         </div>
       </div>
 
@@ -261,13 +187,16 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
                 tick={{ fontSize: 11, fill: MOSS }}
                 width={48}
               />
-              <Tooltip content={<ScoreTooltip />} cursor={{ stroke: MOSS }} />
+              <Tooltip
+                content={<PegScoreTooltip />}
+                cursor={{ stroke: MOSS }}
+              />
               <Line
                 type="monotone"
                 dataKey="score"
                 stroke={FOREST}
                 strokeWidth={2.5}
-                dot={<ModeDot />}
+                dot={<PegScoreDot />}
                 activeDot={{
                   r: 7,
                   fill: FOREST,
