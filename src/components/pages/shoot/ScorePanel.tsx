@@ -14,6 +14,25 @@ type ScorePanelProps = {
   clubId: string;
 };
 
+const SCORE_ROW_PALETTE = [
+  { solid: "#2F5D43", tint: "#E4EFE7" },
+  { solid: "#8C8F57", tint: "#F0F1DD" },
+  { solid: "#A5402D", tint: "#F6E5DF" },
+  { solid: "#3D6F86", tint: "#E1EEF3" },
+  { solid: "#6F4F8C", tint: "#ECE5F2" },
+];
+
+export function getScoreButtonTheme(rowIndex: number, optionIndex: number) {
+  const palette = SCORE_ROW_PALETTE[rowIndex % SCORE_ROW_PALETTE.length];
+  const isPrimaryResult = optionIndex === 0;
+
+  return {
+    backgroundColor: isPrimaryResult ? palette.solid : palette.tint,
+    borderColor: palette.solid,
+    color: isPrimaryResult ? "#fff" : "var(--ink)",
+  };
+}
+
 export function ScorePanel({
   currentScore,
   currentUserId,
@@ -36,7 +55,7 @@ export function ScorePanel({
         {selectedParticipantUser?.isGuest ? " guest" : ""}
       </div>
       <div className="max-w-full space-y-2">
-        {clubData.scoringRows.map((row) => (
+        {clubData.scoringRows.map((row, rowIndex) => (
           <div
             key={row.label}
             className="rounded-lg border border-border bg-card p-2"
@@ -50,17 +69,18 @@ export function ScorePanel({
               )}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {row.scores.map(({ score, result, color }) => {
+              {row.scores.map(({ score, result }, optionIndex) => {
                 return (
                   <button
                     key={score}
                     disabled={disabled}
                     onClick={() => onSetScore(score)}
-                    className={`min-h-16 min-w-0 w-full rounded-lg p-2 border-2 ${color} ${
+                    className={`min-h-16 min-w-0 w-full rounded-lg p-2 border-2 ${
                       currentScore === score
                         ? "ring-3 ring-offset-2 ring-black/80"
                         : ""
                     }`}
+                    style={getScoreButtonTheme(rowIndex, optionIndex)}
                   >
                     <div className="text-xs font-semibold uppercase opacity-90">
                       {result}

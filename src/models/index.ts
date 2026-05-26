@@ -11,7 +11,6 @@ export type ClubData = {
     scores: readonly {
       score: number;
       result: string;
-      color: string;
     }[];
   }[];
 };

@@ -8,12 +8,10 @@ const SCORING_ROWS = [
       {
         score: 20,
         result: "Kill",
-        color: "bg-[#2F5D43] border-[#2F5D43] text-white",
       },
       {
         score: 16,
         result: "Wound",
-        color: "border-[#2F5D43] text-[var(--ink)]",
       },
     ],
   },
@@ -24,12 +22,10 @@ const SCORING_ROWS = [
       {
         score: 14,
         result: "Kill",
-        color: "bg-[#9A9B73] text-white border-[#9A9B73]",
       },
       {
         score: 10,
         result: "Wound",
-        color: "border-[#9A9B73] text-[var(--ink)]",
       },
     ],
   },
@@ -40,12 +36,10 @@ const SCORING_ROWS = [
       {
         score: 8,
         result: "Kill",
-        color: "bg-[#A5402D] text-white border-[#A5402D]",
       },
       {
         score: 4,
         result: "Wound",
-        color: "border-[#A5402D] text-[var(--ink)]",
       },
     ],
   },
