@@ -51,7 +51,7 @@ export const PegScoreTooltip = ({
 
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-md">
-      <div className="font-semibold text-(--club-red-dark)">{label}</div>
+      <div className="font-semibold text-(--deep-forest-green)">{label}</div>
       <div className="text-muted-foreground">
         {score ?? "No score"} points
       </div>

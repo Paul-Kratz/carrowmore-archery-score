@@ -31,7 +31,7 @@ export const SummaryPage = ({
         <section className="mt-5">
           <div className="mb-2 flex items-end justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-(--club-red-dark)">
+              <h3 className="text-lg font-bold text-(--deep-forest-green)">
                 Participants
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -56,7 +56,7 @@ export const SummaryPage = ({
 
         <section className="mt-5">
           <div className="mb-2">
-            <h3 className="text-lg font-bold text-(--club-red-dark)">
+            <h3 className="text-lg font-bold text-(--deep-forest-green)">
               Station Breakdown
             </h3>
             <p className="text-xs text-muted-foreground">

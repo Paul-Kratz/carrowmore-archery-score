@@ -83,11 +83,11 @@ export const ExitDialog = ({
         style={{ padding: 0 }}
         maxWidth="420px"
       >
-        <div className="border-b border-border bg-[linear-gradient(135deg,var(--club-red-dark),var(--club-red))] px-4 py-4 text-primary-foreground">
+        <div className="border-b border-border bg-[linear-gradient(135deg,var(--deep-forest-green),var(--pine-green))] px-4 py-4 text-primary-foreground">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-(--club-gold)/70 bg-[rgba(18,52,38,0.45)]">
-                <TreePine className="h-6 w-6 text-(--club-gold)" />
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-(--sage-green)/70 bg-[rgba(18,52,38,0.45)]">
+                <TreePine className="h-6 w-6 text-(--sage-green)" />
               </div>
               <div>
                 <Dialog.Title className="text-xl font-bold leading-tight">
@@ -119,7 +119,7 @@ export const ExitDialog = ({
                 <Clock className="h-3.5 w-3.5" />
                 Duration
               </div>
-              <div className="text-base font-bold text-(--club-red-dark)">
+              <div className="text-base font-bold text-(--deep-forest-green)">
                 {shootLength}
               </div>
             </div>
@@ -128,14 +128,14 @@ export const ExitDialog = ({
                 <MapPin className="h-3.5 w-3.5" />
                 Club
               </div>
-              <div className="text-base font-bold text-(--club-red-dark)">
+              <div className="text-base font-bold text-(--deep-forest-green)">
                 {clubName}
               </div>
             </div>
           </div>
 
           <label className="block">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-(--club-red-dark)">
+            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-(--deep-forest-green)">
               <NotebookPen className="h-4 w-4" />
               Notes
             </div>

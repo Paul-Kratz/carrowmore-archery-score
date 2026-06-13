@@ -20,19 +20,19 @@ export function ShootStatsCard({ selectedParticipant }: ShootStatsCardProps) {
     <Card className="m-2 p-4 bg-[var(--card)]">
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
-          <div className="text-2xl font-bold text-[var(--club-red-dark)]">
+          <div className="text-2xl font-bold text-[var(--deep-forest-green)]">
             {selectedParticipant?.totalScore}
           </div>
           <div className="text-xs text-muted-foreground">Total Score</div>
         </div>
         <div>
-          <div className="text-2xl font-bold text-[var(--forest)]">
+          <div className="text-2xl font-bold text-[var(--emerald-green)]">
             {completedCount}
           </div>
           <div className="text-xs text-muted-foreground">Completed</div>
         </div>
         <div>
-          <div className="text-2xl font-bold text-[var(--leather)]">{average}</div>
+          <div className="text-2xl font-bold text-[var(--warm-brown)]">{average}</div>
           <div className="text-xs text-muted-foreground">Average</div>
         </div>
       </div>

@@ -28,11 +28,11 @@ export function DeleteShootDialog({
         style={{ padding: 0 }}
         maxWidth="420px"
       >
-        <div className="border-b border-border bg-[linear-gradient(135deg,var(--club-red-dark),var(--club-red))] px-4 py-4 text-primary-foreground">
+        <div className="border-b border-border bg-[linear-gradient(135deg,var(--deep-forest-green),var(--pine-green))] px-4 py-4 text-primary-foreground">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-(--club-gold)/70 bg-[rgba(18,52,38,0.45)]">
-                <AlertTriangle className="h-6 w-6 text-(--club-gold)" />
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-(--sage-green)/70 bg-[rgba(18,52,38,0.45)]">
+                <AlertTriangle className="h-6 w-6 text-(--sage-green)" />
               </div>
               <div>
                 <AlertDialog.Title className="text-xl font-bold leading-tight">
@@ -60,7 +60,7 @@ export function DeleteShootDialog({
 
         <div className="space-y-4 bg-card p-4">
           <div className="rounded-lg border border-border bg-[#edf4e9] p-3">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-(--club-red-dark)">
+            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-(--deep-forest-green)">
               <Trash2 className="h-4 w-4" />
               This cannot be undone
             </div>

@@ -181,7 +181,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
                 <section className="mb-4">
                   <div className="mb-2 flex items-end justify-between gap-3">
                     <div>
-                      <h2 className="text-xl font-bold leading-tight text-(--club-red-dark)">
+                      <h2 className="text-xl font-bold leading-tight text-(--deep-forest-green)">
                         Shoot history
                       </h2>
                       <p className="text-sm text-muted-foreground">
@@ -213,8 +213,8 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
                           onClick={() => setHistoryFilter(option.value)}
                           className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                             selected
-                              ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
-                              : "border-border bg-card/80 text-(--club-red-dark)"
+                              ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
+                              : "border-border bg-card/80 text-(--deep-forest-green)"
                           }`}
                         >
                           {option.label}
@@ -231,8 +231,8 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
                       onClick={() => setShowTrends((value) => !value)}
                       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                         showTrends
-                          ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
-                          : "border-border bg-card/80 text-(--club-red-dark)"
+                          ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
+                          : "border-border bg-card/80 text-(--deep-forest-green)"
                       }`}
                     >
                       <BarChart3 className="h-4 w-4" />

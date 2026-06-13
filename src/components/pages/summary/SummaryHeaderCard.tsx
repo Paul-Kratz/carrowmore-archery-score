@@ -52,11 +52,11 @@ export function SummaryHeaderCard({
             <Target className="h-3.5 w-3.5" />
             Shoot summary
           </div>
-          <h2 className="text-2xl font-bold leading-tight text-(--club-red-dark)">
+          <h2 className="text-2xl font-bold leading-tight text-(--deep-forest-green)">
             {formatSummaryDate(createdAtTimestamp, false)}
           </h2>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-1 text-xs font-bold uppercase text-(--club-red-dark)">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-1 text-xs font-bold uppercase text-(--deep-forest-green)">
           {pegColors.slice(0, 3).map((pegColor) => (
             <span
               key={pegColor}
@@ -73,7 +73,7 @@ export function SummaryHeaderCard({
           <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Archers
           </div>
-          <div className="text-xl font-bold text-(--club-red-dark)">
+          <div className="text-xl font-bold text-(--deep-forest-green)">
             {shootInfo.participants.length}
           </div>
         </div>
@@ -81,7 +81,7 @@ export function SummaryHeaderCard({
           <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Top Score
           </div>
-          <div className="text-xl font-bold text-(--club-red-dark)">
+          <div className="text-xl font-bold text-(--deep-forest-green)">
             {topScore}
           </div>
         </div>
@@ -89,7 +89,7 @@ export function SummaryHeaderCard({
           <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
             Scored
           </div>
-          <div className="text-xl font-bold text-(--club-red-dark)">
+          <div className="text-xl font-bold text-(--deep-forest-green)">
             {completion}%
           </div>
         </div>
@@ -98,7 +98,7 @@ export function SummaryHeaderCard({
       <div className="space-y-2 border-t border-border/70 pt-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
-          <span className="rounded-full border border-(--club-gold-dark)/50 bg-[#eef4d7] px-2.5 py-1 text-xs font-bold text-(--club-red-dark)">
+          <span className="rounded-full border border-(--olive-green)/50 bg-[#eef4d7] px-2.5 py-1 text-xs font-bold text-(--deep-forest-green)">
             {clubName}
           </span>
         </div>

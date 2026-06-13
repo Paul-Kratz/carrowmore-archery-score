@@ -6,29 +6,29 @@
   --font-size: 16px;
   --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --club-red: #2f5d43;
-  --club-red-dark: #123426;
-  --club-gold: #93b35f;
-  --club-gold-dark: #59743b;
-  --parchment: #edf2df;
-  --parchment-deep: #d9dec1;
-  --ink: #1e261c;
-  --forest: #1f6a4a;
-  --leather: #6a5138;
-  --background: var(--parchment);
-  --foreground: var(--ink);
+  --pine-green: #2f5d43;
+  --deep-forest-green: #123426;
+  --sage-green: #93b35f;
+  --olive-green: #59743b;
+  --pale-sage: #edf2df;
+  --pale-olive: #d9dec1;
+  --charcoal-green: #1e261c;
+  --emerald-green: #1f6a4a;
+  --warm-brown: #6a5138;
+  --background: var(--pale-sage);
+  --foreground: var(--charcoal-green);
   --card: #fbf7e8;
-  --card-foreground: var(--ink);
+  --card-foreground: var(--charcoal-green);
   --popover: #fbf7e8;
-  --popover-foreground: var(--ink);
-  --primary: var(--club-red);
+  --popover-foreground: var(--charcoal-green);
+  --primary: var(--pine-green);
   --primary-foreground: #fbf7e8;
   --secondary: #dfe7c7;
-  --secondary-foreground: var(--ink);
+  --secondary-foreground: var(--charcoal-green);
   --muted: #dfe7c7;
   --muted-foreground: #647058;
   --accent: #e6d6ad;
-  --accent-foreground: var(--ink);
+  --accent-foreground: var(--charcoal-green);
   --destructive: #a02522;
   --destructive-foreground: #ffffff;
   --border: rgba(18, 52, 38, 0.18);
@@ -37,21 +37,21 @@
   --switch-background: #b9c899;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #93b35f;
-  --chart-1: #2f5d43;
-  --chart-2: #93b35f;
-  --chart-3: #1f6a4a;
+  --ring: var(--sage-green);
+  --chart-1: var(--pine-green);
+  --chart-2: var(--sage-green);
+  --chart-3: var(--emerald-green);
   --chart-4: #6e4a2f;
   --chart-5: #d6b566;
   --radius: 0.5rem;
   --sidebar: #fbf7e8;
-  --sidebar-foreground: var(--ink);
-  --sidebar-primary: var(--club-red);
+  --sidebar-foreground: var(--charcoal-green);
+  --sidebar-primary: var(--pine-green);
   --sidebar-primary-foreground: #fbf7e8;
   --sidebar-accent: #dfe7c7;
-  --sidebar-accent-foreground: var(--ink);
+  --sidebar-accent-foreground: var(--charcoal-green);
   --sidebar-border: rgba(18, 52, 38, 0.18);
-  --sidebar-ring: #93b35f;
+  --sidebar-ring: var(--sage-green);
 }
 
 .dark {
@@ -299,7 +299,7 @@
     isolation: isolate;
     border: 1px solid rgba(18, 52, 38, 0.22) !important;
     color: var(--primary-foreground) !important;
-    background-color: var(--club-red) !important;
+    background-color: var(--pine-green) !important;
     background-image: linear-gradient(
       180deg,
       rgba(251, 247, 232, 0.16),
@@ -326,7 +326,7 @@
     border: 1px solid rgba(18, 52, 38, 0.14);
     background:
       linear-gradient(180deg, rgba(251, 247, 232, 0.78), rgba(223, 231, 199, 0.82) 65%, rgba(196, 211, 160, 0.56)),
-      var(--parchment);
+      var(--pale-sage);
   }
 
   .forest-chart-surface::before {
@@ -355,7 +355,7 @@
   .forest-loader-stem,
   .forest-loader-branch-left,
   .forest-loader-branch-right {
-    stroke: var(--club-red-dark);
+    stroke: var(--deep-forest-green);
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 4;
@@ -384,7 +384,7 @@
   }
 
   .forest-loader-leaf {
-    fill: var(--club-gold);
+    fill: var(--sage-green);
     opacity: 0;
     transform-box: fill-box;
     transform-origin: center;
@@ -416,7 +416,7 @@
   }
 
   .forest-loader-light .forest-loader-leaf-top {
-    fill: var(--club-gold);
+    fill: var(--sage-green);
   }
 
   @keyframes forest-loader-grow-stem {

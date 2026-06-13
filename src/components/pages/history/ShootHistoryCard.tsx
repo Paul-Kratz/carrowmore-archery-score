@@ -63,7 +63,7 @@ export function ShootHistoryCard({
         };
 
   return (
-    <article className="w-full overflow-hidden rounded-xl border border-border p-0 border-l-6 border-l-(--club-gold-dark) shadow-sm transition-colors">
+    <article className="w-full overflow-hidden rounded-xl border border-border p-0 border-l-6 border-l-(--olive-green) shadow-sm transition-colors">
       <div className="px-4 py-3">
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -78,7 +78,7 @@ export function ShootHistoryCard({
                 {formatHistoryDate(new Date(shoot.createdAt).getTime())}
               </span>
               <span aria-hidden="true">-</span>
-              <span className="rounded-full border border-(--club-gold-dark)/50 bg-[#eef4d7] px-2 py-0.5 font-semibold text-(--club-red-dark)">
+              <span className="rounded-full border border-(--olive-green)/50 bg-[#eef4d7] px-2 py-0.5 font-semibold text-(--deep-forest-green)">
                 {clubName}
               </span>
               <span aria-hidden="true">-</span>
@@ -93,13 +93,13 @@ export function ShootHistoryCard({
                 {pegLabel}
               </span>
             </div>
-            <h3 className="truncate text-base font-semibold leading-tight text-(--club-red-dark)">
+            <h3 className="truncate text-base font-semibold leading-tight text-(--deep-forest-green)">
               {primaryMetric.label}
             </h3>
           </div>
           <button
             type="button"
-            className="-mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-card/70 hover:text-(--club-red-dark)"
+            className="-mr-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-card/70 hover:text-(--deep-forest-green)"
             onClick={() => onOpenSummary(shoot.id)}
             aria-label={`Open shoot from ${formatHistoryDate(
               new Date(shoot.createdAt).getTime(),
@@ -111,7 +111,7 @@ export function ShootHistoryCard({
 
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-3xl font-bold leading-none text-(--club-red-dark)">
+            <div className="text-3xl font-bold leading-none text-(--deep-forest-green)">
               {primaryMetric.value}
             </div>
             <div className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">

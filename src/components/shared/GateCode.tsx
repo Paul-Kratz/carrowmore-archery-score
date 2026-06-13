@@ -29,12 +29,12 @@ export const GateCode = () => {
 
   return (
     <div className="forest-page bg-background min-h-screen">
-      <header className="bg-[var(--club-red)] text-primary-foreground border-b-4 border-[var(--club-gold)] shadow-lg">
+      <header className="bg-[var(--pine-green)] text-primary-foreground border-b-4 border-[var(--sage-green)] shadow-lg">
         <div className="container max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--club-gold)] bg-[var(--club-red-dark)]">
-                <TreePine className="w-6 h-6 text-[var(--club-gold)]" />
+              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--sage-green)] bg-[var(--deep-forest-green)]">
+                <TreePine className="w-6 h-6 text-[var(--sage-green)]" />
               </div>
               <div>
                 <h1 className="text-xl font-bold">In the Forest</h1>
@@ -47,8 +47,8 @@ export const GateCode = () => {
       <main className="container mx-auto flex min-h-[calc(100vh-5rem)] max-w-2xl flex-col justify-center px-4 py-8">
         <section className="mb-5 rounded-2xl border border-border bg-[linear-gradient(135deg,#fbf7e8,#dfe9cb)] p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--club-red-dark)] text-primary-foreground">
-              <ShieldCheck className="h-6 w-6 text-[var(--club-gold)]" />
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--deep-forest-green)] text-primary-foreground">
+              <ShieldCheck className="h-6 w-6 text-[var(--sage-green)]" />
             </div>
             <div className="min-w-0">
               <h2 className="text-2xl font-bold leading-tight">
@@ -64,7 +64,7 @@ export const GateCode = () => {
         <Card className="overflow-hidden p-0">
           <div className="border-b border-border bg-[#dfe9cb] px-4 py-3">
             <div className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-[var(--club-red-dark)]" />
+              <KeyRound className="h-5 w-5 text-[var(--deep-forest-green)]" />
               <p className="font-bold">Please enter the gate code</p>
             </div>
           </div>

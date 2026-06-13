@@ -144,13 +144,13 @@ export function ParticipantsCard({
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-border bg-(--club-red-dark) rounded-sm px-4 py-3 text-primary-foreground">
+      <div className="border-b border-border bg-(--deep-forest-green) rounded-sm px-4 py-3 text-primary-foreground">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <UsersRound className="h-5 w-5 text-(--club-gold)" />
+            <UsersRound className="h-5 w-5 text-(--sage-green)" />
             <h2 className="text-base font-bold">Gather archers</h2>
           </div>
-          <span className="rounded-full bg-(--club-gold) px-3 py-1 text-xs font-bold text-primary-foreground">
+          <span className="rounded-full bg-(--sage-green) px-3 py-1 text-xs font-bold text-primary-foreground">
             {selectedParticipants.length}
           </span>
         </div>
@@ -246,11 +246,11 @@ export function ParticipantsCard({
                 )} peg colour, currently ${getPegColorLabel(
                   participant.pegColor,
                 )}`}
-                className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 shadow-sm border-l-8 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--club-gold) ${
+                className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 shadow-sm border-l-8 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--sage-green) ${
                   participant.userId === currentUserId
                     ? "bg-[#eef4d7]"
                     : "bg-card"
-                } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-(--club-red-dark)"}`}
+                } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-(--deep-forest-green)"}`}
                 onClick={() => handleParticipantPegColorChange(participant)}
                 onKeyDown={(event) =>
                   handleParticipantKeyDown(event, participant)
@@ -275,7 +275,7 @@ export function ParticipantsCard({
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-xs font-bold text-(--club-red-dark)">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-xs font-bold text-(--deep-forest-green)">
                     <span
                       aria-hidden="true"
                       className="h-2.5 w-2.5 rounded-full"

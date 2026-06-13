@@ -2,6 +2,7 @@
 
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getPegColorHex, getPegColorLabel } from "@/constants";
+import { useShootContext } from "@/contexts/ShootContext";
 import { getUserLabel } from "@/helpers/getUserLabel";
 import { IShootParticipantWithScores, IUser } from "@/models";
 
@@ -22,6 +23,7 @@ export function ParticipantSelector({
   participants,
   selectedParticipantId,
 }: ParticipantSelectorProps) {
+  const { showScores } = useShootContext();
   const selectedParticipant =
     participants.find(
       (participant) => participant.id === selectedParticipantId,
@@ -79,9 +81,9 @@ export function ParticipantSelector({
               aria-label={`Select ${participantLabel}`}
               className={`w-28 shrink-0 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 participant.id === selectedParticipantId
-                  ? "border-(--club-red-dark) bg-[#e2ecd0] shadow-sm"
+                  ? "border-(--deep-forest-green) bg-[#e2ecd0] shadow-sm"
                   : participantStationScore !== null
-                    ? "border-(--forest) bg-[#edf4e9]"
+                    ? "border-(--emerald-green) bg-[#edf4e9]"
                     : "border-border bg-background"
               }`}
             >
@@ -96,12 +98,15 @@ export function ParticipantSelector({
                 {participantLabel}
               </div>
               <div className="mt-1 flex items-center justify-between gap-2 text-[11px] leading-tight">
-                <span className="font-bold text-(--club-red-dark)">
-                  Total {participant.totalScore}
-                </span>
-                <span className="font-bold text-(--forest)">
-                  Round {participantStationScore ?? "-"}
-                </span>
+                <div className="font-bold text-(--deep-forest-green) flex flex-col justify-center">
+                  Total
+                  <span>{showScores ? participant.totalScore : "-"}</span>
+                </div>
+
+                <div className="font-bold text-(--emerald-green) flex flex-col justify-center">
+                  Round
+                  <span>{participantStationScore ?? "-"}</span>
+                </div>
               </div>
             </button>
           );

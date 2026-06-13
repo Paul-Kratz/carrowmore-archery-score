@@ -2,7 +2,7 @@
 
 import { IShoot, IShootParticipantWithScores, IUser } from "@/models";
 import { Button, ScrollArea } from "@radix-ui/themes";
-import { Home, TreePine } from "lucide-react";
+import { TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useGetShoot, useUpdateScore } from "@/hooks/queries";
@@ -12,6 +12,7 @@ import { ScorePanel } from "./shoot/ScorePanel";
 import { StationNavigationCard } from "./shoot/StationNavigationCard";
 import { Header } from "../shared/Header";
 import { CLUBS } from "@/constants";
+import { OptionsDropdown } from "./shoot/OptionsDropdown";
 
 type ShootPageProps = {
   currentStation: number;
@@ -117,21 +118,7 @@ export function ShootPage({
         title="In the Forest"
         subtitle={"at " + clubData.name}
         showBackButton={false}
-        exitTrigger={
-          <ExitDialog
-            isShootFinished={false}
-            shoot={shoot}
-            triggerComponent={
-              <Button
-                variant="ghost"
-                size="1"
-                className="p-4 text-primary-foreground"
-              >
-                <Home className="w-6 h-6 text-(--club-gold)" />
-              </Button>
-            }
-          />
-        }
+        rightSlot={<OptionsDropdown shoot={shootData} />}
       />
       <ScrollArea
         type="auto"

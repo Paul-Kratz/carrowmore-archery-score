@@ -187,8 +187,8 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
       <main className="container max-w-2xl mx-auto px-4 py-5 pb-28">
         <div className="mb-5 rounded-2xl border border-border bg-[linear-gradient(135deg,#fbf7e8,#dfe9cb)] p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-(--club-red-dark) text-primary-foreground">
-              <Sprout className="h-5 w-5 text-(--club-gold)" />
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-(--deep-forest-green) text-primary-foreground">
+              <Sprout className="h-5 w-5 text-(--sage-green)" />
             </div>
             <div>
               <h2 className="text-2xl font-bold leading-tight">

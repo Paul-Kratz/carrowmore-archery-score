@@ -19,22 +19,22 @@ const getStationScoreTone = (score: number | null) => {
 
   if (score >= 16) {
     return {
-      accent: "bg-(--club-gold-dark)",
-      className: "border-[#b9c899] bg-[#eef3df]/85 text-(--club-red-dark)",
+      accent: "bg-(--olive-green)",
+      className: "border-[#b9c899] bg-[#eef3df]/85 text-(--deep-forest-green)",
     };
   }
 
   if (score >= 10) {
     return {
-      accent: "bg-(--club-gold)",
-      className: "border-[#cad8a9] bg-[#f2f5e8]/85 text-(--club-red-dark)",
+      accent: "bg-(--sage-green)",
+      className: "border-[#cad8a9] bg-[#f2f5e8]/85 text-(--deep-forest-green)",
     };
   }
 
   if (score >= 4) {
     return {
-      accent: "bg-(--leather)",
-      className: "border-[#d7c69f] bg-[#f7efd9]/85 text-(--leather)",
+      accent: "bg-(--warm-brown)",
+      className: "border-[#d7c69f] bg-[#f7efd9]/85 text-(--warm-brown)",
     };
   }
 
@@ -63,7 +63,7 @@ export function StationBreakdownCard({
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 font-bold text-(--club-red-dark)">
+                  <div className="flex items-center gap-2 font-bold text-(--deep-forest-green)">
                     <span className="truncate">
                       {participant.userInfo.name}
                     </span>
@@ -75,7 +75,7 @@ export function StationBreakdownCard({
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-xl font-bold leading-none text-(--club-red-dark)">
+                  <div className="text-xl font-bold leading-none text-(--deep-forest-green)">
                     {participant.totalScore}
                   </div>
                   <div className="text-[10px] uppercase text-muted-foreground">

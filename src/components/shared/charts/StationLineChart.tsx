@@ -15,9 +15,9 @@ import {
 } from "recharts";
 import { PegScoreDot, PegScoreTooltip } from "./PegScoreChartParts";
 
-const FOREST = "#123426";
+const DEEP_FOREST_GREEN = "#123426";
 const MOSS = "#6d7f47";
-const PARCHMENT_LINE = "#d8cfb8";
+const TAN_GRID_LINE = "#d8cfb8";
 
 const formatShortDate = (createdAt: string) => {
   const date = new Date(createdAt);
@@ -38,7 +38,7 @@ const StationStat = ({
     <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
       {label}
     </div>
-    <div className="text-lg font-bold leading-tight text-(--club-red-dark)">
+    <div className="text-lg font-bold leading-tight text-(--deep-forest-green)">
       {value}
     </div>
   </div>
@@ -86,7 +86,7 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
     <section className="mt-3 border-t border-border/70 pt-3">
       <div className="mb-3">
         <div className="min-w-0">
-          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-(--club-red-dark)">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-(--deep-forest-green)">
             <MapPin className="h-4 w-4" />
             Station trend
           </div>
@@ -115,8 +115,8 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
               onClick={() => setSelectedStation(station)}
               className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border text-sm font-bold transition-colors ${
                 selected
-                  ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
-                  : "border-border bg-card/75 text-(--club-red-dark)"
+                  ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
+                  : "border-border bg-card/75 text-(--deep-forest-green)"
               }`}
             >
               {station + 1}
@@ -131,7 +131,7 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
             data={chartData}
             margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
           >
-            <CartesianGrid stroke={PARCHMENT_LINE} strokeDasharray="4 4" />
+            <CartesianGrid stroke={TAN_GRID_LINE} strokeDasharray="4 4" />
             <XAxis
               dataKey="date"
               axisLine={false}
@@ -154,12 +154,12 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
             <Line
               type="monotone"
               dataKey="score"
-              stroke={FOREST}
+              stroke={DEEP_FOREST_GREEN}
               strokeWidth={2}
               dot={<PegScoreDot />}
               activeDot={{
                 r: 7,
-                fill: FOREST,
+                fill: DEEP_FOREST_GREEN,
                 stroke: "#fbf7e8",
                 strokeWidth: 2,
               }}

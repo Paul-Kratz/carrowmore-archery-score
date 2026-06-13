@@ -35,11 +35,11 @@ export function StationNavigationCard({
           onClick={() => onStationChange(currentStation - 1)}
           disabled={!canGoPrevious || disabled}
         >
-          <ArrowLeft className="w-6 h-6 text-(--club-red)" />
+          <ArrowLeft className="w-6 h-6 text-(--pine-green)" />
         </Button>
         <div className="min-w-0 flex-1 text-center">
           <div className="text-xs text-muted-foreground">Station</div>
-          <div className="text-xl font-bold leading-none text-(--club-red-dark)">
+          <div className="text-xl font-bold leading-none text-(--deep-forest-green)">
             {currentStation}/{totalStations}
           </div>
           <div className="mt-0.5 text-xs text-muted-foreground">
@@ -52,7 +52,7 @@ export function StationNavigationCard({
           onClick={() => onStationChange(currentStation + 1)}
           disabled={!canGoNext || disabled}
         >
-          <ArrowRight className="w-6 h-6 text-(--club-red)" />
+          <ArrowRight className="w-6 h-6 text-(--pine-green)" />
         </Button>
       </div>
 
@@ -64,14 +64,14 @@ export function StationNavigationCard({
             disabled={disabled}
             className={`h-6 min-w-6 shrink-0 rounded text-[11px] font-bold disabled:cursor-not-allowed disabled:opacity-60 ${
               index === currentStation - 1
-                ? "bg-(--club-red) text-primary-foreground ring-2 ring-(--club-gold)"
+                ? "bg-(--pine-green) text-primary-foreground ring-2 ring-(--sage-green)"
                 : `${
                     stationCompletionCounts[index] === participantCount &&
                     participantCount > 0
-                      ? "bg-(--forest) text-white"
+                      ? "bg-(--emerald-green) text-white"
                       : stationCompletionCounts[index] > 0
-                        ? "bg-(--club-gold) text-(--ink)"
-                        : "bg-muted text-(--ink)"
+                        ? "bg-(--sage-green) text-(--charcoal-green)"
+                        : "bg-muted text-(--charcoal-green)"
                   }`
             }`}
           >

@@ -20,14 +20,14 @@ export function HistoryEmptyState({
       }`}
     >
       <div
-        className={`mx-auto mb-3 grid place-items-center rounded-full bg-[#edf4e9] text-[var(--club-red-dark)] ${
+        className={`mx-auto mb-3 grid place-items-center rounded-full bg-[#edf4e9] text-[var(--deep-forest-green)] ${
           compact ? "h-12 w-12" : "h-16 w-16"
         }`}
       >
         <TreePine className={compact ? "h-7 w-7" : "h-9 w-9"} />
       </div>
       <h3
-        className={`text-[var(--club-red-dark)] ${
+        className={`text-[var(--deep-forest-green)] ${
           compact ? "font-semibold mb-2" : "font-semibold text-lg mb-2"
         }`}
       >

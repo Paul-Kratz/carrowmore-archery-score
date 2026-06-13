@@ -16,9 +16,9 @@ import {
 import { PegScoreDot, PegScoreTooltip } from "./PegScoreChartParts";
 import { StationLineChart } from "./StationLineChart";
 
-const FOREST = "#123426";
+const DEEP_FOREST_GREEN = "#123426";
 const MOSS = "#6d7f47";
-const PARCHMENT_LINE = "#d8cfb8";
+const TAN_GRID_LINE = "#d8cfb8";
 
 const formatShortDate = (createdAt: string) => {
   const date = new Date(createdAt);
@@ -43,7 +43,7 @@ const TrendStat = ({
     <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
       {label}
     </div>
-    <div className="text-xl font-bold leading-tight text-(--club-red-dark)">
+    <div className="text-xl font-bold leading-tight text-(--deep-forest-green)">
       {value}
     </div>
     {helper && <div className="text-xs text-muted-foreground">{helper}</div>}
@@ -97,8 +97,8 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
   if (sorted.length === 0) {
     return (
       <div className="forest-chart-panel rounded-xl border border-border p-4 text-center shadow-sm">
-        <TreePine className="mx-auto mb-2 h-8 w-8 text-(--club-red-dark)" />
-        <h3 className="font-semibold text-(--club-red-dark)">No trends yet</h3>
+        <TreePine className="mx-auto mb-2 h-8 w-8 text-(--deep-forest-green)" />
+        <h3 className="font-semibold text-(--deep-forest-green)">No trends yet</h3>
         <p className="text-sm text-muted-foreground">
           Shoot statistics will appear once you have scored a round.
         </p>
@@ -114,7 +114,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
             <TrendingUp className="h-3.5 w-3.5" />
             Trends
           </div>
-          <h3 className="text-lg font-bold leading-tight text-(--club-red-dark)">
+          <h3 className="text-lg font-bold leading-tight text-(--deep-forest-green)">
             Score trend
           </h3>
         </div>
@@ -127,8 +127,8 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
           onClick={() => setSelectedClubId("all")}
           className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
             selectedClubId === "all"
-              ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
-              : "border-border bg-card/80 text-(--club-red-dark)"
+              ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
+              : "border-border bg-card/80 text-(--deep-forest-green)"
           }`}
         >
           All clubs
@@ -141,8 +141,8 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
             onClick={() => setSelectedClubId(clubId)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
               selectedClubId === clubId
-                ? "border-(--club-red-dark) bg-(--club-red-dark) text-primary-foreground"
-                : "border-border bg-card/80 text-(--club-red-dark)"
+                ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
+                : "border-border bg-card/80 text-(--deep-forest-green)"
             }`}
           >
             {CLUBS[clubId].name}
@@ -162,7 +162,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
       </div>
 
       <div className="pt-3">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-(--club-red-dark)">
+        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-(--deep-forest-green)">
           <Target className="h-4 w-4" />
           Total score
         </div>
@@ -172,7 +172,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
               data={chartData}
               margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
             >
-              <CartesianGrid stroke={PARCHMENT_LINE} strokeDasharray="4 4" />
+              <CartesianGrid stroke={TAN_GRID_LINE} strokeDasharray="4 4" />
               <XAxis
                 dataKey="date"
                 axisLine={false}
@@ -194,12 +194,12 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
               <Line
                 type="monotone"
                 dataKey="score"
-                stroke={FOREST}
+                stroke={DEEP_FOREST_GREEN}
                 strokeWidth={2.5}
                 dot={<PegScoreDot />}
                 activeDot={{
                   r: 7,
-                  fill: FOREST,
+                  fill: DEEP_FOREST_GREEN,
                   stroke: "#fbf7e8",
                   strokeWidth: 2,
                 }}

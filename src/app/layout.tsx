@@ -5,6 +5,7 @@ import "./globals.css";
 import { Theme } from "@radix-ui/themes";
 
 import { QueryProvider } from "@/contexts/QueryContext";
+import { ShootProvider } from "@/contexts/ShootContext";
 
 export const metadata: Metadata = {
   title: "In The Forest",
@@ -42,7 +43,9 @@ export default function RootLayout({
       <body className="antialiased min-h-full">
         <QueryProvider>
           <Theme accentColor="green" grayColor="sage" radius="medium">
-            <SessionProvider>{children}</SessionProvider>
+            <ShootProvider>
+              <SessionProvider>{children}</SessionProvider>
+            </ShootProvider>
           </Theme>
         </QueryProvider>
       </body>

@@ -29,7 +29,7 @@ export function getScoreButtonTheme(rowIndex: number, optionIndex: number) {
   return {
     backgroundColor: isPrimaryResult ? palette.solid : palette.tint,
     borderColor: palette.solid,
-    color: isPrimaryResult ? "#fff" : "var(--ink)",
+    color: isPrimaryResult ? "#fff" : "var(--charcoal-green)",
   };
 }
 
@@ -61,7 +61,7 @@ export function ScorePanel({
             className="rounded-lg border border-border bg-card p-2"
           >
             <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-(--club-red-dark)">
+              <span className="font-bold text-(--deep-forest-green)">
                 {row.label}
               </span>
               {row.peg && (
@@ -112,7 +112,7 @@ export function ScorePanel({
           <button
             disabled={disabled}
             onClick={onClear}
-            className="min-h-10 min-w-0 w-full overflow-hidden rounded-lg border-2 border-dashed border-(--leather) bg-card p-2 text-sm font-semibold text-(--ink) disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-10 min-w-0 w-full overflow-hidden rounded-lg border-2 border-dashed border-(--warm-brown) bg-card p-2 text-sm font-semibold text-(--charcoal-green) disabled:cursor-not-allowed disabled:opacity-60"
           >
             Clear
           </button>

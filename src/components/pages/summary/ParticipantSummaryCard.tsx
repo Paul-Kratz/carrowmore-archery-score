@@ -7,10 +7,10 @@ import { CLUBS, getPegColorHex, getPegColorLabel } from "@/constants";
 
 const getScoreCountTone = (score: number) => {
   if (score >= 16)
-    return "border-[#b9c899] bg-[#eef3df] text-(--club-red-dark)";
+    return "border-[#b9c899] bg-[#eef3df] text-(--deep-forest-green)";
   if (score >= 10)
-    return "border-[#cad8a9] bg-[#f2f5e8] text-(--club-red-dark)";
-  if (score >= 4) return "border-[#d7c69f] bg-[#f7efd9] text-(--leather)";
+    return "border-[#cad8a9] bg-[#f2f5e8] text-(--deep-forest-green)";
+  if (score >= 4) return "border-[#d7c69f] bg-[#f7efd9] text-(--warm-brown)";
   return "border-[#d9b2aa] bg-[#f5e3dd] text-[#7d2d25]";
 };
 
@@ -46,18 +46,18 @@ export function ParticipantSummaryCard({
         <div className="mb-3 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-2">
-              <span className="truncate font-bold text-(--club-red-dark)">
+              <span className="truncate font-bold text-(--deep-forest-green)">
                 {participant.userInfo.name}
               </span>
               {participant.userInfo.isGuest && <GuestBadge />}
               {participant.userInfo.id === currentUserId &&
                 !participant.userInfo.isGuest && (
-                  <span className="rounded-full border border-border bg-[#dfe7c7] px-2 py-0.5 text-xs font-bold text-(--club-red-dark)">
+                  <span className="rounded-full border border-border bg-[#dfe7c7] px-2 py-0.5 text-xs font-bold text-(--deep-forest-green)">
                     You
                   </span>
                 )}
               {participant.pegColor && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs font-bold text-(--club-red-dark)">
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs font-bold text-(--deep-forest-green)">
                   <span
                     aria-hidden="true"
                     className="h-2 w-2 rounded-full"
@@ -77,7 +77,7 @@ export function ParticipantSummaryCard({
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div className="text-3xl font-bold leading-none text-(--club-red-dark)">
+            <div className="text-3xl font-bold leading-none text-(--deep-forest-green)">
               {participant.totalScore}
             </div>
             <p className="text-xs text-muted-foreground">points</p>
