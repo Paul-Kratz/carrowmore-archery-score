@@ -106,8 +106,24 @@ describe("SetupPage", () => {
         }),
       );
       expect(Cookies.set).toHaveBeenCalledWith("active_shoot", "shoot-123");
-      expect(mockPush).toHaveBeenCalledWith("/shoot/1");
+      expect(mockPush).toHaveBeenCalledWith("/shoot/shoot-123/1");
     });
+  });
+
+  it("shows a resume action when there is an active shoot", () => {
+    render(
+      <SetupPage
+        activeShootId="shoot-123"
+        users={mockUsers}
+        currentUser={mockCurrentUser}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Resume Shoot"));
+
+    expect(mockPush).toHaveBeenCalledWith("/shoot/shoot-123/1");
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(Cookies.set).not.toHaveBeenCalled();
   });
 
   it("includes guest names when creating a shoot", async () => {

@@ -23,6 +23,7 @@ import { Header } from "../shared/Header";
 import { ClubSelectorCard } from "./setup/ClubSelectorCard";
 
 type SetupPageProps = {
+  activeShootId?: string;
   users: IUser[];
   currentUser: IUser;
 };
@@ -39,7 +40,11 @@ const createRegisteredSetupParticipant = (
   pegColor,
 });
 
-export function SetupPage({ users, currentUser }: SetupPageProps) {
+export function SetupPage({
+  activeShootId,
+  users,
+  currentUser,
+}: SetupPageProps) {
   const [selectedClub, setSelectedClub] = useState("carrowmore");
   const [participants, setParticipants] = useState<SetupParticipant[]>(() => [
     createRegisteredSetupParticipant(
@@ -171,7 +176,7 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
 
       Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
 
-      router.push("/shoot/1");
+      router.push(`/shoot/${newShoot.id}/1`);
     } finally {
       setIsCreatingShoot(false);
     }
@@ -200,6 +205,28 @@ export function SetupPage({ users, currentUser }: SetupPageProps) {
             </div>
           </div>
         </div>
+
+        {activeShootId && (
+          <section className="mb-4 rounded-xl border border-(--sage-green)/60 bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="font-bold text-(--deep-forest-green)">
+                  Active shoot
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Continue scoring your current round.
+                </p>
+              </div>
+              <Button
+                variant="surface"
+                onClick={() => router.push(`/shoot/${activeShootId}/1`)}
+                disabled={isCreatingShoot}
+              >
+                Resume Shoot
+              </Button>
+            </div>
+          </section>
+        )}
 
         <div className="space-y-4">
           <ClubSelectorCard

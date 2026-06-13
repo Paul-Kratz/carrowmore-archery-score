@@ -102,12 +102,12 @@ export function ShootPage({
 
     if (currentStation < clubData.totalStations) {
       setSelectedParticipantId(participants[0]?.id ?? null);
-      router.replace(`/shoot/${currentStation + 1}`);
+      router.replace(`/shoot/${shootId}/${currentStation + 1}`);
     }
   };
 
   const onStationChange = (station: number) => {
-    router.replace(`/shoot/${station}`);
+    router.replace(`/shoot/${shootId}/${station}`);
   };
   const canGoPrevious = currentStation - 1 > 0;
   const canGoNext = currentStation < clubData.totalStations;
