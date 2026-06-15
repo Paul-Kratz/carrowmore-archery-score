@@ -17,6 +17,8 @@ export type ClubData = {
 
 type ObjectId = Types.ObjectId;
 
+export * from "./denormalized";
+
 export interface IUser {
   id: string;
   name?: string | null;

@@ -14,6 +14,7 @@
     "test:coverage": "jest --coverage",
     "backfill:roundscore-participants": "tsx scripts/backfill-roundscore-participants.ts",
     "backfill:shoot-club-ids": "tsx scripts/backfill-shoot-club-ids.ts",
+    "migrate:denormalized-shoots": "tsx scripts/migrate-denormalized-shoots.ts",
     "prepare": "node -e \"process.env.CI || require('child_process').execSync('husky install', {stdio: 'inherit'})\""
   },
   "dependencies": {
