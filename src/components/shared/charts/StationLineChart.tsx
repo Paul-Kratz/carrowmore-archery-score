@@ -66,8 +66,11 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
 
   const chartData = sorted.map((shoot) => ({
     date: formatShortDate(shoot.createdAt),
-    score: shoot.roundScores[activeStation] ?? null,
-    pegColor: shoot.pegColor,
+    score:
+      shoot.participant.scores.find(
+        (score) => score.roundNumber === activeStation + 1,
+      )?.score ?? null,
+    pegColor: shoot.participant.pegColor,
   }));
   const stationScores = chartData
     .map((point) => point.score)

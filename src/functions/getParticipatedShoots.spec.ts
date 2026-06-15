@@ -1,14 +1,31 @@
 const mockConnectMongoose = jest.fn();
-const mockShootAggregate = jest.fn();
+const mockShootDenormalizedFind = jest.fn();
+const mockShootDenormalizedSort = jest.fn();
+const mockShootDenormalizedPopulate = jest.fn();
+const mockShootDenormalizedLean = jest.fn();
 const mockFormatResponseArray = jest.fn();
+
+class MockObjectId {
+  constructor(private readonly value: string) {}
+
+  toString() {
+    return this.value;
+  }
+}
+
+jest.mock("mongoose", () => ({
+  Types: {
+    ObjectId: MockObjectId,
+  },
+}));
 
 jest.mock("@/lib/mongoose", () => ({
   connectMongoose: mockConnectMongoose,
 }));
 
-jest.mock("@/models/mongoose", () => ({
-  Shoot: {
-    aggregate: mockShootAggregate,
+jest.mock("@/models/denormalized/mongoose", () => ({
+  ShootDenormalized: {
+    find: mockShootDenormalizedFind,
   },
 }));
 
@@ -16,152 +33,67 @@ jest.mock("@/helpers/formatResponse", () => ({
   formatResponseArray: mockFormatResponseArray,
 }));
 
-import { IShootWithParticipants } from "@/models";
 import { getParticipatedShoots } from "./getParticipatedShoots";
 
 describe("getParticipatedShoots", () => {
-  const mockAggregatePipeline = {
-    lookup: jest.fn().mockReturnThis(),
-    match: jest.fn().mockReturnThis(),
-    unwind: jest.fn().mockReturnThis(),
-    addFields: jest.fn().mockReturnThis(),
-    group: jest.fn().mockReturnThis(),
-  };
+  const userId = "507f1f77bcf86cd799439001";
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockShootAggregate.mockReturnValue(mockAggregatePipeline);
+    mockShootDenormalizedLean.mockResolvedValue([]);
+    mockShootDenormalizedPopulate.mockReturnValue({
+      lean: mockShootDenormalizedLean,
+    });
+    mockShootDenormalizedSort.mockReturnValue({
+      populate: mockShootDenormalizedPopulate,
+    });
+    mockShootDenormalizedFind.mockReturnValue({
+      sort: mockShootDenormalizedSort,
+    });
+    mockFormatResponseArray.mockReturnValue([]);
   });
 
-  it("should connect to mongoose", async () => {
-    mockFormatResponseArray.mockResolvedValue([]);
-
-    await getParticipatedShoots("user123");
+  it("connects to mongoose", async () => {
+    await getParticipatedShoots(userId);
 
     expect(mockConnectMongoose).toHaveBeenCalled();
   });
 
-  it("should call Shoot.aggregate", async () => {
-    mockFormatResponseArray.mockResolvedValue([]);
+  it("loads denormalized shoots where the user participated", async () => {
+    await getParticipatedShoots(userId);
 
-    await getParticipatedShoots("user123");
+    const [query] = mockShootDenormalizedFind.mock.calls[0];
 
-    expect(mockShootAggregate).toHaveBeenCalled();
+    expect(query["participants.userId"].toString()).toBe(userId);
+    expect(mockShootDenormalizedSort).toHaveBeenCalledWith({ createdAt: -1 });
+    expect(mockShootDenormalizedPopulate).toHaveBeenCalledWith({
+      path: "participants.userId",
+      select: "name email",
+    });
+    expect(mockShootDenormalizedLean).toHaveBeenCalled();
   });
 
-  it("should match shoots where user participated", async () => {
-    mockFormatResponseArray.mockResolvedValue([]);
-
-    await getParticipatedShoots("user123");
-
-    expect(mockAggregatePipeline.match).toHaveBeenCalled();
-  });
-
-  it("should lookup participants and round scores", async () => {
-    mockFormatResponseArray.mockResolvedValue([]);
-
-    await getParticipatedShoots("user123");
-
-    expect(mockAggregatePipeline.lookup).toHaveBeenCalled();
-  });
-
-  it("includes clubId in the shoot aggregation result", async () => {
-    mockFormatResponseArray.mockResolvedValue([]);
-
-    await getParticipatedShoots("user123");
-
-    expect(mockAggregatePipeline.group).toHaveBeenCalledWith(
-      expect.objectContaining({
-        clubId: { $first: "$clubId" },
-      }),
-    );
-  });
-
-  it("should format response array", async () => {
-    const mockData = [
+  it("formats the denormalized shoot list", async () => {
+    const shoots = [
       {
-        _id: "shoot1",
-        participants: [],
-      },
-    ];
-
-    mockFormatResponseArray.mockResolvedValue(mockData);
-
-    const result = await getParticipatedShoots("user123");
-
-    expect(mockFormatResponseArray).toHaveBeenCalled();
-    expect(result).toEqual(mockData);
-  });
-
-  it("should return formatted shoots with round scores", async () => {
-    const mockShoots = [
-      {
-        id: "shoot1",
+        _id: "shoot-1",
         participants: [
           {
-            user: "user123",
-            userInfo: { name: "Test User" },
-            roundScores: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
-            totalScore: 55,
+            userId,
+            scores: [{ roundNumber: 1, score: 10 }],
+            totalScore: 10,
           },
         ],
       },
-    ] as unknown as IShootWithParticipants[];
-
-    mockFormatResponseArray.mockResolvedValue(mockShoots);
-
-    const result = (await getParticipatedShoots(
-      "user123",
-    )) as unknown as IShootWithParticipants[];
-
-    expect(result).toEqual(mockShoots);
-    expect(result[0].participants[0].roundScores).toHaveLength(10);
-  });
-
-  it("should handle empty results", async () => {
-    mockFormatResponseArray.mockResolvedValue([] as IShootWithParticipants[]);
-
-    const result = await getParticipatedShoots("user123");
-
-    expect(result).toEqual([]);
-  });
-
-  it("should handle multiple shoots", async () => {
-    const mockShoots = [
-      { id: "shoot1", participants: [] },
-      { id: "shoot2", participants: [] },
     ];
+    const formattedShoots = [{ id: "shoot-1", participants: [] }];
 
-    mockFormatResponseArray.mockResolvedValue(
-      mockShoots as unknown as IShootWithParticipants[],
-    );
+    mockShootDenormalizedLean.mockResolvedValue(shoots);
+    mockFormatResponseArray.mockReturnValue(formattedShoots);
 
-    const result = await getParticipatedShoots("user123");
+    const result = await getParticipatedShoots(userId);
 
-    expect(result).toHaveLength(2);
-  });
-
-  it("should include shoots from different creators", async () => {
-    const mockShoots = [
-      { id: "shoot1", createdBy: "user456", participants: [] },
-      { id: "shoot2", createdBy: "user789", participants: [] },
-    ];
-
-    mockFormatResponseArray.mockResolvedValue(
-      mockShoots as unknown as IShootWithParticipants[],
-    );
-
-    const result = await getParticipatedShoots("user123");
-
-    expect(result).toHaveLength(2);
-  });
-
-  it("should work with different user IDs", async () => {
-    mockFormatResponseArray.mockResolvedValue([]);
-
-    await getParticipatedShoots("user456");
-    await getParticipatedShoots("user789");
-
-    expect(mockConnectMongoose).toHaveBeenCalledTimes(2);
+    expect(mockFormatResponseArray).toHaveBeenCalledWith(shoots);
+    expect(result).toEqual(formattedShoots);
   });
 });

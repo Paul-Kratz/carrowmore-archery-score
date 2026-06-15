@@ -1,83 +1,17 @@
 import { formatResponseArray } from "@/helpers/formatResponse";
 import { connectMongoose } from "@/lib/mongoose";
-import { Shoot } from "@/models/mongoose";
+import { ShootDenormalized } from "@/models/denormalized/mongoose";
 import { Types } from "mongoose";
 
 export const getCreatedShoots = async (userId: string) => {
   await connectMongoose();
-  const data = await Shoot.aggregate()
-    .match({
-      createdBy: new Types.ObjectId(userId),
-    }) // for shoots created by current user
-    .lookup({
-      from: "shootparticipants",
-      localField: "_id",
-      foreignField: "shoot",
-      as: "participants",
-    })
-    // .match({
-    //   "participants.user": new Types.ObjectId(userId),
-    // }) // for all shoots user participated in
-    .unwind("$participants")
-    .lookup({
-      from: "users",
-      localField: "participants.user",
-      foreignField: "_id",
-      as: "participantUser",
-    })
-    .addFields({
-      "participants.userInfo": {
-        $cond: [
-          { $gt: [{ $size: "$participantUser" }, 0] },
-          {
-            $mergeObjects: [
-              { $arrayElemAt: ["$participantUser", 0] },
-              { isGuest: false },
-            ],
-          },
-          {
-            name: "$participants.guestName",
-            email: null,
-            isGuest: true,
-          },
-        ],
-      },
-    })
-    .lookup({
-      from: "roundscores",
-      let: {
-        shootId: "$_id",
-        participantId: "$participants._id",
-      },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $eq: ["$shoot", "$$shootId"] },
-                { $eq: ["$participant", "$$participantId"] },
-              ],
-            },
-          },
-        },
-        { $group: { _id: null, totalScore: { $sum: "$score" } } },
-      ],
-      as: "scoreSummary",
-    })
-    .addFields({
-      "participants.totalScore": {
-        $ifNull: [{ $arrayElemAt: ["$scoreSummary.totalScore", 0] }, 0],
-      },
-    })
-    .group({
-      _id: "$_id",
-      clubId: { $first: "$clubId" },
-      createdBy: { $first: "$createdBy" },
-      completed: { $first: "$completed" },
-      notes: { $first: "$notes" },
-      participants: { $push: "$participants" },
-      createdAt: { $first: "$createdAt" },
-    });
 
-  return formatResponseArray(data);
+  const shoots = await ShootDenormalized.find({
+    createdBy: new Types.ObjectId(userId),
+  })
+    .sort({ createdAt: -1 })
+    .populate({ path: "participants.userId", select: "name" })
+    .lean();
+
+  return formatResponseArray(shoots);
 };

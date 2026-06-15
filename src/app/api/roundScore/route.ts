@@ -2,7 +2,6 @@ import { updateRound } from "@/functions/updateRound";
 import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { NextRequest, NextResponse } from "next/server";
 import { getShoot } from "@/functions/getShoot";
-import { getShootAccess } from "@/functions/getShootAccess";
 import { auth } from "@/lib/auth";
 
 export async function PATCH(request: NextRequest) {
@@ -29,29 +28,28 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const access = await getShootAccess({
-      shootId,
-      userId: session.user.id,
-    });
-
-    if (!access.exists) {
-      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
+    if (
+      !Number.isInteger(roundNumber) ||
+      roundNumber < 1 ||
+      (score !== null && typeof score !== "number")
+    ) {
+      return NextResponse.json(
+        { error: "Invalid roundNumber or score" },
+        { status: 400 },
+      );
     }
 
-    if (!access.isCreator) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const result = await updateRound(
+    const result = await updateRound({
       participantId,
       shootId,
+      userId: session.user.id,
       roundNumber,
       score,
-    );
+    });
 
     if (result && "matchedCount" in result && result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "Round score not found" },
+        { error: "Round score not found or forbidden" },
         { status: 404 },
       );
     }

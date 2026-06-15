@@ -1,14 +1,16 @@
 const mockConnectMongoose = jest.fn();
-const mockShootAggregate = jest.fn();
+const mockFindById = jest.fn();
+const mockPopulate = jest.fn();
+const mockLean = jest.fn();
 const mockFormatResponse = jest.fn();
 
 jest.mock("@/lib/mongoose", () => ({
   connectMongoose: mockConnectMongoose,
 }));
 
-jest.mock("@/models/mongoose", () => ({
-  Shoot: {
-    aggregate: mockShootAggregate,
+jest.mock("@/models/denormalized/mongoose", () => ({
+  ShootDenormalized: {
+    findById: mockFindById,
   },
 }));
 
@@ -16,156 +18,150 @@ jest.mock("@/helpers/formatResponse", () => ({
   formatResponse: mockFormatResponse,
 }));
 
-import { getShoot } from "./getShoot";
+import { getShoot, getShootWithAccess } from "./getShoot";
 
 describe("getShoot", () => {
-  const mockAggregatePipeline = {
-    match: jest.fn().mockReturnThis(),
-    lookup: jest.fn().mockReturnThis(),
-    unwind: jest.fn().mockReturnThis(),
-    addFields: jest.fn().mockReturnThis(),
-    group: jest.fn().mockReturnThis(),
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
-    mockShootAggregate.mockReturnValue(mockAggregatePipeline);
+    mockFindById.mockReturnValue({
+      populate: mockPopulate,
+    });
+    mockPopulate.mockReturnValue({
+      lean: mockLean,
+    });
   });
 
-  it("should connect to mongoose", async () => {
-    mockFormatResponse.mockResolvedValue({});
+  it("connects to mongoose", async () => {
+    mockLean.mockResolvedValue(null);
+    mockFormatResponse.mockReturnValue(null);
 
     await getShoot({ shootId: "shoot123" });
 
     expect(mockConnectMongoose).toHaveBeenCalled();
   });
 
-  it("should call Shoot.aggregate", async () => {
-    mockFormatResponse.mockResolvedValue({});
+  it("loads the denormalized shoot by ID", async () => {
+    mockLean.mockResolvedValue(null);
+    mockFormatResponse.mockReturnValue(null);
 
     await getShoot({ shootId: "shoot123" });
 
-    expect(mockShootAggregate).toHaveBeenCalled();
+    expect(mockFindById).toHaveBeenCalledWith("shoot123");
   });
 
-  it("should match shoot by ID", async () => {
-    mockFormatResponse.mockResolvedValue({});
+  it("populates participant users", async () => {
+    mockLean.mockResolvedValue(null);
+    mockFormatResponse.mockReturnValue(null);
 
     await getShoot({ shootId: "shoot123" });
 
-    expect(mockAggregatePipeline.match).toHaveBeenCalled();
+    expect(mockPopulate).toHaveBeenCalledWith({
+      path: "participants.userId",
+      select: "name email",
+    });
   });
 
-  it("should lookup participants and round scores", async () => {
-    mockFormatResponse.mockResolvedValue({});
-
-    await getShoot({ shootId: "shoot123" });
-
-    expect(mockAggregatePipeline.lookup).toHaveBeenCalled();
-  });
-
-  it("includes clubId in the shoot aggregation result", async () => {
-    mockFormatResponse.mockResolvedValue({});
-
-    await getShoot({ shootId: "shoot123" });
-
-    expect(mockAggregatePipeline.group).toHaveBeenCalledWith(
-      expect.objectContaining({
-        clubId: { $first: "$clubId" },
-      }),
-    );
-  });
-
-  it("should format response", async () => {
-    const mockData = {
+  it("formats the denormalized shoot response", async () => {
+    const mockShoot = {
       _id: "shoot123",
       participants: [],
     };
+    const mockFormattedShoot = {
+      id: "shoot123",
+      participants: [],
+    };
 
-    mockFormatResponse.mockResolvedValue(mockData);
+    mockLean.mockResolvedValue(mockShoot);
+    mockFormatResponse.mockReturnValue(mockFormattedShoot);
 
     const result = await getShoot({ shootId: "shoot123" });
 
-    expect(mockFormatResponse).toHaveBeenCalled();
-    expect(result).toEqual(mockData);
+    expect(mockFormatResponse).toHaveBeenCalledWith(mockShoot);
+    expect(result).toEqual(mockFormattedShoot);
+  });
+});
+
+describe("getShootWithAccess", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindById.mockReturnValue({
+      populate: mockPopulate,
+    });
+    mockPopulate.mockReturnValue({
+      lean: mockLean,
+    });
   });
 
-  it("should return shoot with participants and scores", async () => {
-    const mockShoot = {
-      id: "shoot123",
-      createdBy: "user123",
-      completed: false,
+  it("returns missing access when the shoot does not exist", async () => {
+    mockLean.mockResolvedValue(null);
+
+    const result = await getShootWithAccess({
+      shootId: "shoot123",
+      userId: "user123",
+    });
+
+    expect(result).toEqual({
+      exists: false,
+      isCreator: false,
+      isParticipant: false,
+      shoot: null,
+    });
+  });
+
+  it("detects creator access", async () => {
+    mockLean.mockResolvedValue({
+      createdBy: { toString: () => "user123" },
+      participants: [],
+    });
+
+    const result = await getShootWithAccess({
+      shootId: "shoot123",
+      userId: "user123",
+    });
+
+    expect(result.exists).toBe(true);
+    expect(result.isCreator).toBe(true);
+    expect(result.isParticipant).toBe(false);
+  });
+
+  it("detects participant access for populated users", async () => {
+    mockLean.mockResolvedValue({
+      createdBy: { toString: () => "creator123" },
       participants: [
         {
-          user: "user123",
-          userInfo: { name: "Test User" },
-          roundScores: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
-          totalScore: 55,
-        },
-        {
-          user: "user456",
-          userInfo: { name: "Another User" },
-          roundScores: [9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
-          totalScore: 90,
+          userId: {
+            _id: { toString: () => "user123" },
+            name: "Pat",
+          },
         },
       ],
-    };
+    });
 
-    mockFormatResponse.mockResolvedValue(mockShoot);
+    const result = await getShootWithAccess({
+      shootId: "shoot123",
+      userId: "user123",
+    });
 
-    const result = await getShoot({ shootId: "shoot123" });
-
-    expect(result).toEqual(mockShoot);
-    expect(result.participants).toHaveLength(2);
+    expect(result.exists).toBe(true);
+    expect(result.isCreator).toBe(false);
+    expect(result.isParticipant).toBe(true);
+    expect(result.shoot?.participants[0].userId.name).toBe("Pat");
   });
 
-  it("should handle shoot with no participants", async () => {
-    const mockShoot = {
-      id: "shoot123",
+  it("populates participant users for the returned shoot", async () => {
+    mockLean.mockResolvedValue({
+      createdBy: { toString: () => "creator123" },
       participants: [],
-    };
+    });
 
-    mockFormatResponse.mockResolvedValue(mockShoot);
+    await getShootWithAccess({
+      shootId: "shoot123",
+      userId: "user123",
+    });
 
-    const result = await getShoot({ shootId: "shoot123" });
-
-    expect(result.participants).toEqual([]);
-  });
-
-  it("should handle completed shoot", async () => {
-    const mockShoot = {
-      id: "shoot123",
-      completed: true,
-      notes: "Great session",
-      participants: [],
-    };
-
-    mockFormatResponse.mockResolvedValue(mockShoot);
-
-    const result = await getShoot({ shootId: "shoot123" });
-
-    expect(result.completed).toBe(true);
-    expect(result.notes).toBe("Great session");
-  });
-
-  it("should work with different shoot IDs", async () => {
-    mockFormatResponse.mockResolvedValue({});
-
-    await getShoot({ shootId: "shoot123" });
-    await getShoot({ shootId: "shoot456" });
-
-    expect(mockConnectMongoose).toHaveBeenCalledTimes(2);
-  });
-
-  it("does not group legacy shoot mode into the result", async () => {
-    mockFormatResponse.mockResolvedValue({});
-
-    await getShoot({ shootId: "shoot123" });
-
-    expect(mockAggregatePipeline.group).toHaveBeenCalledWith(
-      expect.not.objectContaining({
-        mode: expect.anything(),
-      }),
-    );
+    expect(mockPopulate).toHaveBeenCalledWith({
+      path: "participants.userId",
+      select: "name email",
+    });
   });
 });

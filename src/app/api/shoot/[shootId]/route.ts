@@ -1,26 +1,27 @@
-import { getShoot } from "@/functions/getShoot";
-import { getShootAccess } from "@/functions/getShootAccess";
+import { getShootWithAccess } from "@/functions/getShoot";
 import { isValidObjectId } from "@/helpers/isValidObjectId";
+import { formatResponse } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export const GET = async (
   _request: Request,
-  { params }: { params: Promise<{ shootId: string }> }
+  { params }: { params: Promise<{ shootId: string }> },
 ) => {
   const session = await auth();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { shootId } = await params;
 
-  try {
-    if (!isValidObjectId(shootId)) {
-      return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
-    }
+  if (!isValidObjectId(shootId)) {
+    return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
+  }
 
-    const access = await getShootAccess({
+  try {
+    const access = await getShootWithAccess({
       shootId,
       userId: session.user.id,
     });
@@ -33,15 +34,15 @@ export const GET = async (
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const shoots = await getShoot({ shootId });
-    return NextResponse.json(shoots, { status: 200 });
+    return NextResponse.json(formatResponse(access.shoot), { status: 200 });
   } catch (error) {
-    console.error("Error fetching participated shoots", error);
+    console.error("Error fetching shoot", error);
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

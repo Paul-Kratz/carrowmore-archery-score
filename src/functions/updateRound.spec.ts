@@ -1,199 +1,222 @@
 const mockConnectMongoose = jest.fn();
-const mockRoundScoreUpdateOne = jest.fn();
-const mockShootParticipantFindById = jest.fn();
+const mockShootDenormalizedFindOne = jest.fn();
+
+class MockObjectId {
+  constructor(private readonly value: string) {}
+
+  toString() {
+    return this.value;
+  }
+}
+
+jest.mock("mongoose", () => ({
+  Types: {
+    ObjectId: MockObjectId,
+  },
+}));
 
 jest.mock("@/lib/mongoose", () => ({
   connectMongoose: mockConnectMongoose,
 }));
 
-jest.mock("@/models/mongoose", () => ({
-  RoundScore: {
-    updateOne: mockRoundScoreUpdateOne,
-  },
-  ShootParticipant: {
-    findById: mockShootParticipantFindById,
+jest.mock("@/models/denormalized/mongoose", () => ({
+  ShootDenormalized: {
+    findOne: mockShootDenormalizedFindOne,
   },
 }));
 
 import { updateRound } from "./updateRound";
 
+type Score = {
+  _id: { toString: () => string };
+  roundNumber: number;
+  score: number | null;
+  scoredAt?: Date | null;
+};
+
+type Participant = {
+  _id: { toString: () => string };
+  scores: Score[];
+  totalScore: number;
+  scoredCount: number;
+};
+
+const shootId = "507f1f77bcf86cd799439011";
+const userId = "507f1f77bcf86cd799439001";
+const participantId = "507f1f77bcf86cd799439012";
+
+const makeShoot = ({
+  participants = [
+    {
+      _id: { toString: () => participantId },
+      scores: [
+        {
+          _id: { toString: () => "507f1f77bcf86cd799439021" },
+          roundNumber: 1,
+          score: null,
+          scoredAt: null,
+        },
+        {
+          _id: { toString: () => "507f1f77bcf86cd799439022" },
+          roundNumber: 2,
+          score: 5,
+          scoredAt: new Date("2024-01-02T00:00:00.000Z"),
+        },
+      ],
+      totalScore: 5,
+      scoredCount: 1,
+    },
+  ],
+}: {
+  participants?: Participant[];
+} = {}) => ({
+  participants,
+  scoredCount: participants.reduce(
+    (total, participant) => total + participant.scoredCount,
+    0,
+  ),
+  firstScoredAt: null as Date | null,
+  save: jest.fn().mockResolvedValue(undefined),
+});
+
 describe("updateRound", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockConnectMongoose.mockResolvedValue(undefined);
-    mockShootParticipantFindById.mockReturnValue({
-      lean: jest.fn().mockResolvedValue({
-        _id: "participant123",
-        user: "user123",
-      }),
-    });
   });
 
-  it("should connect to mongoose", async () => {
-    mockRoundScoreUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+  it("connects to mongoose", async () => {
+    mockShootDenormalizedFindOne.mockResolvedValue(makeShoot());
 
-    await updateRound("participant123", "shoot123", 5, 10);
+    await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 1,
+      score: 10,
+    });
 
     expect(mockConnectMongoose).toHaveBeenCalled();
   });
 
-  it("should update round score with correct parameters", async () => {
-    const participantId = "participant123";
-    const shootId = "shoot123";
-    const roundNumber = 5;
-    const score = 10;
+  it("loads only shoots created by the user", async () => {
+    mockShootDenormalizedFindOne.mockResolvedValue(makeShoot());
 
-    mockRoundScoreUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+    await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 1,
+      score: 10,
+    });
 
-    await updateRound(participantId, shootId, roundNumber, score);
-
-    expect(mockRoundScoreUpdateOne).toHaveBeenCalledWith(
-      expect.objectContaining({
-        roundNumber: 5,
-      }),
-      expect.objectContaining({
-        $set: expect.objectContaining({
-          score: 10,
-        }),
-      }),
-    );
+    expect(mockShootDenormalizedFindOne).toHaveBeenCalledWith({
+      _id: expect.objectContaining({ value: shootId }),
+      createdBy: expect.objectContaining({ value: userId }),
+    });
   });
 
-  it("should return update result", async () => {
-    const mockResult = { modifiedCount: 1, matchedCount: 1 };
-    mockRoundScoreUpdateOne.mockResolvedValue(mockResult);
+  it("updates a nested score and recalculates participant and shoot totals", async () => {
+    const shoot = makeShoot();
+    mockShootDenormalizedFindOne.mockResolvedValue(shoot);
 
-    const result = await updateRound("participant123", "shoot123", 1, 8);
+    const result = await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 1,
+      score: 10,
+    });
 
-    expect(result).toEqual(mockResult);
+    expect(shoot.participants[0].scores[0].score).toBe(10);
+    expect(shoot.participants[0].scores[0].scoredAt).toEqual(expect.any(Date));
+    expect(shoot.participants[0].totalScore).toBe(15);
+    expect(shoot.participants[0].scoredCount).toBe(2);
+    expect(shoot.scoredCount).toBe(2);
+    expect(shoot.firstScoredAt).toEqual(new Date("2024-01-02T00:00:00.000Z"));
+    expect(shoot.save).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ matchedCount: 1, modifiedCount: 1 });
   });
 
-  it("should handle different round numbers", async () => {
-    mockRoundScoreUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+  it("clears a nested score and recalculates totals", async () => {
+    const shoot = makeShoot();
+    mockShootDenormalizedFindOne.mockResolvedValue(shoot);
 
-    await updateRound("participant123", "shoot123", 1, 10);
-    await updateRound("participant123", "shoot123", 10, 5);
+    const result = await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 2,
+      score: null,
+    });
 
-    expect(mockRoundScoreUpdateOne).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ roundNumber: 1 }),
-      expect.objectContaining({
-        $set: expect.objectContaining({ score: 10 }),
-      }),
-    );
-
-    expect(mockRoundScoreUpdateOne).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ roundNumber: 10 }),
-      expect.objectContaining({
-        $set: expect.objectContaining({ score: 5 }),
-      }),
-    );
+    expect(shoot.participants[0].scores[1].score).toBeNull();
+    expect(shoot.participants[0].scores[1].scoredAt).toBeNull();
+    expect(shoot.participants[0].totalScore).toBe(0);
+    expect(shoot.participants[0].scoredCount).toBe(0);
+    expect(shoot.scoredCount).toBe(0);
+    expect(shoot.firstScoredAt).toBeNull();
+    expect(shoot.save).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ matchedCount: 1, modifiedCount: 1 });
   });
 
-  it("should handle different score values", async () => {
-    mockRoundScoreUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+  it("returns a zero-match result when the shoot is missing or forbidden", async () => {
+    mockShootDenormalizedFindOne.mockResolvedValue(null);
 
-    await updateRound("participant123", "shoot123", 1, 0);
-    await updateRound("participant123", "shoot123", 2, 10);
-    await updateRound("participant123", "shoot123", 3, 5);
+    const result = await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 1,
+      score: 10,
+    });
 
-    expect(mockRoundScoreUpdateOne).toHaveBeenNthCalledWith(
-      1,
-      expect.anything(),
-      expect.objectContaining({
-        $set: expect.objectContaining({ score: 0 }),
-      }),
-    );
-
-    expect(mockRoundScoreUpdateOne).toHaveBeenNthCalledWith(
-      2,
-      expect.anything(),
-      expect.objectContaining({
-        $set: expect.objectContaining({ score: 10 }),
-      }),
-    );
-
-    expect(mockRoundScoreUpdateOne).toHaveBeenNthCalledWith(
-      3,
-      expect.anything(),
-      expect.objectContaining({
-        $set: expect.objectContaining({ score: 5 }),
-      }),
-    );
+    expect(result).toEqual({ matchedCount: 0, modifiedCount: 0 });
   });
 
-  it("should handle different participant IDs", async () => {
-    mockRoundScoreUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+  it("returns a zero-match result when the participant is missing", async () => {
+    const shoot = makeShoot({ participants: [] });
+    mockShootDenormalizedFindOne.mockResolvedValue(shoot);
 
-    mockShootParticipantFindById
-      .mockReturnValueOnce({
-        lean: jest.fn().mockResolvedValue({ _id: "participant1", user: "user1" }),
-      })
-      .mockReturnValueOnce({
-        lean: jest.fn().mockResolvedValue({ _id: "participant2", user: "user2" }),
-      });
+    const result = await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 1,
+      score: 10,
+    });
 
-    await updateRound("participant1", "shoot123", 1, 10);
-    await updateRound("participant2", "shoot123", 1, 8);
-
-    expect(mockRoundScoreUpdateOne).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ matchedCount: 0, modifiedCount: 0 });
+    expect(shoot.save).not.toHaveBeenCalled();
   });
 
-  it("should handle different shoot IDs", async () => {
-    mockRoundScoreUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+  it("returns a zero-match result when the round is missing", async () => {
+    const shoot = makeShoot();
+    mockShootDenormalizedFindOne.mockResolvedValue(shoot);
 
-    await updateRound("participant123", "shoot1", 1, 10);
-    await updateRound("participant123", "shoot2", 1, 8);
+    const result = await updateRound({
+      participantId,
+      shootId,
+      userId,
+      roundNumber: 99,
+      score: 10,
+    });
 
-    expect(mockRoundScoreUpdateOne).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ matchedCount: 0, modifiedCount: 0 });
+    expect(shoot.save).not.toHaveBeenCalled();
   });
 
-  it("should reject when the round score update fails", async () => {
-    const error = new Error("Database error");
-    mockRoundScoreUpdateOne.mockRejectedValue(error);
-
-    await expect(
-      updateRound("participant123", "shoot123", 1, 10),
-    ).rejects.toThrow(
-      "Database error",
-    );
-  });
-
-  it("should reject when mongoose connection fails", async () => {
+  it("rejects when mongoose connection fails", async () => {
     mockConnectMongoose.mockRejectedValue(new Error("Connection failed"));
 
     await expect(
-      updateRound("participant123", "shoot123", 1, 10),
-    ).rejects.toThrow(
-      "Connection failed",
-    );
-  });
-
-  it("should handle no documents matched", async () => {
-    mockRoundScoreUpdateOne.mockResolvedValue({
-      modifiedCount: 0,
-      matchedCount: 0,
-    });
-
-    const result = await updateRound("participant123", "shoot123", 1, 10);
-
-    expect(result).toEqual({ modifiedCount: 0, matchedCount: 0 });
-  });
-
-  it("returns a zero-match result when the participant does not exist", async () => {
-    mockShootParticipantFindById.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(null),
-    });
-
-    const result = await updateRound("missing-participant", "shoot123", 1, 10);
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        matchedCount: 0,
-        modifiedCount: 0,
+      updateRound({
+        participantId,
+        shootId,
+        userId,
+        roundNumber: 1,
+        score: 10,
       }),
-    );
-    expect(mockRoundScoreUpdateOne).not.toHaveBeenCalled();
+    ).rejects.toThrow("Connection failed");
   });
 });

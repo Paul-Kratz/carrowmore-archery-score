@@ -10,14 +10,14 @@ import {
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
 import { connectMongoose } from "@/lib/mongoose";
-import { IShoot, ShootParticipantInput } from "@/models";
-import { User, Shoot, ShootParticipant, RoundScore } from "@/models/mongoose";
-import mongoose, { Types } from "mongoose";
+import { IShootDenormalized, ShootParticipantInput } from "@/models";
+import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { User } from "@/models/mongoose";
+import { Types } from "mongoose";
 
 type ParticipantInsert = {
   _id: Types.ObjectId;
-  shoot: Types.ObjectId;
-  user?: Types.ObjectId;
+  userId?: Types.ObjectId;
   guestName?: string;
   guestNameNormalized?: string;
   pegColor: string;
@@ -126,157 +126,145 @@ export const createNewShoot = async ({
   participants?: ShootParticipantInput[];
 }) => {
   await connectMongoose();
-  const session = await mongoose.startSession();
 
-  try {
-    session.startTransaction();
-    const clubData = CLUBS[clubId];
+  const clubData = CLUBS[clubId];
 
-    if (!clubData) {
-      throw new Error("Invalid clubId");
-    }
-
-    const allowedPegColors = getClubPegColors(clubData);
-    const defaultPegColor = allowedPegColors[0];
-    const { registeredParticipants, guestParticipants } =
-      normalizeParticipantInputs({
-        userId,
-        participantIds,
-        guestNames,
-        participants,
-        defaultPegColor,
-        allowedPegColors,
-      });
-
-    const sanitizedGuestNames = guestParticipants.map(
-      (participant) => participant.guestName,
-    );
-
-    if (sanitizedGuestNames.some((guestName) => !guestName)) {
-      throw new Error("Guest names cannot be empty");
-    }
-
-    if (
-      sanitizedGuestNames.some(
-        (guestName) => guestName.length > MAX_GUEST_NAME_LENGTH,
-      )
-    ) {
-      throw new Error(
-        `Guest names must be ${MAX_GUEST_NAME_LENGTH} characters or fewer`,
-      );
-    }
-
-    const uniqueGuestNames = Array.from(new Set(sanitizedGuestNames));
-    const normalizedGuestNames = uniqueGuestNames.map(normalizeParticipantName);
-
-    if (
-      uniqueGuestNames.length !== sanitizedGuestNames.length ||
-      new Set(normalizedGuestNames).size !== normalizedGuestNames.length
-    ) {
-      throw new Error("Guest names must be unique");
-    }
-
-    const registeredPegColorsByUserId = new Map(
-      registeredParticipants.map((participant) => [
-        participant.userId,
-        participant.pegColor,
-      ]),
-    );
-    const uniqueParticipants = registeredParticipants.map(
-      (participant) => participant.userId,
-    );
-    // verify all participants exist
-    const users = await User.find(
-      { _id: { $in: uniqueParticipants.map((id) => new Types.ObjectId(id)) } },
-      { _id: 1, name: 1, email: 1 },
-      { session },
-    );
-    const userIds = users.map((user) => user._id.toString());
-
-    if (userIds.length !== uniqueParticipants.length) {
-      throw new Error("One or more participant userIds do not exist");
-    }
-
-    const normalizedRegisteredLabels = users.map((user) =>
-      normalizeParticipantName(
-        getRegisteredParticipantDisplayName(
-          {
-            id: user._id.toString(),
-            name: user.name ?? null,
-            email: user.email ?? null,
-          },
-          userId,
-        ),
-      ),
-    );
-
-    if (
-      normalizedGuestNames.some((guestName) =>
-        normalizedRegisteredLabels.includes(guestName),
-      )
-    ) {
-      throw new Error(
-        "Guest names cannot match selected registered participant names",
-      );
-    }
-
-    const ROUNDS = Array.from(
-      { length: clubData.totalStations },
-      (_, i) => i + 1,
-    );
-    // Create shoot
-    const [shootDoc] = await Shoot.create(
-      [
-        {
-          createdBy: new Types.ObjectId(userId),
-          completed: false,
-          clubId,
-        },
-      ],
-      { session },
-    );
-
-    // Create all shoot participants
-    const participantDocs: ParticipantInsert[] = [
-      ...uniqueParticipants.map((uid) => ({
-        _id: new Types.ObjectId(),
-        shoot: shootDoc._id,
-        user: new Types.ObjectId(uid),
-        pegColor: registeredPegColorsByUserId.get(uid) ?? defaultPegColor,
-        joinedAt: new Date(),
-      })),
-      ...guestParticipants.map((participant) => ({
-        _id: new Types.ObjectId(),
-        shoot: shootDoc._id,
-        guestName: participant.guestName,
-        guestNameNormalized: normalizeParticipantName(participant.guestName),
-        pegColor: participant.pegColor,
-        joinedAt: new Date(),
-      })),
-    ];
-
-    await ShootParticipant.insertMany(participantDocs, { session });
-
-    // Create all round scores
-    await RoundScore.insertMany(
-      participantDocs.flatMap((participantDoc) =>
-        ROUNDS.map((roundNumber) => ({
-          shoot: shootDoc._id,
-          participant: participantDoc._id,
-          roundNumber,
-          score: null,
-        })),
-      ),
-      { session },
-    );
-
-    await session.commitTransaction();
-
-    return formatResponse<IShoot>(shootDoc);
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    await session.endSession();
+  if (!clubData) {
+    throw new Error("Invalid clubId");
   }
+
+  const allowedPegColors = getClubPegColors(clubData);
+  const defaultPegColor = allowedPegColors[0];
+  const { registeredParticipants, guestParticipants } =
+    normalizeParticipantInputs({
+      userId,
+      participantIds,
+      guestNames,
+      participants,
+      defaultPegColor,
+      allowedPegColors,
+    });
+
+  const sanitizedGuestNames = guestParticipants.map(
+    (participant) => participant.guestName,
+  );
+
+  if (sanitizedGuestNames.some((guestName) => !guestName)) {
+    throw new Error("Guest names cannot be empty");
+  }
+
+  if (
+    sanitizedGuestNames.some(
+      (guestName) => guestName.length > MAX_GUEST_NAME_LENGTH,
+    )
+  ) {
+    throw new Error(
+      `Guest names must be ${MAX_GUEST_NAME_LENGTH} characters or fewer`,
+    );
+  }
+
+  const uniqueGuestNames = Array.from(new Set(sanitizedGuestNames));
+  const normalizedGuestNames = uniqueGuestNames.map(normalizeParticipantName);
+
+  if (
+    uniqueGuestNames.length !== sanitizedGuestNames.length ||
+    new Set(normalizedGuestNames).size !== normalizedGuestNames.length
+  ) {
+    throw new Error("Guest names must be unique");
+  }
+
+  const registeredPegColorsByUserId = new Map(
+    registeredParticipants.map((participant) => [
+      participant.userId,
+      participant.pegColor,
+    ]),
+  );
+  const uniqueParticipants = registeredParticipants.map(
+    (participant) => participant.userId,
+  );
+  const users = await User.find(
+    { _id: { $in: uniqueParticipants.map((id) => new Types.ObjectId(id)) } },
+    { _id: 1, name: 1, email: 1 },
+  );
+  const userIds = users.map((user) => user._id.toString());
+
+  if (userIds.length !== uniqueParticipants.length) {
+    throw new Error("One or more participant userIds do not exist");
+  }
+
+  const normalizedRegisteredLabels = users.map((user) =>
+    normalizeParticipantName(
+      getRegisteredParticipantDisplayName(
+        {
+          id: user._id.toString(),
+          name: user.name ?? null,
+          email: user.email ?? null,
+        },
+        userId,
+      ),
+    ),
+  );
+
+  if (
+    normalizedGuestNames.some((guestName) =>
+      normalizedRegisteredLabels.includes(guestName),
+    )
+  ) {
+    throw new Error(
+      "Guest names cannot match selected registered participant names",
+    );
+  }
+
+  const rounds = Array.from(
+    { length: clubData.totalStations },
+    (_, index) => index + 1,
+  );
+  const joinedAt = new Date();
+  const participantDocs: ParticipantInsert[] = [
+    ...uniqueParticipants.map((uid) => ({
+      _id: new Types.ObjectId(),
+      userId: new Types.ObjectId(uid),
+      pegColor: registeredPegColorsByUserId.get(uid) ?? defaultPegColor,
+      joinedAt,
+    })),
+    ...guestParticipants.map((participant) => ({
+      _id: new Types.ObjectId(),
+      guestName: participant.guestName,
+      guestNameNormalized: normalizeParticipantName(participant.guestName),
+      pegColor: participant.pegColor,
+      joinedAt,
+    })),
+  ];
+
+  const shootDoc = await ShootDenormalized.create({
+    schemaVersion: 1,
+    createdBy: new Types.ObjectId(userId),
+    clubId,
+    totalStations: clubData.totalStations,
+    completed: false,
+    completedAt: null,
+    notes: null,
+    firstScoredAt: null,
+    participantCount: participantDocs.length,
+    scoredCount: 0,
+    totalScoreSlots: participantDocs.length * clubData.totalStations,
+    participants: participantDocs.map((participantDoc) => ({
+      _id: participantDoc._id,
+      userId: participantDoc.userId ?? null,
+      guestName: participantDoc.guestName ?? null,
+      guestNameNormalized: participantDoc.guestNameNormalized ?? null,
+      pegColor: participantDoc.pegColor,
+      joinedAt: participantDoc.joinedAt,
+      scores: rounds.map((roundNumber) => ({
+        _id: new Types.ObjectId(),
+        roundNumber,
+        score: null,
+        scoredAt: null,
+      })),
+      totalScore: 0,
+      scoredCount: 0,
+    })),
+  });
+
+  return formatResponse<IShootDenormalized & { id: string }>(shootDoc);
 };

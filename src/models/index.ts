@@ -84,8 +84,20 @@ export interface IShootWithParticipants extends IShoot {
 export interface IShootChartData {
   id: string;
   clubId: string;
-  pegColor?: string | null;
   createdAt: string;
-  roundScores: (number | null)[];
-  totalScore: number;
+  completed: boolean;
+  totalStations: number;
+  participant: {
+    id: string;
+    userId?: string | null;
+    pegColor?: string | null;
+    totalScore: number;
+    scoredCount: number;
+    scores: {
+      id: string;
+      roundNumber: number;
+      score: number | null;
+      scoredAt?: string | null;
+    }[];
+  };
 }

@@ -2,7 +2,6 @@ const mockAuth = jest.fn();
 const mockCreateNewShoot = jest.fn();
 const mockUpdateShoot = jest.fn();
 const mockDeleteShoot = jest.fn();
-const mockGetShootAccess = jest.fn();
 
 jest.mock("@/lib/auth", () => ({
   auth: mockAuth,
@@ -18,10 +17,6 @@ jest.mock("@/functions/updateShoot", () => ({
 
 jest.mock("@/functions/deleteShoot", () => ({
   deleteShoot: mockDeleteShoot,
-}));
-
-jest.mock("@/functions/getShootAccess", () => ({
-  getShootAccess: mockGetShootAccess,
 }));
 
 import { DELETE, PATCH, POST } from "./route";
@@ -282,13 +277,9 @@ describe("/api/shoot", () => {
   });
 
   describe("PATCH", () => {
-    it("returns 403 when the user is not the shoot creator", async () => {
+    it("returns 404 when the shoot does not exist or the user is not the creator", async () => {
       mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-      mockGetShootAccess.mockResolvedValue({
-        exists: true,
-        isCreator: false,
-        isParticipant: true,
-      });
+      mockUpdateShoot.mockResolvedValue({ matchedCount: 0, modifiedCount: 0 });
 
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "PATCH",
@@ -297,18 +288,20 @@ describe("/api/shoot", () => {
 
       const response = await PATCH(request as never);
 
-      expect(response.status).toBe(403);
-      expect(await response.json()).toEqual({ error: "Forbidden" });
-      expect(mockUpdateShoot).not.toHaveBeenCalled();
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({
+        error: "Shoot not found or forbidden",
+      });
+      expect(mockUpdateShoot).toHaveBeenCalledWith({
+        shootId: validShootId,
+        userId: "session-user",
+        notes: "note",
+      });
     });
 
     it("updates the shoot when the user is the creator", async () => {
       mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-      mockGetShootAccess.mockResolvedValue({
-        exists: true,
-        isCreator: true,
-        isParticipant: true,
-      });
+      mockUpdateShoot.mockResolvedValue({ matchedCount: 1, modifiedCount: 1 });
 
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "PATCH",
@@ -323,6 +316,7 @@ describe("/api/shoot", () => {
 
       expect(mockUpdateShoot).toHaveBeenCalledWith({
         shootId: validShootId,
+        userId: "session-user",
         notes: "note",
         completed: true,
       });
@@ -341,18 +335,14 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: "Invalid shootId" });
-      expect(mockGetShootAccess).not.toHaveBeenCalled();
+      expect(mockUpdateShoot).not.toHaveBeenCalled();
     });
   });
 
   describe("DELETE", () => {
     it("returns 404 when the shoot does not exist", async () => {
       mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-      mockGetShootAccess.mockResolvedValue({
-        exists: false,
-        isCreator: false,
-        isParticipant: false,
-      });
+      mockDeleteShoot.mockResolvedValue({ deletedCount: 0 });
 
       const request = new Request(
         `http://localhost:3000/api/shoot?shootId=${validShootId}`,
@@ -362,17 +352,18 @@ describe("/api/shoot", () => {
       const response = await DELETE(request as never);
 
       expect(response.status).toBe(404);
-      expect(await response.json()).toEqual({ error: "Shoot not found" });
-      expect(mockDeleteShoot).not.toHaveBeenCalled();
+      expect(await response.json()).toEqual({
+        error: "Shoot not found or forbidden",
+      });
+      expect(mockDeleteShoot).toHaveBeenCalledWith({
+        shootId: validShootId,
+        userId: "session-user",
+      });
     });
 
     it("deletes the shoot when the user is the creator", async () => {
       mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-      mockGetShootAccess.mockResolvedValue({
-        exists: true,
-        isCreator: true,
-        isParticipant: true,
-      });
+      mockDeleteShoot.mockResolvedValue({ deletedCount: 1 });
 
       const request = new Request(
         `http://localhost:3000/api/shoot?shootId=${validShootId}`,
@@ -381,7 +372,10 @@ describe("/api/shoot", () => {
 
       const response = await DELETE(request as never);
 
-      expect(mockDeleteShoot).toHaveBeenCalledWith(validShootId);
+      expect(mockDeleteShoot).toHaveBeenCalledWith({
+        shootId: validShootId,
+        userId: "session-user",
+      });
       expect(response.status).toBe(200);
     });
 
@@ -396,7 +390,7 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: "Invalid shootId" });
-      expect(mockGetShootAccess).not.toHaveBeenCalled();
+      expect(mockDeleteShoot).not.toHaveBeenCalled();
     });
   });
 });

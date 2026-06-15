@@ -1,27 +1,48 @@
 const mockConnectMongoose = jest.fn();
-const mockShootUpdateOne = jest.fn();
+const mockShootDenormalizedUpdateOne = jest.fn();
+
+class MockObjectId {
+  constructor(private readonly value: string) {}
+
+  toString() {
+    return this.value;
+  }
+}
+
+jest.mock("mongoose", () => ({
+  Types: {
+    ObjectId: MockObjectId,
+  },
+}));
 
 jest.mock("@/lib/mongoose", () => ({
   connectMongoose: mockConnectMongoose,
 }));
 
-jest.mock("@/models/mongoose", () => ({
-  Shoot: {
-    updateOne: mockShootUpdateOne,
+jest.mock("@/models/denormalized/mongoose", () => ({
+  ShootDenormalized: {
+    updateOne: mockShootDenormalizedUpdateOne,
   },
 }));
 
 import { updateShoot } from "./updateShoot";
 
 describe("updateShoot", () => {
+  const shootId = "507f1f77bcf86cd799439011";
+  const userId = "507f1f77bcf86cd799439001";
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockShootUpdateOne.mockResolvedValue({ modifiedCount: 1 });
+    mockShootDenormalizedUpdateOne.mockResolvedValue({
+      matchedCount: 1,
+      modifiedCount: 1,
+    });
   });
 
-  it("should connect to mongoose", async () => {
+  it("connects to mongoose", async () => {
     await updateShoot({
-      shootId: "shoot123",
+      shootId,
+      userId,
       notes: "Test notes",
       completed: false,
     });
@@ -29,135 +50,74 @@ describe("updateShoot", () => {
     expect(mockConnectMongoose).toHaveBeenCalled();
   });
 
-  it("should update shoot with notes and completed status", async () => {
-    const shootId = "shoot123";
-    const notes = "Great session today";
-    const completed = true;
-
-    await updateShoot({ shootId, notes, completed });
-
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(expect.anything(), {
+  it("updates only shoots created by the user", async () => {
+    await updateShoot({
+      shootId,
+      userId,
       notes: "Great session today",
       completed: true,
     });
+
+    expect(mockShootDenormalizedUpdateOne).toHaveBeenCalledWith(
+      {
+        _id: expect.objectContaining({ value: shootId }),
+        createdBy: expect.objectContaining({ value: userId }),
+      },
+      {
+        $set: expect.objectContaining({
+          notes: "Great session today",
+          completed: true,
+          completedAt: expect.any(Date),
+        }),
+      },
+    );
   });
 
-  it("should update shoot with correct shoot ID", async () => {
-    const shootId = "shoot123";
-
+  it("clears completedAt when marking a shoot incomplete", async () => {
     await updateShoot({
       shootId,
-      notes: "Test",
+      userId,
       completed: false,
     });
 
-    expect(mockShootUpdateOne).toHaveBeenCalled();
+    expect(mockShootDenormalizedUpdateOne).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        $set: {
+          completed: false,
+          completedAt: null,
+        },
+      },
+    );
   });
 
-  it("should mark shoot as completed", async () => {
+  it("updates notes without changing completed state when completed is omitted", async () => {
     await updateShoot({
-      shootId: "shoot123",
+      shootId,
+      userId,
       notes: "",
-      completed: true,
     });
 
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(
+    expect(mockShootDenormalizedUpdateOne).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ completed: true }),
+      {
+        $set: {
+          notes: "",
+        },
+      },
     );
   });
 
-  it("should mark shoot as not completed", async () => {
-    await updateShoot({
-      shootId: "shoot123",
-      notes: "",
-      completed: false,
-    });
+  it("returns the update result", async () => {
+    const mockResult = { matchedCount: 0, modifiedCount: 0 };
+    mockShootDenormalizedUpdateOne.mockResolvedValue(mockResult);
 
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ completed: false }),
-    );
-  });
-
-  it("should update with empty notes", async () => {
-    await updateShoot({
-      shootId: "shoot123",
-      notes: "",
-      completed: true,
-    });
-
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ notes: "" }),
-    );
-  });
-
-  it("should update with long notes", async () => {
-    const longNotes =
-      "This is a very long note with lots of details about the archery session and how it went.";
-
-    await updateShoot({
-      shootId: "shoot123",
-      notes: longNotes,
-      completed: true,
-    });
-
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ notes: longNotes }),
-    );
-  });
-
-  it("should handle different shoot IDs", async () => {
-    await updateShoot({
-      shootId: "shoot1",
-      notes: "First shoot",
-      completed: true,
-    });
-
-    await updateShoot({
-      shootId: "shoot2",
-      notes: "Second shoot",
-      completed: false,
-    });
-
-    expect(mockShootUpdateOne).toHaveBeenCalledTimes(2);
-  });
-
-  it("should complete without returning value", async () => {
     const result = await updateShoot({
-      shootId: "shoot123",
+      shootId,
+      userId,
       notes: "Test",
-      completed: true,
     });
 
-    expect(result).toBeUndefined();
-  });
-
-  it("should handle update of only completed status", async () => {
-    await updateShoot({
-      shootId: "shoot123",
-      notes: "",
-      completed: true,
-    });
-
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(expect.anything(), {
-      notes: "",
-      completed: true,
-    });
-  });
-
-  it("should handle update of only notes", async () => {
-    await updateShoot({
-      shootId: "shoot123",
-      notes: "Updated notes",
-      completed: false,
-    });
-
-    expect(mockShootUpdateOne).toHaveBeenCalledWith(expect.anything(), {
-      notes: "Updated notes",
-      completed: false,
-    });
+    expect(result).toBe(mockResult);
   });
 });

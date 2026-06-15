@@ -45,15 +45,38 @@ const chartData: IShootChartData[] = [
     id: "shoot-1",
     clubId: "carrowmore",
     createdAt: "2026-01-01T00:00:00.000Z",
-    roundScores: [20, 16, 14],
-    totalScore: 50,
+    completed: true,
+    totalStations: 18,
+    participant: {
+      id: "participant-1",
+      userId: "user-1",
+      pegColor: "yellow",
+      totalScore: 50,
+      scoredCount: 3,
+      scores: [
+        { id: "score-1", roundNumber: 1, score: 20 },
+        { id: "score-2", roundNumber: 2, score: 16 },
+        { id: "score-3", roundNumber: 3, score: 14 },
+      ],
+    },
   },
   {
     id: "shoot-2",
     clubId: "testclub",
     createdAt: "2026-01-02T00:00:00.000Z",
-    roundScores: [10, 8],
-    totalScore: 18,
+    completed: true,
+    totalStations: 6,
+    participant: {
+      id: "participant-2",
+      userId: "user-1",
+      pegColor: "blue",
+      totalScore: 18,
+      scoredCount: 2,
+      scores: [
+        { id: "score-4", roundNumber: 1, score: 10 },
+        { id: "score-5", roundNumber: 2, score: 8 },
+      ],
+    },
   },
 ];
 

@@ -1,6 +1,5 @@
 import { createNewShoot } from "@/functions/createNewShoot";
 import { deleteShoot } from "@/functions/deleteShoot";
-import { getShootAccess } from "@/functions/getShootAccess";
 import { isValidObjectId } from "@/helpers/isValidObjectId";
 import {
   CREATE_SHOOT_VALIDATION_ERRORS,
@@ -55,7 +54,9 @@ export async function POST(request: NextRequest) {
           )))
     ) {
       return NextResponse.json(
-        { error: "Invalid participants, participantIds, guestNames, or clubId" },
+        {
+          error: "Invalid participants, participantIds, guestNames, or clubId",
+        },
         { status: 400 },
       );
     }
@@ -108,24 +109,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
     }
 
-    const access = await getShootAccess({
+    const result = await updateShoot({
       shootId,
       userId: session.user.id,
-    });
-
-    if (!access.exists) {
-      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
-    }
-
-    if (!access.isCreator) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    await updateShoot({
-      shootId,
       notes,
       completed,
     });
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: "Shoot not found or forbidden" },
+        { status: 404 },
+      );
+    }
 
     return NextResponse.json(
       { message: "Shoot updated successfully" },
@@ -163,20 +159,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Invalid shootId" }, { status: 400 });
     }
 
-    const access = await getShootAccess({
+    const result = await deleteShoot({
       shootId,
       userId: session.user.id,
     });
 
-    if (!access.exists) {
-      return NextResponse.json({ error: "Shoot not found" }, { status: 404 });
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { error: "Shoot not found or forbidden" },
+        { status: 404 },
+      );
     }
-
-    if (!access.isCreator) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    await deleteShoot(shootId);
 
     return NextResponse.json(
       { message: "Shoot deleted successfully" },

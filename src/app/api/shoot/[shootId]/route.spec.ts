@@ -1,17 +1,17 @@
 const mockAuth = jest.fn();
-const mockGetShootAccess = jest.fn();
-const mockGetShoot = jest.fn();
+const mockGetShootWithAccess = jest.fn();
+const mockFormatResponse = jest.fn();
 
 jest.mock("@/lib/auth", () => ({
   auth: mockAuth,
 }));
 
-jest.mock("@/functions/getShootAccess", () => ({
-  getShootAccess: mockGetShootAccess,
+jest.mock("@/functions/getShoot", () => ({
+  getShootWithAccess: mockGetShootWithAccess,
 }));
 
-jest.mock("@/functions/getShoot", () => ({
-  getShoot: mockGetShoot,
+jest.mock("@/helpers/formatResponse", () => ({
+  formatResponse: mockFormatResponse,
 }));
 
 import { GET } from "./route";
@@ -36,7 +36,7 @@ describe("/api/shoot/[shootId]", () => {
 
   it("returns 403 for users outside the shoot", async () => {
     mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-    mockGetShootAccess.mockResolvedValue({
+    mockGetShootWithAccess.mockResolvedValue({
       exists: true,
       isCreator: false,
       isParticipant: false,
@@ -48,27 +48,33 @@ describe("/api/shoot/[shootId]", () => {
 
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ error: "Forbidden" });
-    expect(mockGetShoot).not.toHaveBeenCalled();
+    expect(mockFormatResponse).not.toHaveBeenCalled();
   });
 
   it("returns the shoot for a participant", async () => {
     const shoot = { id: "shoot-1" };
+    const formattedShoot = { id: "shoot-1", formatted: true };
 
     mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-    mockGetShootAccess.mockResolvedValue({
+    mockGetShootWithAccess.mockResolvedValue({
       exists: true,
       isCreator: false,
       isParticipant: true,
+      shoot,
     });
-    mockGetShoot.mockResolvedValue(shoot);
+    mockFormatResponse.mockReturnValue(formattedShoot);
 
     const response = await GET({} as Request, {
       params: Promise.resolve({ shootId: validShootId }),
     });
 
-    expect(mockGetShoot).toHaveBeenCalledWith({ shootId: validShootId });
+    expect(mockGetShootWithAccess).toHaveBeenCalledWith({
+      shootId: validShootId,
+      userId: "session-user",
+    });
+    expect(mockFormatResponse).toHaveBeenCalledWith(shoot);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(shoot);
+    expect(await response.json()).toEqual(formattedShoot);
   });
 
   it("returns 400 for malformed shoot ids", async () => {
@@ -80,6 +86,6 @@ describe("/api/shoot/[shootId]", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Invalid shootId" });
-    expect(mockGetShootAccess).not.toHaveBeenCalled();
+    expect(mockGetShootWithAccess).not.toHaveBeenCalled();
   });
 });

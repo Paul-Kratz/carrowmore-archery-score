@@ -29,6 +29,8 @@ const formatShortDate = (createdAt: string) => {
 };
 
 const getShootClubId = (shoot: IShootChartData) => shoot.clubId || "carrowmore";
+const getShootTotalScore = (shoot: IShootChartData) =>
+  shoot.participant.totalScore;
 
 const TrendStat = ({
   label,
@@ -70,18 +72,18 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
   const previousShoot = sorted.at(-2);
   const bestScore =
     sorted.length > 0
-      ? Math.max(...sorted.map((shoot) => shoot.totalScore))
+      ? Math.max(...sorted.map((shoot) => getShootTotalScore(shoot)))
       : null;
   const averageScore =
     sorted.length > 0
       ? Math.round(
-          sorted.reduce((total, shoot) => total + shoot.totalScore, 0) /
+          sorted.reduce((total, shoot) => total + getShootTotalScore(shoot), 0) /
             sorted.length,
         )
       : null;
   const latestChange =
     latestShoot && previousShoot
-      ? latestShoot.totalScore - previousShoot.totalScore
+      ? getShootTotalScore(latestShoot) - getShootTotalScore(previousShoot)
       : null;
   const latestChangeLabel =
     latestChange === null
@@ -90,8 +92,8 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
 
   const chartData = sorted.map((shoot) => ({
     date: formatShortDate(shoot.createdAt),
-    score: shoot.totalScore,
-    pegColor: shoot.pegColor,
+    score: getShootTotalScore(shoot),
+    pegColor: shoot.participant.pegColor,
   }));
 
   if (sorted.length === 0) {
@@ -156,7 +158,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
         <TrendStat label="Average" value={averageScore ?? "-"} />
         <TrendStat
           label="Latest"
-          value={latestShoot?.totalScore ?? "-"}
+          value={latestShoot ? getShootTotalScore(latestShoot) : "-"}
           helper={latestChangeLabel}
         />
       </div>
