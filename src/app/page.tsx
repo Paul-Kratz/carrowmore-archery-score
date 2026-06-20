@@ -8,10 +8,12 @@ import { User } from "@/models/mongoose";
 import { cookies } from "next/headers";
 
 export default async function Home() {
-  const session = await auth();
+  // Check if there is an active shoot to resume
   const cookieStore = await cookies();
   const activeShootId = cookieStore.get(ACTIVE_SHOOT_COOKIE)?.value;
 
+  // Fetch list of users
+  const session = await auth();
   await connectMongoose();
 
   const users = formatResponseArray<IUser>(

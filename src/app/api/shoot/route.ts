@@ -10,6 +10,7 @@ import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { CLUBS, getClubPegColors } from "@/constants";
 
+// CREATE A SHOOT
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -19,20 +20,15 @@ export async function POST(request: NextRequest) {
 
     const currentUserId = session.user.id;
     const body = await request.json();
-    const { participantIds, guestNames = [], clubId, participants } = body;
+    const { clubId, participants } = body;
     const club = typeof clubId === "string" ? CLUBS[clubId] : undefined;
     const allowedPegColors = getClubPegColors(club);
     const participantInputsProvided = Array.isArray(participants);
 
-    if (
-      !clubId ||
-      (!participantInputsProvided &&
-        (!Array.isArray(participantIds) || !Array.isArray(guestNames)))
-    ) {
+    if (!clubId || !participantInputsProvided) {
       return NextResponse.json(
         {
-          error:
-            "Missing required fields: participants or participantIds, guestNames, clubId",
+          error: "Missing required fields: participants or clubId",
         },
         { status: 400 },
       );
@@ -43,19 +39,11 @@ export async function POST(request: NextRequest) {
       (participantInputsProvided &&
         !(participants as unknown[]).every((participant) =>
           isShootParticipantInput(participant, allowedPegColors),
-        )) ||
-      (!participantInputsProvided &&
-        (!participantIds.every(
-          (participantId: unknown) =>
-            typeof participantId === "string" && isValidObjectId(participantId),
-        ) ||
-          !guestNames.every(
-            (guestName: unknown) => typeof guestName === "string",
-          )))
+        ))
     ) {
       return NextResponse.json(
         {
-          error: "Invalid participants, participantIds, guestNames, or clubId",
+          error: "Invalid participants or clubId",
         },
         { status: 400 },
       );
@@ -63,9 +51,7 @@ export async function POST(request: NextRequest) {
 
     const shoot = await createNewShoot({
       userId: currentUserId,
-      participantIds: participantInputsProvided ? undefined : participantIds,
-      guestNames: participantInputsProvided ? undefined : guestNames,
-      participants: participantInputsProvided ? participants : undefined,
+      participants,
       clubId,
     });
 
@@ -88,6 +74,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// UPDATE A SHOOT
 export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
@@ -138,6 +125,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
+// DELETE A SHOOT
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();

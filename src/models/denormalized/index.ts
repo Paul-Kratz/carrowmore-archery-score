@@ -8,10 +8,15 @@ export interface IDenormalizedScore {
   score: number | null;
   scoredAt?: Date | null;
 }
-
+export interface IDenormalizedParticipantUserInfo {
+  id: string;
+  email?: string | null;
+  name?: string | null;
+}
 export interface IDenormalizedParticipant {
   _id?: ObjectId;
-  userId?: ObjectId | null;
+  id: string;
+  user?: ObjectId | string | null | IDenormalizedParticipantUserInfo;
   guestName?: string | null;
   guestNameNormalized?: string | null;
   pegColor?: string | null;
@@ -23,6 +28,7 @@ export interface IDenormalizedParticipant {
 
 export interface IShootDenormalized {
   _id?: ObjectId;
+  id: string;
   schemaVersion: number;
   createdAt: Date;
   updatedAt: Date;

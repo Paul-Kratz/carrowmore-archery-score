@@ -1,3 +1,5 @@
+import { IDenormalizedScore } from "@/models";
+
 export const POSSIBLE_SCORES = [0, 4, 8, 10, 14, 16, 20];
 
 export const formatSummaryDate = (timestamp: number, withTime: boolean) => {
@@ -18,13 +20,13 @@ export const getColourForScore = (score: number | null) => {
   return "text-gray-500";
 };
 
-export const getScoreCounts = (roundScores: (number | null)[]) => {
+export const getScoreCounts = (scores: IDenormalizedScore[]) => {
   const counts = new Map<number, number>();
   POSSIBLE_SCORES.forEach((score) => counts.set(score, 0));
 
-  roundScores.forEach((score) => {
-    if (score !== null && counts.has(score)) {
-      counts.set(score, counts.get(score)! + 1);
+  scores.forEach((s) => {
+    if (s.score !== null && counts.has(s.score)) {
+      counts.set(s.score, counts.get(s.score)! + 1);
     }
   });
 

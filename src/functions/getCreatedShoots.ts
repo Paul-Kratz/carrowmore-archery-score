@@ -10,7 +10,7 @@ export const getCreatedShoots = async (userId: string) => {
     createdBy: new Types.ObjectId(userId),
   })
     .sort({ createdAt: -1 })
-    .populate({ path: "participants.userId", select: "name" })
+    .populate({ path: "participants.user", select: "name" })
     .lean();
 
   return formatResponseArray(shoots);

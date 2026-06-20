@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Cookies from "js-cookie";
 import { ExitDialog } from "./ExitDialog";
-import { type IShoot } from "@/models";
 
 const mockMutateAsync = jest.fn();
 const mockPush = jest.fn();
@@ -48,13 +47,11 @@ jest.mock("@radix-ui/themes", () => ({
   ),
 }));
 
-const shoot: IShoot = {
+const shoot = {
   id: "shoot-123",
   clubId: "carrowmore",
-  completed: false,
-  createdBy: "user-1",
-  createdAt: new Date("2026-01-01T10:00:00.000Z"),
-  updatedAt: new Date("2026-01-01T10:00:00.000Z"),
+  firstScoredAt: null,
+  notes: null,
 };
 
 const renderExitDialog = () =>

@@ -1,7 +1,7 @@
 "use client";
 
-import { getUserLabel } from "@/helpers/getUserLabel";
-import { IUser } from "@/models";
+import { getShootParticipantLabel } from "@/helpers/getUserLabel";
+import { IDenormalizedParticipant } from "@/models";
 import { CLUBS } from "@/constants";
 
 type ScorePanelProps = {
@@ -10,7 +10,7 @@ type ScorePanelProps = {
   disabled?: boolean;
   onClear: () => void;
   onSetScore: (score: number) => void;
-  selectedParticipantUser: IUser | null;
+  selectedParticipantUser: IDenormalizedParticipant | null;
   clubId: string;
 };
 
@@ -43,7 +43,7 @@ export function ScorePanel({
   clubId = "carrowmore",
 }: ScorePanelProps) {
   const participantLabel = selectedParticipantUser
-    ? getUserLabel(selectedParticipantUser, currentUserId)
+    ? getShootParticipantLabel(selectedParticipantUser, currentUserId)
     : "Unknown participant";
 
   const clubData = CLUBS[clubId];
@@ -52,7 +52,7 @@ export function ScorePanel({
     <div className="max-w-full overflow-hidden p-2 pt-0">
       <div className="sr-only">
         Score for {participantLabel}
-        {selectedParticipantUser?.isGuest ? " guest" : ""}
+        {!!selectedParticipantUser?.guestName ? " guest" : ""}
       </div>
       <div className="max-w-full space-y-2">
         {clubData.scoringRows.map((row, rowIndex) => (

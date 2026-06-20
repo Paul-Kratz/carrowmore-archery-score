@@ -1,11 +1,11 @@
-import { IShootWithParticipants } from "@/models";
+import { IDenormalizedParticipantUserInfo, IShootDenormalized } from "@/models";
 
 export const truncateString = (str: string, maxLength: number) => {
   if (str.length <= maxLength) return str;
   return `${str.slice(0, maxLength)}...`;
 };
 
-export const getTopScorer = (shoot: IShootWithParticipants) => {
+export const getTopScorer = (shoot: IShootDenormalized) => {
   if (shoot.participants.length === 0) return null;
 
   const sorted = [...shoot.participants].sort(
@@ -16,35 +16,41 @@ export const getTopScorer = (shoot: IShootWithParticipants) => {
   const topParticipant = sorted[0];
 
   return {
-    name: topParticipant?.userInfo?.name || "Unknown",
+    name:
+      (topParticipant?.user as IDenormalizedParticipantUserInfo)?.name ||
+      "Unknown",
     score: topParticipant.totalScore,
-    isGuest: Boolean(topParticipant?.userInfo?.isGuest),
+    isGuest: Boolean(topParticipant.guestName),
   };
 };
 
 export const getUserScore = (
-  shoot: IShootWithParticipants,
+  shoot: IShootDenormalized,
   currentUserId: string,
 ) => {
   const userParticipant = shoot.participants.find(
-    (participant) => participant?.userInfo?.id === currentUserId,
+    (participant) =>
+      (participant?.user as IDenormalizedParticipantUserInfo)?.id ===
+      currentUserId,
   );
 
   if (!userParticipant) return null;
 
-  const completed = userParticipant.roundScores.filter(
-    (score) => score !== null,
+  const completed = userParticipant.scores.filter(
+    (score) => score.score !== null,
   ).length;
 
   return { score: userParticipant.totalScore, completed };
 };
 
 export const getUserStanding = (
-  shoot: IShootWithParticipants,
+  shoot: IShootDenormalized,
   currentUserId: string,
 ) => {
   const userParticipant = shoot.participants.find(
-    (participant) => participant?.userInfo?.id === currentUserId,
+    (participant) =>
+      (participant?.user as IDenormalizedParticipantUserInfo)?.id ===
+      currentUserId,
   );
 
   if (!userParticipant) return null;
@@ -54,26 +60,27 @@ export const getUserStanding = (
       participantB.totalScore - participantA.totalScore,
   );
   const rank =
-    sorted.findIndex((participant) => participant.id === userParticipant.id) + 1;
+    sorted.findIndex((participant) => participant.id === userParticipant.id) +
+    1;
 
   return {
     rank,
     score: userParticipant.totalScore,
-    completed: userParticipant.roundScores.filter((score) => score !== null)
+    completed: userParticipant.scores.filter((score) => score.score !== null)
       .length,
     participantCount: shoot.participants.length,
   };
 };
 
-export const getShootCompletionStats = (shoot: IShootWithParticipants) => {
+export const getShootCompletionStats = (shoot: IShootDenormalized) => {
   const participantCount = shoot.participants.length;
-  const guestCount = shoot.participants.filter(
-    (participant) => participant.userInfo.isGuest,
+  const guestCount = shoot.participants.filter((participant) =>
+    Boolean(participant.guestName),
   ).length;
   const totalSlots = participantCount * 18;
   const scoredSlots = shoot.participants.reduce(
     (total, participant) =>
-      total + participant.roundScores.filter((score) => score !== null).length,
+      total + participant.scores.filter((score) => score.score !== null).length,
     0,
   );
   const completedStations =
@@ -81,7 +88,7 @@ export const getShootCompletionStats = (shoot: IShootWithParticipants) => {
       ? 0
       : Array.from({ length: 18 }, (_, stationIndex) =>
           shoot.participants.every(
-            (participant) => participant.roundScores[stationIndex] !== null,
+            (participant) => participant.scores[stationIndex]?.score !== null,
           ),
         ).filter(Boolean).length;
   const completionPercent =

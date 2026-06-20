@@ -67,7 +67,7 @@ describe("getCreatedShoots", () => {
     expect(query.createdBy.toString()).toBe(userId);
     expect(mockShootDenormalizedSort).toHaveBeenCalledWith({ createdAt: -1 });
     expect(mockShootDenormalizedPopulate).toHaveBeenCalledWith({
-      path: "participants.userId",
+      path: "participants.user",
       select: "name",
     });
     expect(mockShootDenormalizedLean).toHaveBeenCalled();

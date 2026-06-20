@@ -5,7 +5,7 @@ import { ShootDenormalized } from "@/models/denormalized/mongoose";
 import { Types } from "mongoose";
 
 type ShootAccessParticipant = {
-  userId?: Types.ObjectId | { _id?: Types.ObjectId | string } | null;
+  user?: Types.ObjectId | { _id?: Types.ObjectId | string } | null;
 };
 
 export const getShoot = async ({ shootId }: { shootId: string }) => {
@@ -13,7 +13,7 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
 
   const shoot = await ShootDenormalized.findById(shootId)
     .populate({
-      path: "participants.userId",
+      path: "participants.user",
       select: "name email",
     })
     .lean();
@@ -32,7 +32,7 @@ export const getShootWithAccess = async ({
 
   const shoot = await ShootDenormalized.findById(shootId)
     .populate({
-      path: "participants.userId",
+      path: "participants.user",
       select: "name email",
     })
     .lean();
@@ -49,7 +49,7 @@ export const getShootWithAccess = async ({
   const isCreator = shoot.createdBy.toString() === userId;
   const isParticipant = shoot.participants.some(
     (participant: IDenormalizedParticipant) => {
-      const participantUser = (participant as ShootAccessParticipant).userId;
+      const participantUser = (participant as ShootAccessParticipant).user;
 
       if (!participantUser) {
         return false;

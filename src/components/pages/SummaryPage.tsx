@@ -1,6 +1,6 @@
 "use client";
 import { CLUBS } from "@/constants";
-import { IShootWithParticipants, IUser } from "@/models";
+import { IShootDenormalized, IUser } from "@/models";
 import { ParticipantSummaryCard } from "./summary/ParticipantSummaryCard";
 import { StationBreakdownCard } from "./summary/StationBreakdownCard";
 import { SummaryHeaderCard } from "./summary/SummaryHeaderCard";
@@ -11,7 +11,7 @@ export const SummaryPage = ({
   shootInfo,
 }: {
   currentUser: IUser;
-  shootInfo: IShootWithParticipants;
+  shootInfo: IShootDenormalized;
 }) => {
   const onBack = () => {
     window.history.back();

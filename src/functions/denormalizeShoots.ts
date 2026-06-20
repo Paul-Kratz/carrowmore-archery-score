@@ -3,15 +3,11 @@ import { connectMongoose } from "@/lib/mongoose";
 import {
   IDenormalizedParticipant,
   IDenormalizedScore,
-  IRoundScore,
-  IShoot,
   IShootDenormalized,
-  IShootParticipant,
 } from "@/models";
 import { ShootDenormalized } from "@/models/denormalized/mongoose";
-import { RoundScore, Shoot, ShootParticipant } from "@/models/mongoose";
 import { createHash } from "node:crypto";
-import { Types } from "mongoose";
+import { model, models, Schema, Types } from "mongoose";
 
 export type DenormalizeShootsResponse = {
   totalShoots: number;
@@ -31,25 +27,57 @@ type ObjectIdLike = {
   toString: () => string;
 };
 
-type LeanShoot = Omit<IShoot, "id" | "createdBy"> & {
+type LeanShoot = {
   _id: ObjectIdLike;
   createdBy: ObjectIdLike;
+  createdAt: Date;
+  updatedAt: Date;
+  completed: boolean;
+  clubId: string;
+  notes?: string | null;
 };
 
-type LeanShootParticipant = Omit<IShootParticipant, "id" | "shoot"> & {
+type LeanShootParticipant = {
   _id: ObjectIdLike;
   shoot: ObjectIdLike;
+  user?: ObjectIdLike | null;
+  guestName?: string | null;
+  guestNameNormalized?: string | null;
+  pegColor?: string | null;
+  joinedAt: Date;
 };
 
-type LeanRoundScore = Omit<
-  IRoundScore,
-  "id" | "shoot" | "participant" | "user"
-> & {
+type LeanRoundScore = {
   _id: ObjectIdLike;
   shoot: ObjectIdLike;
   participant?: ObjectIdLike | null;
   user?: ObjectIdLike | null;
+  roundNumber: number;
+  score?: number | null;
+  scoredAt?: Date | null;
 };
+
+const legacyShootSchema = new Schema(
+  {},
+  { collection: "shoots", strict: false },
+);
+const legacyParticipantSchema = new Schema(
+  {},
+  { collection: "shootparticipants", strict: false },
+);
+const legacyRoundScoreSchema = new Schema(
+  {},
+  { collection: "roundscores", strict: false },
+);
+
+const LegacyShoot =
+  models.Shoot || model<LeanShoot>("Shoot", legacyShootSchema);
+const LegacyShootParticipant =
+  models.ShootParticipant ||
+  model<LeanShootParticipant>("ShootParticipant", legacyParticipantSchema);
+const LegacyRoundScore =
+  models.RoundScore ||
+  model<LeanRoundScore>("RoundScore", legacyRoundScoreSchema);
 
 const toId = (value: unknown): string | null => {
   if (!value) {
@@ -145,9 +173,7 @@ const getParticipantScores = (
       return scoreParticipantId === participantId;
     }
 
-    return Boolean(
-      participantUserId && toId(score.user) === participantUserId,
-    );
+    return Boolean(participantUserId && toId(score.user) === participantUserId);
   });
 };
 
@@ -205,7 +231,8 @@ const mapParticipants = ({
 
     return {
       _id: toObjectId(participant._id),
-      userId: userId ? toObjectId(userId) : null,
+      id: participantId,
+      user: userId ? toObjectId(userId) : null,
       guestName: participant.guestName ?? null,
       guestNameNormalized: participant.guestNameNormalized ?? null,
       pegColor: participant.pegColor ?? null,
@@ -278,6 +305,7 @@ export const mapShootToDenormalized = ({
 
   return {
     _id: toObjectId(shoot._id),
+    id: shootId,
     schemaVersion: DENORMALIZED_SHOOT_SCHEMA_VERSION,
     createdBy: toObjectId(shoot.createdBy),
     clubId: shoot.clubId,
@@ -303,11 +331,11 @@ export async function denormalizeShoots({
 }: DenormalizeShootsOptions = {}): Promise<DenormalizeShootsResponse> {
   await connectMongoose();
 
-  const shoots = (await Shoot.find({}).lean()) as LeanShoot[];
+  const shoots = (await LegacyShoot.find({}).lean()) as LeanShoot[];
   const shootIds = shoots.map((shoot) => shoot._id);
   const [participants, roundScores] = await Promise.all([
-    ShootParticipant.find({ shoot: { $in: shootIds } }).lean(),
-    RoundScore.find({ shoot: { $in: shootIds } }).lean(),
+    LegacyShootParticipant.find({ shoot: { $in: shootIds } }).lean(),
+    LegacyRoundScore.find({ shoot: { $in: shootIds } }).lean(),
   ]);
 
   const participantsByShoot = groupBy(

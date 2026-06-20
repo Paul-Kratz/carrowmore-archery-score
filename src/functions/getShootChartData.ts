@@ -10,7 +10,7 @@ export const getShootChartData = async (userId: string) => {
   const userObjectId = new Types.ObjectId(userId);
   const shoots = await ShootDenormalized.find(
     {
-      "participants.userId": userObjectId,
+      "participants.user": userObjectId,
     },
     {
       clubId: 1,
@@ -19,7 +19,7 @@ export const getShootChartData = async (userId: string) => {
       totalStations: 1,
       participants: {
         $elemMatch: {
-          userId: userObjectId,
+          user: userObjectId,
         },
       },
     },

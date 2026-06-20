@@ -1,10 +1,10 @@
 "use client";
 
-import { IShoot, IShootParticipantWithScores, IUser } from "@/models";
+import { IDenormalizedParticipant, IShootDenormalized, IUser } from "@/models";
 import { Button, ScrollArea } from "@radix-ui/themes";
 import { TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetShoot, useUpdateScore } from "@/hooks/queries";
 import { ExitDialog } from "@/components/pages/shoot/ExitDialog";
 import { ParticipantSelector } from "./shoot/ParticipantSelector";
@@ -19,6 +19,19 @@ type ShootPageProps = {
   currentUser: IUser;
   shootId: string;
 };
+
+const scoreSaveErrorMessage =
+  "That score did not save. Check your signal and tap the score again.";
+
+const getScoreSaveErrorKey = (shootId: string) =>
+  `score-save-error:${shootId}`;
+
+type FailedScoreSave = {
+  message: string;
+  participantId: string;
+  station: number;
+};
+
 export function ShootPage({
   currentStation,
   currentUser,
@@ -27,16 +40,41 @@ export function ShootPage({
   const { data: shootData } = useGetShoot(shootId);
   const { mutateAsync: updateScore, isPending: isUpdatingScore } =
     useUpdateScore();
-  const { participants, ...shoot } =
-    (shootData as IShoot & {
-      participants: IShootParticipantWithScores[];
-    }) || {};
+  const { participants, ...shoot } = (shootData as IShootDenormalized) || {};
   const [selectedParticipantId, setSelectedParticipantId] = useState<
     string | null
   >(null);
+  const [scoreSaveError, setScoreSaveError] = useState<string | null>(null);
   const router = useRouter();
 
-  const clubData = CLUBS[shoot.clubId || "carrowmore"];
+  const clubData = CLUBS[shoot?.clubId || "carrowmore"];
+
+  useEffect(() => {
+    const rawFailedSave = sessionStorage.getItem(getScoreSaveErrorKey(shootId));
+
+    if (!rawFailedSave) {
+      return;
+    }
+
+    let failedSave: FailedScoreSave;
+
+    try {
+      failedSave = JSON.parse(rawFailedSave) as FailedScoreSave;
+    } catch {
+      sessionStorage.removeItem(getScoreSaveErrorKey(shootId));
+      return;
+    }
+
+    if (failedSave.station !== currentStation) {
+      return;
+    }
+
+    sessionStorage.removeItem(getScoreSaveErrorKey(shootId));
+    queueMicrotask(() => {
+      setSelectedParticipantId(failedSave.participantId);
+      setScoreSaveError(failedSave.message);
+    });
+  }, [currentStation, shootId]);
 
   const selectedParticipant =
     participants?.find((p) => p.id === selectedParticipantId) ??
@@ -44,7 +82,7 @@ export function ShootPage({
     null;
 
   const currentScore = selectedParticipant
-    ? selectedParticipant.roundScores[currentStation - 1]
+    ? (selectedParticipant.scores[currentStation - 1]?.score ?? null)
     : null;
 
   const selectedParticipantIndex =
@@ -57,27 +95,42 @@ export function ShootPage({
     { length: clubData.totalStations },
     (_, index) =>
       (participants ?? []).filter(
-        (participant) => participant.roundScores[index] !== null,
+        (participant) => (participant.scores[index]?.score ?? null) !== null,
       ).length,
   );
   const participantCount = participants?.length ?? 0;
-  const remainingScoreCount = (participants ?? []).reduce(
-    (remaining, participant) =>
-      remaining +
-      participant.roundScores.filter((score) => score === null).length,
-    0,
-  );
+
+  const remainingScoreCount = shoot?.totalScoreSlots - shoot?.scoredCount;
 
   const handleSetScore = (value: number | null) => {
     if (!shoot.id || !selectedParticipant?.id || isUpdatingScore) {
       return;
     }
 
+    const scoredParticipantId = selectedParticipant.id;
+    const scoredStation = currentStation;
+    const failedSave = {
+      message: scoreSaveErrorMessage,
+      participantId: scoredParticipantId,
+      station: scoredStation,
+    };
+
+    sessionStorage.removeItem(getScoreSaveErrorKey(shootId));
+    setScoreSaveError(null);
+
     void updateScore({
       shootId: shoot.id,
-      participantId: selectedParticipant.id,
-      roundNumber: currentStation,
+      participantId: scoredParticipantId,
+      roundNumber: scoredStation,
       score: value,
+    }).catch(() => {
+      sessionStorage.setItem(
+        getScoreSaveErrorKey(shootId),
+        JSON.stringify(failedSave),
+      );
+      setSelectedParticipantId(scoredParticipantId);
+      setScoreSaveError(scoreSaveErrorMessage);
+      router.replace(`/shoot/${shootId}/${scoredStation}`);
     });
 
     if (value === null || !participants?.length) {
@@ -92,7 +145,8 @@ export function ShootPage({
         return participants[nextIndex];
       },
     ).find(
-      (participant) => participant.roundScores[currentStation - 1] === null,
+      (participant) =>
+        (participant.scores[currentStation - 1]?.score ?? null) === null,
     );
 
     if (nextUnscoredParticipant) {
@@ -118,7 +172,7 @@ export function ShootPage({
         title="In the Forest"
         subtitle={"at " + clubData.name}
         showBackButton={false}
-        rightSlot={<OptionsDropdown shoot={shootData} />}
+        rightSlot={<OptionsDropdown shoot={shoot} />}
       />
       <ScrollArea
         type="auto"
@@ -135,6 +189,15 @@ export function ShootPage({
             selectedParticipantId={selectedParticipant?.id ?? null}
           />
 
+          {scoreSaveError && (
+            <div
+              role="alert"
+              className="mx-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-800"
+            >
+              {scoreSaveError}
+            </div>
+          )}
+
           <div className="flex-1">
             <ScorePanel
               currentScore={currentScore}
@@ -143,9 +206,9 @@ export function ShootPage({
               onClear={() => handleSetScore(null)}
               onSetScore={handleSetScore}
               selectedParticipantUser={
-                (selectedParticipant?.userInfo as IUser) || null
+                (selectedParticipant as IDenormalizedParticipant) || null
               }
-              clubId={shoot.clubId}
+              clubId={shoot?.clubId}
             />
           </div>
 

@@ -4,6 +4,7 @@ import { formatResponse } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+// GET SHOOT BY ID
 export const GET = async (
   _request: Request,
   { params }: { params: Promise<{ shootId: string }> },

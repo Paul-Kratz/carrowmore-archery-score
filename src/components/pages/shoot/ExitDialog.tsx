@@ -1,6 +1,6 @@
 "use client";
 import { useUpdateShoot } from "@/hooks/queries";
-import { IShoot } from "@/models";
+import { IShootDenormalized } from "@/models";
 import { Button, Dialog, TextArea } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,7 +11,7 @@ import { Clock, MapPin, NotebookPen, TreePine, X } from "lucide-react";
 
 type ExitDialogProps = {
   isShootFinished?: boolean;
-  shoot: IShoot;
+  shoot: IShootDenormalized;
   triggerComponent: React.ReactNode;
 };
 
@@ -34,10 +34,7 @@ export const ExitDialog = ({
     scoreStartedAt && openedAt
       ? openedAt.getTime() - scoreStartedAt.getTime()
       : Number.NaN;
-  const totalMinutes = Math.max(
-    0,
-    Math.floor(shootLengthMs / (1000 * 60)),
-  );
+  const totalMinutes = Math.max(0, Math.floor(shootLengthMs / (1000 * 60)));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   const shootLength =

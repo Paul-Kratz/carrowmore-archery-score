@@ -1,9 +1,13 @@
 "use client";
 
-import { IShootParticipantWithScores } from "@/models";
+import { IDenormalizedParticipant } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getScoreCounts } from "./summaryUtils";
 import { CLUBS, getPegColorHex, getPegColorLabel } from "@/constants";
+import {
+  getShootParticipantDisplayName,
+  getShootParticipantUserId,
+} from "@/helpers/participantDisplay";
 
 const getScoreCountTone = (score: number) => {
   if (score >= 16)
@@ -16,7 +20,7 @@ const getScoreCountTone = (score: number) => {
 
 type ParticipantSummaryCardProps = {
   currentUserId: string;
-  participant: IShootParticipantWithScores;
+  participant: IDenormalizedParticipant;
   clubId: string;
 };
 
@@ -25,9 +29,16 @@ export function ParticipantSummaryCard({
   participant,
   clubId,
 }: ParticipantSummaryCardProps) {
-  const counts = getScoreCounts(participant.roundScores);
-  const completedStations = participant.roundScores.filter(
-    (score) => score !== null,
+  const counts = getScoreCounts(participant.scores);
+  const participantName = getShootParticipantDisplayName(
+    participant,
+    currentUserId,
+  );
+  const isCurrentUser =
+    getShootParticipantUserId(participant) === currentUserId &&
+    !participant.guestName;
+  const completedStations = participant.scores.filter(
+    (s) => s.score !== null,
   ).length;
   const clubScoreTotals = CLUBS[clubId].scoringRows
     .map((row) => row.scores)
@@ -47,15 +58,14 @@ export function ParticipantSummaryCard({
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <span className="truncate font-bold text-(--deep-forest-green)">
-                {participant.userInfo.name}
+                {participantName}
               </span>
-              {participant.userInfo.isGuest && <GuestBadge />}
-              {participant.userInfo.id === currentUserId &&
-                !participant.userInfo.isGuest && (
-                  <span className="rounded-full border border-border bg-[#dfe7c7] px-2 py-0.5 text-xs font-bold text-(--deep-forest-green)">
-                    You
-                  </span>
-                )}
+              {!!participant.guestName && <GuestBadge />}
+              {isCurrentUser && (
+                <span className="rounded-full border border-border bg-[#dfe7c7] px-2 py-0.5 text-xs font-bold text-(--deep-forest-green)">
+                  You
+                </span>
+              )}
               {participant.pegColor && (
                 <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-xs font-bold text-(--deep-forest-green)">
                   <span

@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { SummaryPage } from "./SummaryPage";
-import { IShootWithParticipants, IUser } from "@/models";
+import {
+  IDenormalizedParticipant,
+  IDenormalizedScore,
+  IShootDenormalized,
+  IUser,
+} from "@/models";
 import type { Types } from "mongoose";
 
 const asObjectId = (value: string) => value as unknown as Types.ObjectId;
@@ -13,32 +18,61 @@ const mockCurrentUser: IUser = {
   updatedAt: new Date("2025-01-01"),
 };
 
+const createScores = (scores: number[]): IDenormalizedScore[] =>
+  scores.map((score, index) => ({
+    roundNumber: index + 1,
+    score,
+    scoredAt: new Date("2025-06-15T10:30:00Z"),
+  }));
+
+const createParticipant = (
+  overrides: Partial<IDenormalizedParticipant> = {},
+): IDenormalizedParticipant => {
+  const scores =
+    overrides.scores ??
+    createScores([
+      20, 16, 14, 10, 8, 4, 0, 20, 14, 10, 8, 4, 0, 16, 14, 10, 8, 4,
+    ]);
+
+  return {
+    id: "p1",
+    user: { id: "user1", name: "Alice", email: "alice@test.com" },
+    joinedAt: new Date(),
+    pegColor: "yellow",
+    scores,
+    totalScore: scores.reduce((total, score) => total + (score.score ?? 0), 0),
+    scoredCount: scores.filter((score) => score.score !== null).length,
+    ...overrides,
+  };
+};
+
 const createShootInfo = (
-  overrides: Partial<IShootWithParticipants> = {},
-): IShootWithParticipants => ({
+  overrides: Partial<IShootDenormalized> = {},
+): IShootDenormalized => {
+  const participants = overrides.participants ?? [createParticipant()];
+
+  return {
   id: "shoot1",
-  createdBy: "user1",
+  schemaVersion: 1,
+  createdBy: asObjectId("user1"),
   createdAt: new Date("2025-06-15T10:30:00Z"),
   updatedAt: new Date("2025-06-15T10:30:00Z"),
+  firstScoredAt: new Date("2025-06-15T10:30:00Z"),
+  completedAt: new Date("2025-06-15T10:30:00Z"),
   completed: true,
   notes: "Sunny day",
-  participants: [
-    {
-      id: "p1",
-      shoot: asObjectId("shoot1"),
-      user: asObjectId("user1"),
-      joinedAt: new Date(),
-      pegColor: "yellow",
-      userInfo: { id: "user1", name: "Alice", email: "alice@test.com" },
-      roundScores: [
-        20, 16, 14, 10, 8, 4, 0, 20, 14, 10, 8, 4, 0, 16, 14, 10, 8, 4,
-      ],
-      totalScore: 180,
-    },
-  ],
-  ...overrides,
   clubId: overrides.clubId ?? "carrowmore",
-});
+  totalStations: 18,
+  participantCount: participants.length,
+  scoredCount: participants.reduce(
+    (total, participant) => total + participant.scoredCount,
+    0,
+  ),
+  totalScoreSlots: participants.length * 18,
+  participants,
+  ...overrides,
+  };
+};
 
 describe("SummaryPage", () => {
   describe("Rendering", () => {
@@ -116,7 +150,7 @@ describe("SummaryPage", () => {
       const { rerender } = render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ createdBy: "user1" })}
+          shootInfo={createShootInfo({ createdBy: asObjectId("user1") })}
         />,
       );
 
@@ -125,7 +159,7 @@ describe("SummaryPage", () => {
       rerender(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ createdBy: "user2" })}
+          shootInfo={createShootInfo({ createdBy: asObjectId("user2") })}
         />,
       );
 
@@ -138,24 +172,14 @@ describe("SummaryPage", () => {
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo({
             participants: [
-              {
-                id: "p1",
-                shoot: asObjectId("shoot1"),
-                user: asObjectId("user1"),
-                joinedAt: new Date(),
-                userInfo: { id: "user1", name: "Alice" },
-                roundScores: [10],
-                totalScore: 10,
-              },
-              {
+              createParticipant({ scores: createScores([10]) }),
+              createParticipant({
                 id: "p2",
-                shoot: asObjectId("shoot1"),
-                user: asObjectId("user2"),
-                joinedAt: new Date(),
-                userInfo: { id: "user2", name: "Bob" },
-                roundScores: [14],
+                user: { id: "user2", name: "Bob" },
+                scores: createScores([14]),
                 totalScore: 14,
-              },
+                scoredCount: 1,
+              }),
             ],
           })}
         />,
@@ -179,16 +203,14 @@ describe("SummaryPage", () => {
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo({
             participants: [
-              {
+              createParticipant({
                 id: "guest-1",
-                shoot: asObjectId("shoot1"),
                 user: null,
                 guestName: "Charlie",
-                joinedAt: new Date(),
-                userInfo: { name: "Charlie", isGuest: true },
-                roundScores: [10, 8, 4],
+                scores: createScores([10, 8, 4]),
                 totalScore: 22,
-              },
+                scoredCount: 3,
+              }),
             ],
           })}
         />,
@@ -234,7 +256,7 @@ describe("SummaryPage", () => {
     });
 
     it("should count score occurrences correctly", () => {
-      // roundScores: [20, 16, 14, 10, 8, 4, 0, 20, 14, 10, 8, 4, 0, 16, 14, 10, 8, 4]
+      // Scores: [20, 16, 14, 10, 8, 4, 0, 20, 14, 10, 8, 4, 0, 16, 14, 10, 8, 4]
       // Expected counts: 0→2, 4→3, 8→3, 10→3, 14→3, 16→2, 20→2
       render(
         <SummaryPage
@@ -257,15 +279,11 @@ describe("SummaryPage", () => {
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo({
             participants: [
-              {
-                id: "p1",
-                shoot: asObjectId("shoot1"),
-                user: asObjectId("user1"),
-                joinedAt: new Date(),
-                userInfo: { id: "user1", name: "Alice" },
-                roundScores: [20, 20, 20],
+              createParticipant({
+                scores: createScores([20, 20, 20]),
                 totalScore: 60,
-              },
+                scoredCount: 3,
+              }),
             ],
           })}
         />,
@@ -282,15 +300,11 @@ describe("SummaryPage", () => {
           currentUser={mockCurrentUser}
           shootInfo={createShootInfo({
             participants: [
-              {
-                id: "p1",
-                shoot: asObjectId("shoot1"),
-                user: asObjectId("user1"),
-                joinedAt: new Date(),
-                userInfo: { id: "user1", name: "Alice" },
-                roundScores: [20],
+              createParticipant({
+                scores: createScores([20]),
                 totalScore: 20,
-              },
+                scoredCount: 1,
+              }),
             ],
           })}
         />,
@@ -315,7 +329,7 @@ describe("SummaryPage", () => {
       for (let i = 1; i <= 18; i++) {
         expect(
           screen.getByLabelText(`Alice station ${i} score ${
-            createShootInfo().participants[0].roundScores[i - 1]
+            createShootInfo().participants[0].scores[i - 1]?.score
           }`),
         ).toBeInTheDocument();
       }

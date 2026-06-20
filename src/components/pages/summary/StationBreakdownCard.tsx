@@ -1,11 +1,12 @@
 "use client";
 
-import { IShootParticipantWithScores } from "@/models";
+import { IDenormalizedParticipant } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { CLUBS } from "@/constants";
+import { getShootParticipantDisplayName } from "@/helpers/participantDisplay";
 
 type StationBreakdownCardProps = {
-  participants: IShootParticipantWithScores[];
+  participants: IDenormalizedParticipant[];
   clubId: string;
 };
 
@@ -52,8 +53,12 @@ export function StationBreakdownCard({
     <article className="forest-chart-panel overflow-hidden rounded-xl border border-border p-3 shadow-sm">
       <div className="space-y-3">
         {participants.map((participant) => {
-          const completedStations = participant.roundScores.filter(
-            (score) => score !== null,
+          const participantName = getShootParticipantDisplayName(
+            participant,
+            "",
+          );
+          const completedStations = participant.scores.filter(
+            (s) => s.score !== null,
           ).length;
 
           return (
@@ -64,10 +69,8 @@ export function StationBreakdownCard({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 font-bold text-(--deep-forest-green)">
-                    <span className="truncate">
-                      {participant.userInfo.name}
-                    </span>
-                    {participant.userInfo.isGuest && <GuestBadge />}
+                    <span className="truncate">{participantName}</span>
+                    {!!participant.guestName && <GuestBadge />}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {completedStations} / {CLUBS[clubId].totalStations} stations
@@ -88,15 +91,15 @@ export function StationBreakdownCard({
                 className="grid grid-cols-6 gap-1.5"
                 aria-label="Station scores"
               >
-                {participant.roundScores.map((score, index) => {
-                  const tone = getStationScoreTone(score);
+                {participant.scores.map((scoreData, index) => {
+                  const tone = getStationScoreTone(scoreData.score);
 
                   return (
                     <div
                       key={index}
-                      aria-label={`${participant.userInfo.name} station ${
-                        index + 1
-                      } score ${score ?? "not scored"}`}
+                      aria-label={`${participantName} station ${index + 1} score ${
+                        scoreData.score ?? "not scored"
+                      }`}
                       className={`min-h-12 overflow-hidden rounded-md border text-center ${tone.className}`}
                     >
                       <div className={`h-1 w-full ${tone.accent}`} />
@@ -105,7 +108,7 @@ export function StationBreakdownCard({
                           {index + 1}
                         </div>
                         <div className="text-sm font-bold leading-tight">
-                          {score ?? "-"}
+                          {scoreData.score ?? "-"}
                         </div>
                       </div>
                     </div>

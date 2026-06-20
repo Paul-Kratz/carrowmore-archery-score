@@ -87,7 +87,7 @@ describe("createNewShoot", () => {
   it("connects to mongoose", async () => {
     await createShoot({
       userId: USER_ID,
-      participantIds: [],
+      participants: [{ userId: USER_ID }],
     });
 
     expect(mockConnectMongoose).toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe("createNewShoot", () => {
 
     const result = await createShoot({
       userId: USER_ID,
-      participantIds: [USER_TWO_ID],
+      participants: [{ userId: USER_ID }, { userId: USER_TWO_ID }],
     });
 
     expect(mockShootDenormalizedCreate).toHaveBeenCalledWith(
@@ -125,14 +125,14 @@ describe("createNewShoot", () => {
   it("creates nested participant scores for all rounds", async () => {
     await createShoot({
       userId: USER_ID,
-      participantIds: [],
+      participants: [{ userId: USER_ID }],
     });
 
     const shootDoc = mockShootDenormalizedCreate.mock.calls[0][0];
 
     expect(shootDoc.participants).toHaveLength(1);
     expect(shootDoc.participants[0]).toMatchObject({
-      userId: expect.objectContaining({ value: USER_ID }),
+      user: expect.objectContaining({ value: USER_ID }),
       guestName: null,
       pegColor: "yellow",
       totalScore: 0,
@@ -156,7 +156,7 @@ describe("createNewShoot", () => {
   it("creates shoots with station counts from other clubs", async () => {
     await createShoot({
       userId: USER_ID,
-      participantIds: [],
+      participants: [{ userId: USER_ID }],
       clubId: "marbleArchers",
     });
 
@@ -173,15 +173,21 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      participantIds: [USER_TWO_ID, USER_TWO_ID, USER_ID],
+      participants: [
+        { userId: USER_TWO_ID },
+        { userId: USER_TWO_ID },
+        { userId: USER_ID },
+      ],
     });
 
     const shootDoc = mockShootDenormalizedCreate.mock.calls[0][0];
 
     expect(shootDoc.participants).toHaveLength(2);
-    expect(shootDoc.participants.map((participant: { userId: MockObjectId }) =>
-      participant.userId.toString(),
-    )).toEqual([USER_ID, USER_TWO_ID]);
+    expect(
+      shootDoc.participants.map((participant: { user: MockObjectId }) =>
+        participant.user.toString(),
+      ),
+    ).toEqual([USER_TWO_ID, USER_ID]);
   });
 
   it("stores peg colors for explicit registered and guest participants", async () => {
@@ -204,17 +210,17 @@ describe("createNewShoot", () => {
     expect(shootDoc.participants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          userId: expect.objectContaining({ value: USER_ID }),
+          user: expect.objectContaining({ value: USER_ID }),
           guestName: null,
           pegColor: "red",
         }),
         expect.objectContaining({
-          userId: expect.objectContaining({ value: USER_TWO_ID }),
+          user: expect.objectContaining({ value: USER_TWO_ID }),
           guestName: null,
           pegColor: "yellow",
         }),
         expect.objectContaining({
-          userId: null,
+          user: null,
           guestName: "Charlie",
           guestNameNormalized: "charlie",
           pegColor: "red",
@@ -231,7 +237,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        participantIds: [USER_TWO_ID],
+        participants: [{ userId: USER_TWO_ID }],
       }),
     ).rejects.toThrow("One or more participant userIds do not exist");
 
@@ -242,7 +248,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        participantIds: [],
+        participants: [{ userId: USER_ID }],
         clubId: "unknown-club",
       }),
     ).rejects.toThrow("Invalid clubId");
@@ -265,8 +271,10 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        participantIds: [],
-        guestNames: ["Charlie", " charlie "],
+        participants: [
+          { guestName: "Charlie" },
+          { guestName: " charlie " },
+        ],
       }),
     ).rejects.toThrow("Guest names must be unique");
   });
@@ -277,8 +285,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        participantIds: [],
-        guestNames: ["charlie"],
+        participants: [{ userId: USER_ID }, { guestName: "charlie" }],
       }),
     ).rejects.toThrow(
       "Guest names cannot match selected registered participant names",
@@ -289,8 +296,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        participantIds: [],
-        guestNames: ["x".repeat(51)],
+        participants: [{ guestName: "x".repeat(51) }],
       }),
     ).rejects.toThrow("Guest names must be 50 characters or fewer");
   });
@@ -304,7 +310,7 @@ describe("createNewShoot", () => {
 
     const result = await createShoot({
       userId: USER_ID,
-      participantIds: [],
+      participants: [{ userId: USER_ID }],
     });
 
     expect(mockFormatResponse).toHaveBeenCalledWith(mockShoot);
@@ -316,7 +322,7 @@ describe("createNewShoot", () => {
 
     await createShoot({
       userId: USER_ID,
-      participantIds: [USER_TWO_ID, USER_THREE_ID],
+      participants: [{ userId: USER_TWO_ID }, { userId: USER_THREE_ID }],
     }).catch(() => {});
 
     expect(mockUserFind).toHaveBeenCalled();

@@ -3,7 +3,7 @@
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { CLUBS, getPegColorHex } from "@/constants";
 import { getParticipantPegColorSummary } from "@/helpers/pegColors";
-import { IShootWithParticipants } from "@/models";
+import { IShootDenormalized } from "@/models";
 import { Button } from "@radix-ui/themes";
 import { ChevronRight, Notebook, Trash2 } from "lucide-react";
 import {
@@ -20,7 +20,7 @@ type ShootHistoryCardProps = {
   onDelete: (shootId: string) => void;
   onOpenSummary: (shootId: string) => void;
   relationLabel?: string;
-  shoot: IShootWithParticipants;
+  shoot: IShootDenormalized;
   showUserScore?: boolean;
 };
 
@@ -147,7 +147,7 @@ export function ShootHistoryCard({
           </span>
         </div>
 
-        {shoot.createdBy === currentUserId && (
+        {shoot.createdBy.toString() === currentUserId && (
           <Button
             variant="ghost"
             color="red"

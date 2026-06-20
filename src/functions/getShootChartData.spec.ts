@@ -54,7 +54,7 @@ describe("getShootChartData", () => {
     const [filter, projection] = mockShootDenormalizedFind.mock.calls[0];
 
     expect(mockConnectMongoose).toHaveBeenCalled();
-    expect(filter["participants.userId"].toString()).toBe(
+    expect(filter["participants.user"].toString()).toBe(
       "507f1f77bcf86cd799439001",
     );
     expect(projection).toMatchObject({
@@ -64,11 +64,11 @@ describe("getShootChartData", () => {
       totalStations: 1,
       participants: {
         $elemMatch: {
-          userId: expect.anything(),
+          user: expect.anything(),
         },
       },
     });
-    expect(projection.participants.$elemMatch.userId.toString()).toBe(
+    expect(projection.participants.$elemMatch.user.toString()).toBe(
       "507f1f77bcf86cd799439001",
     );
     expect(mockShootDenormalizedSort).toHaveBeenCalledWith({ createdAt: 1 });
@@ -85,7 +85,7 @@ describe("getShootChartData", () => {
       participants: [
         {
           _id: "participant-1",
-          userId: "507f1f77bcf86cd799439001",
+          user: "507f1f77bcf86cd799439001",
           pegColor: "yellow",
           totalScore: 20,
           scoredCount: 1,

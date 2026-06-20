@@ -1,5 +1,3 @@
-import { Types } from "mongoose";
-
 export type ClubData = {
   id: string;
   name: string;
@@ -14,8 +12,6 @@ export type ClubData = {
     }[];
   }[];
 };
-
-type ObjectId = Types.ObjectId;
 
 export * from "./denormalized";
 
@@ -36,51 +32,6 @@ export type ShootParticipantInput = {
   pegColor?: string;
 };
 
-export interface IShoot {
-  id: string;
-  createdBy: ObjectId | IUser | string;
-  createdAt: Date;
-  updatedAt: Date;
-  completed: boolean;
-  clubId: string;
-  firstScoredAt?: Date | string | null;
-  notes?: string | null;
-}
-
-export interface IShootParticipant {
-  id: string;
-  shoot: ObjectId | IShoot;
-  user?: ObjectId | IUser | null;
-  guestName?: string | null;
-  guestNameNormalized?: string | null;
-  pegColor?: string | null;
-  joinedAt: Date;
-}
-
-export interface IRoundScore {
-  id: string;
-  shoot: ObjectId | IShoot;
-  participant?: ObjectId | IShootParticipant | null;
-  user?: ObjectId | IUser | null;
-  roundNumber: number;
-  score?: number | null;
-  scoredAt?: Date | null;
-}
-export interface IShootParticipantWithScores extends IShootParticipant {
-  roundScores: (number | null)[];
-  totalScore: number;
-  userInfo: {
-    id?: string | null;
-    name?: string | null;
-    email?: string | null;
-    isGuest?: boolean;
-  };
-}
-
-export interface IShootWithParticipants extends IShoot {
-  participants: IShootParticipantWithScores[];
-}
-
 export interface IShootChartData {
   id: string;
   clubId: string;
@@ -89,7 +40,7 @@ export interface IShootChartData {
   totalStations: number;
   participant: {
     id: string;
-    userId?: string | null;
+    user?: string | IUser | null;
     pegColor?: string | null;
     totalScore: number;
     scoredCount: number;

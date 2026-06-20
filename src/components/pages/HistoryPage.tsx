@@ -1,6 +1,6 @@
 "use client";
 import { useDeleteShoot, useGetParticipatedShoots } from "@/hooks/queries";
-import { IShootChartData, IShootWithParticipants, IUser } from "@/models";
+import { IShootChartData, IShootDenormalized, IUser } from "@/models";
 import { BarChart3, ChevronDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ type HistoryPageProps = {
 type HistoryFilter = "all" | "shot" | "tracked";
 
 type HistoryFeedItem = {
-  shoot: IShootWithParticipants;
+  shoot: IShootDenormalized;
   shotByCurrentUser: boolean;
   trackedByCurrentUser: boolean;
 };
@@ -97,7 +97,8 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
         shoot,
         shotByCurrentUser: true,
         trackedByCurrentUser:
-          existing?.trackedByCurrentUser || shoot.createdBy === currentUser.id,
+          existing?.trackedByCurrentUser ||
+          shoot.createdBy.toString() === currentUser.id,
       });
     });
 
@@ -108,9 +109,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     );
   }, [currentUser.id, participatedShoots, trackedShoots]);
 
-  const shotCount = historyFeed.filter(
-    (item) => item.shotByCurrentUser,
-  ).length;
+  const shotCount = historyFeed.filter((item) => item.shotByCurrentUser).length;
   const trackedCount = historyFeed.filter(
     (item) => item.trackedByCurrentUser,
   ).length;
@@ -143,7 +142,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     if (isDeletingShoot) return;
     if (!deleteShootId) return;
     const shootToDelete = trackedShoots.find((s) => s.id === deleteShootId);
-    if (currentUser.id !== shootToDelete?.createdBy) return; // Extra safety check to ensure only creator can delete
+    if (currentUser.id !== shootToDelete?.createdBy.toString()) return; // Extra safety check to ensure only creator can delete
     try {
       await mutateAsync(deleteShootId);
     } catch (error) {

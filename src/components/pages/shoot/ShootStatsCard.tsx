@@ -1,15 +1,15 @@
 "use client";
 
-import { IShootParticipantWithScores } from "@/models";
+import { IDenormalizedParticipant } from "@/models";
 import { Card } from "@radix-ui/themes";
 
 type ShootStatsCardProps = {
-  selectedParticipant: IShootParticipantWithScores | null;
+  selectedParticipant: IDenormalizedParticipant | null;
 };
 
 export function ShootStatsCard({ selectedParticipant }: ShootStatsCardProps) {
   const completedCount = selectedParticipant
-    ? selectedParticipant.roundScores.filter((score) => score !== null).length
+    ? selectedParticipant.scores.filter((s) => s.score !== null).length
     : 0;
 
   const average = (
@@ -17,22 +17,24 @@ export function ShootStatsCard({ selectedParticipant }: ShootStatsCardProps) {
   ).toFixed(1);
 
   return (
-    <Card className="m-2 p-4 bg-[var(--card)]">
+    <Card className="m-2 p-4 bg-card">
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
-          <div className="text-2xl font-bold text-[var(--deep-forest-green)]">
+          <div className="text-2xl font-bold text-(--deep-forest-green)">
             {selectedParticipant?.totalScore}
           </div>
           <div className="text-xs text-muted-foreground">Total Score</div>
         </div>
         <div>
-          <div className="text-2xl font-bold text-[var(--emerald-green)]">
+          <div className="text-2xl font-bold text-(--emerald-green)">
             {completedCount}
           </div>
           <div className="text-xs text-muted-foreground">Completed</div>
         </div>
         <div>
-          <div className="text-2xl font-bold text-[var(--warm-brown)]">{average}</div>
+          <div className="text-2xl font-bold text-(--warm-brown)">
+            {average}
+          </div>
           <div className="text-xs text-muted-foreground">Average</div>
         </div>
       </div>

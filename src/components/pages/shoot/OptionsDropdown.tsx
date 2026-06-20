@@ -1,11 +1,11 @@
 import { Button, DropdownMenu } from "@radix-ui/themes";
 import { LogOut, Settings } from "lucide-react";
 import { ExitDialog } from "./ExitDialog";
-import { IShoot } from "@/models";
 import { ShowScoresToggle } from "./ShotScoresToggle";
+import { IShootDenormalized } from "@/models";
 
 type OptionsDropdownProps = {
-  shoot: IShoot;
+  shoot: IShootDenormalized;
 };
 
 export const OptionsDropdown = ({ shoot }: OptionsDropdownProps) => {

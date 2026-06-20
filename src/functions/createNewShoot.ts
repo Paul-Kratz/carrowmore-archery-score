@@ -17,7 +17,7 @@ import { Types } from "mongoose";
 
 type ParticipantInsert = {
   _id: Types.ObjectId;
-  userId?: Types.ObjectId;
+  user?: Types.ObjectId;
   guestName?: string;
   guestNameNormalized?: string;
   pegColor: string;
@@ -31,15 +31,11 @@ type GuestParticipant = {
 
 const normalizeParticipantInputs = ({
   userId,
-  participantIds,
-  guestNames,
   participants,
   defaultPegColor,
   allowedPegColors,
 }: {
   userId: string;
-  participantIds: string[];
-  guestNames: string[];
   participants?: ShootParticipantInput[];
   defaultPegColor: string;
   allowedPegColors: string[];
@@ -76,24 +72,6 @@ const normalizeParticipantInputs = ({
         pegColor,
       });
     });
-  } else {
-    [userId, ...participantIds].forEach((registeredUserId) => {
-      registeredParticipants.set(
-        registeredUserId,
-        normalizePegColor({
-          pegColor: defaultPegColor,
-          defaultPegColor,
-          allowedPegColors,
-        }),
-      );
-    });
-
-    guestNames.forEach((guestName) => {
-      guestParticipants.push({
-        guestName,
-        pegColor: defaultPegColor,
-      });
-    });
   }
 
   if (!registeredParticipants.has(userId)) {
@@ -114,14 +92,10 @@ const normalizeParticipantInputs = ({
 
 export const createNewShoot = async ({
   userId,
-  participantIds = [],
-  guestNames = [],
   clubId,
   participants,
 }: {
   userId: string;
-  participantIds?: string[];
-  guestNames?: string[];
   clubId: string;
   participants?: ShootParticipantInput[];
 }) => {
@@ -138,8 +112,6 @@ export const createNewShoot = async ({
   const { registeredParticipants, guestParticipants } =
     normalizeParticipantInputs({
       userId,
-      participantIds,
-      guestNames,
       participants,
       defaultPegColor,
       allowedPegColors,
@@ -223,7 +195,7 @@ export const createNewShoot = async ({
   const participantDocs: ParticipantInsert[] = [
     ...uniqueParticipants.map((uid) => ({
       _id: new Types.ObjectId(),
-      userId: new Types.ObjectId(uid),
+      user: new Types.ObjectId(uid),
       pegColor: registeredPegColorsByUserId.get(uid) ?? defaultPegColor,
       joinedAt,
     })),
@@ -250,7 +222,7 @@ export const createNewShoot = async ({
     totalScoreSlots: participantDocs.length * clubData.totalStations,
     participants: participantDocs.map((participantDoc) => ({
       _id: participantDoc._id,
-      userId: participantDoc.userId ?? null,
+      user: participantDoc.user ?? null,
       guestName: participantDoc.guestName ?? null,
       guestNameNormalized: participantDoc.guestNameNormalized ?? null,
       pegColor: participantDoc.pegColor,

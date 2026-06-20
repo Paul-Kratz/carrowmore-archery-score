@@ -1,26 +1,24 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ShootProvider } from "@/contexts/ShootContext";
-import { type IShootParticipantWithScores } from "@/models";
-import type { Types } from "mongoose";
+import { type IDenormalizedParticipant } from "@/models";
 import { ParticipantSelector } from "./ParticipantSelector";
 import { ShowScoresToggle } from "./ShotScoresToggle";
 
-const asObjectId = (value: string) => value as unknown as Types.ObjectId;
-
-const participants: IShootParticipantWithScores[] = [
+const participants: IDenormalizedParticipant[] = [
   {
     id: "participant-1",
-    shoot: asObjectId("shoot-1"),
-    user: asObjectId("user-1"),
-    joinedAt: new Date("2026-01-01T10:00:00.000Z"),
-    pegColor: "red",
-    roundScores: [8, null],
-    totalScore: 24,
-    userInfo: {
+    user: {
       id: "user-1",
       name: "Alice",
-      isGuest: false,
     },
+    joinedAt: new Date("2026-01-01T10:00:00.000Z"),
+    pegColor: "red",
+    scores: [
+      { roundNumber: 1, score: 8 },
+      { roundNumber: 2, score: null },
+    ],
+    totalScore: 24,
+    scoredCount: 1,
   },
 ];
 

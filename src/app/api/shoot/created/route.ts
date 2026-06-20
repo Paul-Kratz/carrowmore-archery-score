@@ -2,6 +2,7 @@ import { getCreatedShoots } from "@/functions/getCreatedShoots";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+// GET CREATED SHOOTS
 export const GET = async () => {
   const session = await auth();
   if (!session || !session?.user) {
@@ -17,7 +18,7 @@ export const GET = async () => {
       {
         error: error instanceof Error ? error.message : "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

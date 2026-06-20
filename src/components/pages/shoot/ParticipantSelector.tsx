@@ -3,15 +3,15 @@
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getPegColorHex, getPegColorLabel } from "@/constants";
 import { useShootContext } from "@/contexts/ShootContext";
-import { getUserLabel } from "@/helpers/getUserLabel";
-import { IShootParticipantWithScores, IUser } from "@/models";
+import { getShootParticipantLabel } from "@/helpers/getUserLabel";
+import { IDenormalizedParticipant } from "@/models";
 
 type ParticipantSelectorProps = {
   currentStation: number;
   currentUserId: string;
   disabled?: boolean;
   onSelect: (participantId: string) => void;
-  participants: IShootParticipantWithScores[];
+  participants: IDenormalizedParticipant[];
   selectedParticipantId: string | null;
 };
 
@@ -42,12 +42,9 @@ export function ParticipantSelector({
           <div className="flex items-center gap-2 justify-center text-center font-bold leading-tight">
             <div className="flex items-center justify-center gap-2">
               <span className="truncate text-base">
-                {getUserLabel(
-                  selectedParticipant.userInfo as IUser,
-                  currentUserId,
-                )}
+                {getShootParticipantLabel(selectedParticipant, currentUserId)}
               </span>
-              {selectedParticipant.userInfo.isGuest && <GuestBadge />}
+              {selectedParticipant.guestName && <GuestBadge />}
             </div>
             <span
               aria-label={`${getPegColorLabel(
@@ -66,12 +63,12 @@ export function ParticipantSelector({
 
       <div className="mt-2 flex max-w-full justify-center min-w-0 gap-2 overflow-x-auto pb-1">
         {participants.map((participant) => {
-          const participantLabel = getUserLabel(
-            participant.userInfo as IUser,
+          const participantLabel = getShootParticipantLabel(
+            participant,
             currentUserId,
           );
           const participantStationScore =
-            participant.roundScores[currentStation - 1];
+            participant.scores[currentStation - 1]?.score ?? null;
 
           return (
             <button

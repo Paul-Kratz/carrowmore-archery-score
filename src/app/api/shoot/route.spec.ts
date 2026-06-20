@@ -23,6 +23,14 @@ import { DELETE, PATCH, POST } from "./route";
 
 describe("/api/shoot", () => {
   const validShootId = "507f1f77bcf86cd799439011";
+  const validParticipant = {
+    userId: "507f1f77bcf86cd799439012",
+    pegColor: "red",
+  };
+  const validGuestParticipant = {
+    guestName: "Guest",
+    pegColor: "red",
+  };
   const validParticipantId = "507f1f77bcf86cd799439012";
 
   beforeEach(() => {
@@ -56,19 +64,20 @@ describe("/api/shoot", () => {
         method: "POST",
         body: JSON.stringify({
           userId: "spoofed-user",
-          participantIds: [validParticipantId],
+          participants: [validParticipant],
           clubId: "carrowmore",
         }),
       });
 
       const response = await POST(request as never);
 
-      expect(mockCreateNewShoot).toHaveBeenCalledWith(expect.objectContaining({
-        userId: "session-user",
-        participantIds: [validParticipantId],
-        guestNames: [],
-        clubId: "carrowmore",
-      }));
+      expect(mockCreateNewShoot).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "session-user",
+          participants: [validParticipant],
+          clubId: "carrowmore",
+        }),
+      );
       expect(response.status).toBe(201);
     });
 
@@ -79,41 +88,21 @@ describe("/api/shoot", () => {
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "POST",
         body: JSON.stringify({
-          participantIds: [validParticipantId],
-          guestNames: ["Charlie"],
+          participants: [validGuestParticipant, validParticipant],
           clubId: "carrowmore",
         }),
       });
 
       const response = await POST(request as never);
 
-      expect(mockCreateNewShoot).toHaveBeenCalledWith(expect.objectContaining({
-        userId: "session-user",
-        participantIds: [validParticipantId],
-        guestNames: ["Charlie"],
-        clubId: "carrowmore",
-      }));
+      expect(mockCreateNewShoot).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "session-user",
+          participants: [validGuestParticipant, validParticipant],
+          clubId: "carrowmore",
+        }),
+      );
       expect(response.status).toBe(201);
-    });
-
-    it("returns 400 for malformed participant ids", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-
-      const request = new Request("http://localhost:3000/api/shoot", {
-        method: "POST",
-        body: JSON.stringify({
-          participantIds: ["not-an-object-id"],
-          clubId: "carrowmore",
-        }),
-      });
-
-      const response = await POST(request as never);
-
-      expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({
-        error: "Invalid participants, participantIds, guestNames, or clubId",
-      });
-      expect(mockCreateNewShoot).not.toHaveBeenCalled();
     });
 
     it("returns 400 for unknown clubs", async () => {
@@ -122,7 +111,7 @@ describe("/api/shoot", () => {
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "POST",
         body: JSON.stringify({
-          participantIds: [validParticipantId],
+          participants: [validParticipant],
           clubId: "unknown-club",
         }),
       });
@@ -131,32 +120,9 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: "Invalid participants, participantIds, guestNames, or clubId",
+        error: "Invalid participants or clubId",
       });
       expect(mockCreateNewShoot).not.toHaveBeenCalled();
-    });
-
-    it("accepts legacy participant ids without shoot mode", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "session-user" } });
-      mockCreateNewShoot.mockResolvedValue({ id: "shoot-1" });
-
-      const request = new Request("http://localhost:3000/api/shoot", {
-        method: "POST",
-        body: JSON.stringify({
-          participantIds: [validParticipantId],
-          clubId: "carrowmore",
-        }),
-      });
-
-      const response = await POST(request as never);
-
-      expect(mockCreateNewShoot).toHaveBeenCalledWith(expect.objectContaining({
-        userId: "session-user",
-        participantIds: [validParticipantId],
-        guestNames: [],
-        clubId: "carrowmore",
-      }));
-      expect(response.status).toBe(201);
     });
 
     it("returns 400 for participant peg colours not supported by the selected club", async () => {
@@ -174,7 +140,7 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: "Invalid participants, participantIds, guestNames, or clubId",
+        error: "Invalid participants or clubId",
       });
       expect(mockCreateNewShoot).not.toHaveBeenCalled();
     });
@@ -194,11 +160,13 @@ describe("/api/shoot", () => {
 
       const response = await POST(request as never);
 
-      expect(mockCreateNewShoot).toHaveBeenCalledWith(expect.objectContaining({
-        userId: "session-user",
-        participants,
-        clubId: "marbleArchers",
-      }));
+      expect(mockCreateNewShoot).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "session-user",
+          participants,
+          clubId: "marbleArchers",
+        }),
+      );
       expect(response.status).toBe(201);
     });
 
@@ -223,11 +191,13 @@ describe("/api/shoot", () => {
 
       const response = await POST(request as never);
 
-      expect(mockCreateNewShoot).toHaveBeenCalledWith(expect.objectContaining({
-        userId: currentUserId,
-        participants,
-        clubId: "carrowmore",
-      }));
+      expect(mockCreateNewShoot).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: currentUserId,
+          participants,
+          clubId: "carrowmore",
+        }),
+      );
       expect(response.status).toBe(201);
     });
 
@@ -247,7 +217,7 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: "Invalid participants, participantIds, guestNames, or clubId",
+        error: "Invalid participants or clubId",
       });
       expect(mockCreateNewShoot).not.toHaveBeenCalled();
     });
@@ -261,8 +231,7 @@ describe("/api/shoot", () => {
       const request = new Request("http://localhost:3000/api/shoot", {
         method: "POST",
         body: JSON.stringify({
-          participantIds: [],
-          guestNames: [""],
+          participants: [{ guestName: "" }],
           clubId: "carrowmore",
         }),
       });
@@ -271,7 +240,7 @@ describe("/api/shoot", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: "Guest names cannot be empty",
+        error: "Invalid participants or clubId",
       });
     });
   });

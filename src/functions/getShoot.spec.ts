@@ -56,7 +56,7 @@ describe("getShoot", () => {
     await getShoot({ shootId: "shoot123" });
 
     expect(mockPopulate).toHaveBeenCalledWith({
-      path: "participants.userId",
+      path: "participants.user",
       select: "name email",
     });
   });
@@ -129,7 +129,7 @@ describe("getShootWithAccess", () => {
       createdBy: { toString: () => "creator123" },
       participants: [
         {
-          userId: {
+          user: {
             _id: { toString: () => "user123" },
             name: "Pat",
           },
@@ -145,7 +145,7 @@ describe("getShootWithAccess", () => {
     expect(result.exists).toBe(true);
     expect(result.isCreator).toBe(false);
     expect(result.isParticipant).toBe(true);
-    expect(result.shoot?.participants[0].userId.name).toBe("Pat");
+    expect(result.shoot?.participants[0].user.name).toBe("Pat");
   });
 
   it("populates participant users for the returned shoot", async () => {
@@ -160,7 +160,7 @@ describe("getShootWithAccess", () => {
     });
 
     expect(mockPopulate).toHaveBeenCalledWith({
-      path: "participants.userId",
+      path: "participants.user",
       select: "name email",
     });
   });

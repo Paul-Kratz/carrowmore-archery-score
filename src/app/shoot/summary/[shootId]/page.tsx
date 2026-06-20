@@ -1,7 +1,8 @@
 import { SummaryPage } from "@/components/pages/SummaryPage";
-import { getShootSummary } from "@/functions/getShootSummary";
+import { getShootWithAccess } from "@/functions/getShoot";
+import { formatResponse } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
-import { IShootWithParticipants, IUser } from "@/models";
+import { IShootDenormalized, IUser } from "@/models";
 import { redirect } from "next/navigation";
 
 export default async function Summary({
@@ -16,10 +17,22 @@ export default async function Summary({
     redirect("/");
   }
 
-  const shootInfo = (await getShootSummary({
+  if (!authData?.user?.id) {
+    redirect("/");
+  }
+
+  const access = await getShootWithAccess({
     shootId,
-    userId: authData?.user?.id,
-  })) as IShootWithParticipants;
+    userId: authData.user.id,
+  });
+
+  if (!access.exists || (!access.isCreator && !access.isParticipant)) {
+    redirect("/");
+  }
+
+  const shootInfo = formatResponse(
+    access.shoot,
+  ) as unknown as IShootDenormalized;
 
   return (
     <SummaryPage currentUser={authData?.user as IUser} shootInfo={shootInfo} />

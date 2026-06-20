@@ -64,10 +64,10 @@ describe("getParticipatedShoots", () => {
 
     const [query] = mockShootDenormalizedFind.mock.calls[0];
 
-    expect(query["participants.userId"].toString()).toBe(userId);
+    expect(query["participants.user"].toString()).toBe(userId);
     expect(mockShootDenormalizedSort).toHaveBeenCalledWith({ createdAt: -1 });
     expect(mockShootDenormalizedPopulate).toHaveBeenCalledWith({
-      path: "participants.userId",
+      path: "participants.user",
       select: "name email",
     });
     expect(mockShootDenormalizedLean).toHaveBeenCalled();
@@ -79,7 +79,7 @@ describe("getParticipatedShoots", () => {
         _id: "shoot-1",
         participants: [
           {
-            userId,
+            user: userId,
             scores: [{ roundNumber: 1, score: 10 }],
             totalScore: 10,
           },

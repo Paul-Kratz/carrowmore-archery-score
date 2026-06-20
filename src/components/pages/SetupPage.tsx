@@ -7,7 +7,7 @@ import {
   MAX_GUEST_NAME_LENGTH,
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
-import { IShoot, IUser, ShootParticipantInput } from "@/models";
+import { IShootDenormalized, IUser, ShootParticipantInput } from "@/models";
 import { Button } from "@radix-ui/themes";
 import { History, Sprout, TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,10 +15,7 @@ import { useState } from "react";
 import Cookies from "js-cookie";
 import { AddUsernameDialog } from "@/components/pages/setup/AddUsernameDialog";
 import { ForestLoader } from "@/components/shared/ForestLoader";
-import {
-  ParticipantsCard,
-  SetupParticipant,
-} from "./setup/ParticipantsCard";
+import { ParticipantsCard, SetupParticipant } from "./setup/ParticipantsCard";
 import { Header } from "../shared/Header";
 import { ClubSelectorCard } from "./setup/ClubSelectorCard";
 
@@ -134,7 +131,8 @@ export function SetupPage({
 
   const handleRemoveParticipant = (id: string) => {
     const updatedParticipants = participants.filter(
-      (participant) => participant.id !== id || participant.id === currentUser.id,
+      (participant) =>
+        participant.id !== id || participant.id === currentUser.id,
     );
     setParticipants(updatedParticipants);
   };
@@ -172,7 +170,9 @@ export function SetupPage({
         throw new Error("Failed to create shoot");
       }
 
-      const newShoot = formatResponse<IShoot>(await response.json()) as IShoot;
+      const newShoot = formatResponse<IShootDenormalized>(
+        await response.json(),
+      ) as IShootDenormalized;
 
       Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
 
@@ -206,6 +206,7 @@ export function SetupPage({
           </div>
         </div>
 
+        {/* Resume a previous active shoot */}
         {activeShootId && (
           <section className="mb-4 rounded-xl border border-(--sage-green)/60 bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">

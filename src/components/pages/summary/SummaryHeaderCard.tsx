@@ -2,7 +2,7 @@
 
 import { CLUBS, getPegColorHex } from "@/constants";
 import { getParticipantPegColorSummary } from "@/helpers/pegColors";
-import { IShootWithParticipants } from "@/models";
+import { IShootDenormalized } from "@/models";
 import {
   Calendar,
   MapPin,
@@ -15,7 +15,7 @@ import { formatSummaryDate } from "./summaryUtils";
 
 type SummaryHeaderCardProps = {
   currentUserId: string;
-  shootInfo: IShootWithParticipants;
+  shootInfo: IShootDenormalized;
 };
 
 export function SummaryHeaderCard({
@@ -29,7 +29,7 @@ export function SummaryHeaderCard({
   );
   const scoredStations = shootInfo.participants.reduce(
     (total, participant) =>
-      total + participant.roundScores.filter((score) => score !== null).length,
+      total + participant.scores.filter((s) => s.score !== null).length,
     0,
   );
   const clubData = CLUBS[shootInfo.clubId];
@@ -111,7 +111,8 @@ export function SummaryHeaderCard({
           <span>
             {shootInfo.participants.length} participant
             {shootInfo.participants.length !== 1 ? "s" : ""}
-            {shootInfo.createdBy === currentUserId && " (tracked by you)"}
+            {shootInfo.createdBy.toString() === currentUserId &&
+              " (tracked by you)"}
           </span>
         </div>
         <div className="flex items-center gap-2">

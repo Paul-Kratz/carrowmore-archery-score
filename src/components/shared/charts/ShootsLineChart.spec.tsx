@@ -49,7 +49,7 @@ const chartData: IShootChartData[] = [
     totalStations: 18,
     participant: {
       id: "participant-1",
-      userId: "user-1",
+      user: "user-1",
       pegColor: "yellow",
       totalScore: 50,
       scoredCount: 3,
@@ -68,7 +68,7 @@ const chartData: IShootChartData[] = [
     totalStations: 6,
     participant: {
       id: "participant-2",
-      userId: "user-1",
+      user: "user-1",
       pegColor: "blue",
       totalScore: 18,
       scoredCount: 2,

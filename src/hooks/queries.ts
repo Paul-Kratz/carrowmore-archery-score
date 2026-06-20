@@ -1,6 +1,15 @@
 import { queryClient } from "@/lib/queryClient";
-import { IShootWithParticipants } from "@/models";
+import { IShootDenormalized } from "@/models";
 import { useMutation, useQuery } from "@tanstack/react-query";
+
+class ScoreUpdateError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
+    super(message);
+  }
+}
 
 export const useGetShoot = (shootId: string) => {
   return useQuery({
@@ -13,6 +22,7 @@ export const useGetShoot = (shootId: string) => {
       return response.json();
     },
     enabled: !!shootId,
+    staleTime: 5000,
   });
 };
 
@@ -51,6 +61,7 @@ export const useUpdateScore = () => {
   };
 
   return useMutation({
+    mutationKey: ["updateScore"],
     mutationFn: async ({
       shootId,
       participantId,
@@ -65,18 +76,38 @@ export const useUpdateScore = () => {
         body: JSON.stringify({ shootId, participantId, roundNumber, score }),
       });
       if (!response.ok) {
-        throw new Error("Error updating round score");
+        const body = await response.json().catch(() => null);
+        const message =
+          body && typeof body === "object" && "error" in body
+            ? String(body.error)
+            : "Error updating round score";
+
+        throw new ScoreUpdateError(message, response.status);
       }
-      return response;
+      return response.json() as Promise<IShootDenormalized>;
     },
+    retry: (failureCount, error) => {
+      if (failureCount >= 3) {
+        return false;
+      }
+
+      return (
+        !(error instanceof ScoreUpdateError) ||
+        !error.status ||
+        error.status >= 500
+      );
+    },
+    retryDelay: (failureCount) => Math.min(1000 * 2 ** failureCount, 5000),
     onMutate: async ({ shootId, participantId, roundNumber, score }) => {
       await queryClient.cancelQueries({ queryKey: ["shoot", shootId] });
 
-      const previousShoot =
-        queryClient.getQueryData<IShootWithParticipants>(["shoot", shootId]);
+      const previousShoot = queryClient.getQueryData<IShootDenormalized>([
+        "shoot",
+        shootId,
+      ]);
       const scoredAt = score === null ? null : new Date();
 
-      queryClient.setQueryData<IShootWithParticipants>(
+      queryClient.setQueryData<IShootDenormalized>(
         ["shoot", shootId],
         (currentShoot) => {
           if (!currentShoot) {
@@ -86,25 +117,46 @@ export const useUpdateScore = () => {
           return {
             ...currentShoot,
             firstScoredAt:
-              currentShoot.firstScoredAt ?? scoredAt ?? currentShoot.firstScoredAt,
+              currentShoot.firstScoredAt ??
+              scoredAt ??
+              currentShoot.firstScoredAt,
             participants: currentShoot.participants.map((participant) => {
               if (participant.id !== participantId) {
                 return participant;
               }
 
-              const nextRoundScores = [...participant.roundScores];
-              nextRoundScores[roundNumber - 1] = score;
-              const nextTotalScore = nextRoundScores.reduce<number>(
-                (total, roundScore) => total + (roundScore ?? 0),
+              const nextScores = participant.scores.map((roundScore) =>
+                roundScore.roundNumber === roundNumber
+                  ? { ...roundScore, score, scoredAt }
+                  : roundScore,
+              );
+              const nextTotalScore = nextScores.reduce<number>(
+                (total, roundScore) => total + (roundScore.score ?? 0),
                 0,
               );
+              const nextScoredCount = nextScores.filter(
+                (roundScore) => roundScore.score !== null,
+              ).length;
 
               return {
                 ...participant,
-                roundScores: nextRoundScores,
+                scores: nextScores,
                 totalScore: nextTotalScore,
+                scoredCount: nextScoredCount,
               };
             }),
+            scoredCount: currentShoot.participants.reduce(
+              (total, participant) =>
+                total +
+                (participant.id === participantId
+                  ? participant.scores.filter((roundScore) =>
+                      roundScore.roundNumber === roundNumber
+                        ? score !== null
+                        : roundScore.score !== null,
+                    ).length
+                  : participant.scoredCount),
+              0,
+            ),
           };
         },
       );
@@ -119,8 +171,8 @@ export const useUpdateScore = () => {
         );
       }
     },
-    onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["shoot", variables.shootId] });
+    onSuccess: (shoot, variables) => {
+      queryClient.setQueryData(["shoot", variables.shootId], shoot);
     },
   });
 };
@@ -178,13 +230,13 @@ export function useGetParticipatedShoots(currentUserId: string | null) {
     return { participatedShoots: [], trackedShoots: [], isLoading: true };
   }
 
-  const shoots = data as IShootWithParticipants[];
+  const shoots = data as IShootDenormalized[];
   const participatedShoots = shoots.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   const trackedShoots = participatedShoots.filter(
-    (s) => s.createdBy === currentUserId,
+    (s) => s.createdBy.toString() === currentUserId,
   );
 
   return { participatedShoots, trackedShoots, isLoading: false };

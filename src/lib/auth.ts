@@ -8,6 +8,7 @@ const publicRoutes: string[] = [];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: MongoDBAdapter(client),
+  trustHost: true,
   providers: [Google, Resend({ from: process.env.AUTH_EMAIL })],
   pages: {
     // verifyRequest: ROUTES.VERIFY_REQUEST,

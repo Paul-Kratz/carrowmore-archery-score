@@ -17,37 +17,36 @@ const ScoreSchema = new Schema<IDenormalizedScore>(
   },
 );
 
-const DenormalizedParticipantSchema =
-  new Schema<IDenormalizedParticipant>(
-    {
-      userId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        default: null,
-        index: true,
-      },
-      guestName: { type: String, default: null },
-      guestNameNormalized: { type: String, default: null },
-      pegColor: { type: String, default: null },
-      joinedAt: { type: Date, required: true, default: () => new Date() },
-      scores: { type: [ScoreSchema], required: true, default: [] },
-      totalScore: { type: Number, required: true, default: 0 },
-      scoredCount: { type: Number, required: true, default: 0 },
+const DenormalizedParticipantSchema = new Schema<IDenormalizedParticipant>(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
     },
-    {
-      toObject: { virtuals: true },
-      toJSON: { virtuals: true },
-    },
-  );
+    guestName: { type: String, default: null },
+    guestNameNormalized: { type: String, default: null },
+    pegColor: { type: String, default: null },
+    joinedAt: { type: Date, required: true, default: () => new Date() },
+    scores: { type: [ScoreSchema], required: true, default: [] },
+    totalScore: { type: Number, required: true, default: 0 },
+    scoredCount: { type: Number, required: true, default: 0 },
+  },
+  {
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  },
+);
 
 DenormalizedParticipantSchema.pre("validate", function () {
-  const hasUserId = Boolean(this.userId);
+  const hasUser = Boolean(this.user);
   const hasGuestName =
     typeof this.guestName === "string" && this.guestName.trim().length > 0;
 
-  if (hasUserId === hasGuestName) {
+  if (hasUser === hasGuestName) {
     throw new Error(
-      "Participant must have either userId or guestName, but not both.",
+      "Participant must have either user or guestName, but not both.",
     );
   }
 });
@@ -84,7 +83,7 @@ const DenormalizedShootSchema = new Schema<IShootDenormalized>(
 );
 
 DenormalizedShootSchema.index({ createdBy: 1, createdAt: -1 });
-DenormalizedShootSchema.index({ "participants.userId": 1, createdAt: -1 });
+DenormalizedShootSchema.index({ "participants.user": 1, createdAt: -1 });
 DenormalizedShootSchema.index({
   "participants.guestNameNormalized": 1,
   createdAt: -1,
