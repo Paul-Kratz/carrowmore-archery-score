@@ -1,16 +1,14 @@
 "use client";
 
-import { getShootParticipantLabel } from "@/helpers/getUserLabel";
-import { IDenormalizedParticipant } from "@/models";
+import { ShootParticipant } from "@/models";
 import { CLUBS } from "@/constants";
 
 type ScorePanelProps = {
   currentScore: number | null;
-  currentUserId: string;
   disabled?: boolean;
   onClear: () => void;
   onSetScore: (score: number) => void;
-  selectedParticipantUser: IDenormalizedParticipant | null;
+  selectedParticipantUser: ShootParticipant | null;
   clubId: string;
 };
 
@@ -35,23 +33,18 @@ export function getScoreButtonTheme(rowIndex: number, optionIndex: number) {
 
 export function ScorePanel({
   currentScore,
-  currentUserId,
   disabled = false,
   onClear,
   onSetScore,
   selectedParticipantUser,
   clubId = "carrowmore",
 }: ScorePanelProps) {
-  const participantLabel = selectedParticipantUser
-    ? getShootParticipantLabel(selectedParticipantUser, currentUserId)
-    : "Unknown participant";
-
   const clubData = CLUBS[clubId];
 
   return (
     <div className="max-w-full overflow-hidden p-2 pt-0">
       <div className="sr-only">
-        Score for {participantLabel}
+        Score for {selectedParticipantUser?.getParticipantLabel()}
         {!!selectedParticipantUser?.guestName ? " guest" : ""}
       </div>
       <div className="max-w-full space-y-2">

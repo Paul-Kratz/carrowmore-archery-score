@@ -4,6 +4,7 @@ import { ACTIVE_SHOOT_COOKIE, CLUBS, getClubPegColors } from "@/constants";
 import { formatResponse } from "@/helpers/formatResponse";
 import {
   getParticipantDisplayName,
+  getParticipantUserId,
   MAX_GUEST_NAME_LENGTH,
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
@@ -109,7 +110,11 @@ export function SetupPage({
       [currentUser, ...participants].some(
         (participant) =>
           normalizeParticipantName(
-            getParticipantDisplayName(participant, currentUser.id),
+            getParticipantDisplayName(
+              participant,
+              getParticipantUserId(participant) === currentUser.id &&
+                !participant.isGuest,
+            ),
           ) === normalizedGuestName,
       )
     ) {
@@ -170,9 +175,7 @@ export function SetupPage({
         throw new Error("Failed to create shoot");
       }
 
-      const newShoot = formatResponse<IShootDenormalized>(
-        await response.json(),
-      ) as IShootDenormalized;
+      const newShoot = formatResponse<IShootDenormalized>(await response.json());
 
       Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
 

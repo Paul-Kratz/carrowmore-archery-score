@@ -172,7 +172,7 @@ export const createNewShoot = async ({
           name: user.name ?? null,
           email: user.email ?? null,
         },
-        userId,
+        user._id.toString() === userId,
       ),
     ),
   );

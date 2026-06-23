@@ -6,9 +6,10 @@ import {
   getPegColorHex,
   getPegColorLabel,
 } from "@/constants";
-import { getUserLabel } from "@/helpers/getUserLabel";
 import {
   getParticipantDisplayName,
+  getParticipantUserId,
+  getUserLabel,
   MAX_GUEST_NAME_LENGTH,
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
@@ -34,7 +35,10 @@ type ParticipantsCardProps = {
   disabled?: boolean;
   onAddGuest: (guestName: string) => void;
   onAddParticipant: (participantId: string) => void;
-  onUpdateParticipantPegColor: (participantId: string, pegColor: string) => void;
+  onUpdateParticipantPegColor: (
+    participantId: string,
+    pegColor: string,
+  ) => void;
   onArcherQueryChange: (query: string) => void;
   onRemoveParticipant: (participantId: string) => void;
   participants: SetupParticipant[];
@@ -72,14 +76,20 @@ export function ParticipantsCard({
       : availableUsers
           .filter((user) =>
             normalizeParticipantName(
-              getParticipantDisplayName(user, currentUserId),
+              getParticipantDisplayName(
+                user,
+                currentUserId === getParticipantUserId(user),
+              ),
             ).includes(normalizedQuery),
           )
           .slice(0, 4);
   const exactMatch = availableUsers.find(
     (user) =>
       normalizeParticipantName(
-        getParticipantDisplayName(user, currentUserId),
+        getParticipantDisplayName(
+          user,
+          currentUserId === getParticipantUserId(user),
+        ),
       ) === normalizedQuery,
   );
   const canAddGuest =
@@ -89,7 +99,10 @@ export function ParticipantsCard({
     !selectedParticipants.some(
       (participant) =>
         normalizeParticipantName(
-          getParticipantDisplayName(participant, currentUserId),
+          getParticipantDisplayName(
+            participant,
+            currentUserId === getParticipantUserId(participant),
+          ),
         ) === normalizedQuery,
     );
   const hasSuggestions = matchingUsers.length > 0 || canAddGuest;
@@ -204,7 +217,10 @@ export function ParticipantsCard({
                   onClick={() => addRegisteredParticipant(user.id)}
                 >
                   <span className="font-semibold">
-                    {getUserLabel(user, currentUserId)}
+                    {getUserLabel(
+                      user,
+                      currentUserId === getParticipantUserId(user),
+                    )}
                   </span>
                   <span className="text-xs text-muted-foreground">Member</span>
                 </button>
@@ -242,7 +258,7 @@ export function ParticipantsCard({
                 aria-disabled={disabled}
                 aria-label={`Change ${getParticipantDisplayName(
                   participant,
-                  currentUserId,
+                  currentUserId === getParticipantUserId(participant),
                 )} peg colour, currently ${getPegColorLabel(
                   participant.pegColor,
                 )}`}
@@ -263,7 +279,10 @@ export function ParticipantsCard({
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate font-semibold">
-                    {getParticipantDisplayName(participant, currentUserId)}
+                    {getParticipantDisplayName(
+                      participant,
+                      currentUserId === getParticipantUserId(participant),
+                    )}
                     {participant.userId === currentUserId &&
                       !participant.isGuest &&
                       " (you)"}

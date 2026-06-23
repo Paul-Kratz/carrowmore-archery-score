@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Cookies from "js-cookie";
+import { Shoot, type IShootDenormalized } from "@/models";
 import { ExitDialog } from "./ExitDialog";
 
 const mockMutateAsync = jest.fn();
@@ -47,12 +48,24 @@ jest.mock("@radix-ui/themes", () => ({
   ),
 }));
 
-const shoot = {
+const shootData: IShootDenormalized = {
   id: "shoot-123",
+  schemaVersion: 1,
+  createdAt: new Date("2026-01-01T10:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T10:00:00.000Z"),
+  createdBy: "user-1",
   clubId: "carrowmore",
+  totalStations: 18,
+  completed: false,
   firstScoredAt: null,
+  completedAt: null,
   notes: null,
+  participantCount: 0,
+  scoredCount: 0,
+  totalScoreSlots: 0,
+  participants: [],
 };
+const shoot = Shoot.from(shootData, "user-1");
 
 const renderExitDialog = () =>
   render(

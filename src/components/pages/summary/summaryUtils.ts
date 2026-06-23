@@ -1,6 +1,4 @@
-import { IDenormalizedScore } from "@/models";
-
-export const POSSIBLE_SCORES = [0, 4, 8, 10, 14, 16, 20];
+import { CLUBS } from "@/constants";
 
 export const formatSummaryDate = (timestamp: number, withTime: boolean) => {
   const date = new Date(timestamp);
@@ -11,24 +9,12 @@ export const formatSummaryDate = (timestamp: number, withTime: boolean) => {
   }).format(date);
 };
 
-export const getColourForScore = (score: number | null) => {
-  if (score === null) return "text-gray-500";
-  if (score >= 16) return "text-green-700";
-  if (score >= 10) return "text-blue-700";
-  if (score >= 4) return "text-orange-500";
-  if (score === 0) return "text-red-600";
-  return "text-gray-500";
-};
-
-export const getScoreCounts = (scores: IDenormalizedScore[]) => {
-  const counts = new Map<number, number>();
-  POSSIBLE_SCORES.forEach((score) => counts.set(score, 0));
-
-  scores.forEach((s) => {
-    if (s.score !== null && counts.has(s.score)) {
-      counts.set(s.score, counts.get(s.score)! + 1);
-    }
-  });
-
-  return counts;
-};
+export const getClubScoreValues = (clubId: string) =>
+  Array.from(
+    new Set([
+      ...CLUBS[clubId].scoringRows.flatMap((row) =>
+        row.scores.map(({ score }) => score),
+      ),
+      0,
+    ]),
+  );

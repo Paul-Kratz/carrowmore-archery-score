@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ShootProvider } from "@/contexts/ShootContext";
-import { type IDenormalizedParticipant } from "@/models";
+import { ShootParticipant, type IDenormalizedParticipant } from "@/models";
 import { ParticipantSelector } from "./ParticipantSelector";
 import { ShowScoresToggle } from "./ShotScoresToggle";
 
-const participants: IDenormalizedParticipant[] = [
+const participantData: IDenormalizedParticipant[] = [
   {
     id: "participant-1",
     user: {
@@ -21,16 +21,18 @@ const participants: IDenormalizedParticipant[] = [
     scoredCount: 1,
   },
 ];
+const participants = participantData.map(
+  (participant) => new ShootParticipant(participant, "user-1"),
+);
 
 const renderParticipantSelector = () =>
   render(
     <ShootProvider>
       <ShowScoresToggle />
-      <ParticipantSelector
-        currentStation={1}
-        currentUserId="user-1"
-        onSelect={jest.fn()}
-        participants={participants}
+        <ParticipantSelector
+          currentStation={1}
+          onSelect={jest.fn()}
+          participants={participants}
         selectedParticipantId="participant-1"
       />
     </ShootProvider>,

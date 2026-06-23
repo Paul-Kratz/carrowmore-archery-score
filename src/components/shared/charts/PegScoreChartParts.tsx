@@ -1,6 +1,6 @@
 "use client";
 
-import { getPegColorHex, getPegColorLabel } from "@/constants";
+import { getPegColorHex } from "@/constants";
 import { Dot } from "recharts";
 
 type PegScoreDotProps = {
@@ -52,15 +52,12 @@ export const PegScoreTooltip = ({
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-md">
       <div className="font-semibold text-(--deep-forest-green)">{label}</div>
-      <div className="text-muted-foreground">
-        {score ?? "No score"} points
-      </div>
+      <div className="text-muted-foreground">{score ?? "No score"} points</div>
       <div className="mt-1 flex items-center gap-1.5 text-xs uppercase text-muted-foreground">
         <span
-          className="h-2 w-2 rounded-full"
+          className="h-4 w-4 rounded-full"
           style={{ backgroundColor: getPegColorHex(pegColor) }}
         />
-        {getPegColorLabel(pegColor)} peg
       </div>
     </div>
   );

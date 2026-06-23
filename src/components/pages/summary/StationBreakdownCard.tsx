@@ -1,12 +1,11 @@
 "use client";
 
-import { IDenormalizedParticipant } from "@/models";
+import { ShootParticipant } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { CLUBS } from "@/constants";
-import { getShootParticipantDisplayName } from "@/helpers/participantDisplay";
 
 type StationBreakdownCardProps = {
-  participants: IDenormalizedParticipant[];
+  participants: ShootParticipant[];
   clubId: string;
 };
 
@@ -50,16 +49,10 @@ export function StationBreakdownCard({
   clubId,
 }: StationBreakdownCardProps) {
   return (
-    <article className="forest-chart-panel overflow-hidden rounded-xl border border-border p-3 shadow-sm">
+    <article className="bg-card/95 overflow-hidden rounded-xl border border-border p-3 shadow-sm">
       <div className="space-y-3">
         {participants.map((participant) => {
-          const participantName = getShootParticipantDisplayName(
-            participant,
-            "",
-          );
-          const completedStations = participant.scores.filter(
-            (s) => s.score !== null,
-          ).length;
+          const participantLabel = participant.getParticipantLabel();
 
           return (
             <section
@@ -69,12 +62,12 @@ export function StationBreakdownCard({
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 font-bold text-(--deep-forest-green)">
-                    <span className="truncate">{participantName}</span>
+                    <span className="truncate">{participantLabel}</span>
                     {!!participant.guestName && <GuestBadge />}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {completedStations} / {CLUBS[clubId].totalStations} stations
-                    scored
+                    {participant.completedStationCount} /{" "}
+                    {CLUBS[clubId].totalStations} stations scored
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -91,13 +84,13 @@ export function StationBreakdownCard({
                 className="grid grid-cols-6 gap-1.5"
                 aria-label="Station scores"
               >
-                {participant.scores.map((scoreData, index) => {
+                {participant.scores.map((scoreData) => {
                   const tone = getStationScoreTone(scoreData.score);
 
                   return (
                     <div
-                      key={index}
-                      aria-label={`${participantName} station ${index + 1} score ${
+                      key={scoreData.id || scoreData.roundNumber}
+                      aria-label={`${participantLabel} station ${scoreData.roundNumber} score ${
                         scoreData.score ?? "not scored"
                       }`}
                       className={`min-h-12 overflow-hidden rounded-md border text-center ${tone.className}`}
@@ -105,7 +98,7 @@ export function StationBreakdownCard({
                       <div className={`h-1 w-full ${tone.accent}`} />
                       <div className="px-1 py-1">
                         <div className="text-[10px] font-bold leading-tight text-muted-foreground">
-                          {index + 1}
+                          {scoreData.roundNumber}
                         </div>
                         <div className="text-sm font-bold leading-tight">
                           {scoreData.score ?? "-"}

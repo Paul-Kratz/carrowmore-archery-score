@@ -1,8 +1,8 @@
 "use client";
 
-import { CLUBS, getPegColorHex } from "@/constants";
+import { getPegColorHex, getPegColorLabel } from "@/constants";
 import { getParticipantPegColorSummary } from "@/helpers/pegColors";
-import { IShootDenormalized } from "@/models";
+import { Shoot } from "@/models";
 import {
   Calendar,
   MapPin,
@@ -15,37 +15,23 @@ import { formatSummaryDate } from "./summaryUtils";
 
 type SummaryHeaderCardProps = {
   currentUserId: string;
-  shootInfo: IShootDenormalized;
+  shootInfo: Shoot;
 };
 
 export function SummaryHeaderCard({
   currentUserId,
   shootInfo,
 }: SummaryHeaderCardProps) {
-  const createdAtTimestamp = new Date(shootInfo.createdAt).getTime();
-  const topScore = Math.max(
-    0,
-    ...shootInfo.participants.map((participant) => participant.totalScore),
-  );
-  const scoredStations = shootInfo.participants.reduce(
-    (total, participant) =>
-      total + participant.scores.filter((s) => s.score !== null).length,
-    0,
-  );
-  const clubData = CLUBS[shootInfo.clubId];
-
-  const totalStations = shootInfo.participants.length * clubData.totalStations;
-  const completion =
-    totalStations === 0
-      ? 0
-      : Math.round((scoredStations / totalStations) * 100);
-  const clubName = clubData?.name ?? shootInfo.clubId;
-  const { label: pegLabel, pegColors } = getParticipantPegColorSummary(
-    shootInfo.participants,
-  );
+  const createdAtTimestamp = shootInfo.createdAt.getTime();
+  const clubName = shootInfo.clubData?.name ?? shootInfo.clubId;
+  const { pegColors } = getParticipantPegColorSummary(shootInfo.participants);
+  const pegLabel =
+    pegColors.length === 1
+      ? `${getPegColorLabel(pegColors[0])} peg`
+      : `${pegColors.length} pegs`;
 
   return (
-    <section className="forest-chart-panel overflow-hidden rounded-xl border border-border p-4 shadow-sm">
+    <section className="bg-card/95 overflow-hidden rounded-xl border border-border p-4 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -82,7 +68,7 @@ export function SummaryHeaderCard({
             Top Score
           </div>
           <div className="text-xl font-bold text-(--deep-forest-green)">
-            {topScore}
+            {shootInfo.topScore}
           </div>
         </div>
         <div>
@@ -90,7 +76,7 @@ export function SummaryHeaderCard({
             Scored
           </div>
           <div className="text-xl font-bold text-(--deep-forest-green)">
-            {completion}%
+            {shootInfo.completionPercent}%
           </div>
         </div>
       </div>
@@ -111,8 +97,7 @@ export function SummaryHeaderCard({
           <span>
             {shootInfo.participants.length} participant
             {shootInfo.participants.length !== 1 ? "s" : ""}
-            {shootInfo.createdBy.toString() === currentUserId &&
-              " (tracked by you)"}
+            {shootInfo.isCreatedBy(currentUserId) && " (tracked by you)"}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -121,7 +106,7 @@ export function SummaryHeaderCard({
         </div>
         <div className="flex items-center gap-2">
           <Trophy className="h-4 w-4" />
-          <span>Best score {topScore}</span>
+          <span>Best score {shootInfo.topScore}</span>
         </div>
       </div>
     </section>

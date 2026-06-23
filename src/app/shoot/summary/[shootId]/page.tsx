@@ -35,6 +35,6 @@ export default async function Summary({
   ) as unknown as IShootDenormalized;
 
   return (
-    <SummaryPage currentUser={authData?.user as IUser} shootInfo={shootInfo} />
+    <SummaryPage currentUser={authData.user as IUser} shootInfo={shootInfo} />
   );
 }

@@ -3,21 +3,18 @@
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getPegColorHex, getPegColorLabel } from "@/constants";
 import { useShootContext } from "@/contexts/ShootContext";
-import { getShootParticipantLabel } from "@/helpers/getUserLabel";
-import { IDenormalizedParticipant } from "@/models";
+import { ShootParticipant } from "@/models";
 
 type ParticipantSelectorProps = {
   currentStation: number;
-  currentUserId: string;
   disabled?: boolean;
   onSelect: (participantId: string) => void;
-  participants: IDenormalizedParticipant[];
+  participants: ShootParticipant[];
   selectedParticipantId: string | null;
 };
 
 export function ParticipantSelector({
   currentStation,
-  currentUserId,
   disabled = false,
   onSelect,
   participants,
@@ -42,9 +39,9 @@ export function ParticipantSelector({
           <div className="flex items-center gap-2 justify-center text-center font-bold leading-tight">
             <div className="flex items-center justify-center gap-2">
               <span className="truncate text-base">
-                {getShootParticipantLabel(selectedParticipant, currentUserId)}
+                {selectedParticipant.getParticipantLabel()}
               </span>
-              {selectedParticipant.guestName && <GuestBadge />}
+              {selectedParticipant.isGuest && <GuestBadge />}
             </div>
             <span
               aria-label={`${getPegColorLabel(
@@ -63,19 +60,15 @@ export function ParticipantSelector({
 
       <div className="mt-2 flex max-w-full justify-center min-w-0 gap-2 overflow-x-auto pb-1">
         {participants.map((participant) => {
-          const participantLabel = getShootParticipantLabel(
-            participant,
-            currentUserId,
-          );
           const participantStationScore =
-            participant.scores[currentStation - 1]?.score ?? null;
+            participant.getScoreForStation(currentStation);
 
           return (
             <button
               key={participant.id}
               disabled={disabled}
               onClick={() => onSelect(participant.id)}
-              aria-label={`Select ${participantLabel}`}
+              aria-label={`Select ${participant.getParticipantLabel()}`}
               className={`w-28 shrink-0 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 participant.id === selectedParticipantId
                   ? "border-(--deep-forest-green) bg-[#e2ecd0] shadow-sm"
@@ -92,7 +85,7 @@ export function ParticipantSelector({
                     backgroundColor: getPegColorHex(participant.pegColor),
                   }}
                 />
-                {participantLabel}
+                {participant.getParticipantLabel()}
               </div>
               <div className="mt-1 flex items-center justify-between gap-2 text-[11px] leading-tight">
                 <div className="font-bold text-(--deep-forest-green) flex flex-col justify-center">

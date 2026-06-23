@@ -1,18 +1,18 @@
 "use client";
 
-import { IDenormalizedParticipant, IShootDenormalized, IUser } from "@/models";
+import { IUser, Shoot } from "@/models";
 import { Button, ScrollArea } from "@radix-ui/themes";
 import { TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGetShoot, useUpdateScore } from "@/hooks/queries";
 import { ExitDialog } from "@/components/pages/shoot/ExitDialog";
 import { ParticipantSelector } from "./shoot/ParticipantSelector";
 import { ScorePanel } from "./shoot/ScorePanel";
 import { StationNavigationCard } from "./shoot/StationNavigationCard";
 import { Header } from "../shared/Header";
-import { CLUBS } from "@/constants";
 import { OptionsDropdown } from "./shoot/OptionsDropdown";
+import { ForestLoader } from "../shared/ForestLoader";
 
 type ShootPageProps = {
   currentStation: number;
@@ -23,8 +23,7 @@ type ShootPageProps = {
 const scoreSaveErrorMessage =
   "That score did not save. Check your signal and tap the score again.";
 
-const getScoreSaveErrorKey = (shootId: string) =>
-  `score-save-error:${shootId}`;
+const getScoreSaveErrorKey = (shootId: string) => `score-save-error:${shootId}`;
 
 type FailedScoreSave = {
   message: string;
@@ -37,17 +36,14 @@ export function ShootPage({
   currentUser,
   shootId,
 }: ShootPageProps) {
-  const { data: shootData } = useGetShoot(shootId);
+  const { data: shootData, isLoading, isError } = useGetShoot(shootId);
   const { mutateAsync: updateScore, isPending: isUpdatingScore } =
     useUpdateScore();
-  const { participants, ...shoot } = (shootData as IShootDenormalized) || {};
   const [selectedParticipantId, setSelectedParticipantId] = useState<
     string | null
   >(null);
   const [scoreSaveError, setScoreSaveError] = useState<string | null>(null);
   const router = useRouter();
-
-  const clubData = CLUBS[shoot?.clubId || "carrowmore"];
 
   useEffect(() => {
     const rawFailedSave = sessionStorage.getItem(getScoreSaveErrorKey(shootId));
@@ -76,31 +72,28 @@ export function ShootPage({
     });
   }, [currentStation, shootId]);
 
+  const shoot = useMemo(
+    () => (shootData ? Shoot.from(shootData, currentUser.id) : null),
+    [shootData, currentUser.id],
+  );
+
+  if (isLoading) {
+    return <ForestLoader label="Loading shoot" size="lg" />;
+  }
+
+  if (isError || !shoot) {
+    return <div>Unable to load shoot</div>;
+  }
+  const participants = shoot.participants;
+
   const selectedParticipant =
-    participants?.find((p) => p.id === selectedParticipantId) ??
-    participants?.[0] ??
-    null;
+    shoot.getParticipantById(selectedParticipantId) ?? shoot.firstParticipant;
 
   const currentScore = selectedParticipant
-    ? (selectedParticipant.scores[currentStation - 1]?.score ?? null)
+    ? selectedParticipant.getScoreForStation(currentStation)
     : null;
 
-  const selectedParticipantIndex =
-    selectedParticipant && participants
-      ? participants.findIndex(
-          (participant) => participant.id === selectedParticipant.id,
-        )
-      : -1;
-  const stationCompletionCounts = Array.from(
-    { length: clubData.totalStations },
-    (_, index) =>
-      (participants ?? []).filter(
-        (participant) => (participant.scores[index]?.score ?? null) !== null,
-      ).length,
-  );
-  const participantCount = participants?.length ?? 0;
-
-  const remainingScoreCount = shoot?.totalScoreSlots - shoot?.scoredCount;
+  const participantCount = participants.length;
 
   const handleSetScore = (value: number | null) => {
     if (!shoot.id || !selectedParticipant?.id || isUpdatingScore) {
@@ -137,16 +130,9 @@ export function ShootPage({
       return;
     }
 
-    const nextUnscoredParticipant = Array.from(
-      { length: Math.max(participants.length - 1, 0) },
-      (_, offset) => {
-        const nextIndex =
-          (selectedParticipantIndex + offset + 1) % participants.length;
-        return participants[nextIndex];
-      },
-    ).find(
-      (participant) =>
-        (participant.scores[currentStation - 1]?.score ?? null) === null,
+    const nextUnscoredParticipant = shoot.getNextUnscoredParticipant(
+      selectedParticipant.id,
+      currentStation,
     );
 
     if (nextUnscoredParticipant) {
@@ -154,7 +140,7 @@ export function ShootPage({
       return;
     }
 
-    if (currentStation < clubData.totalStations) {
+    if (currentStation < shoot.totalStations) {
       setSelectedParticipantId(participants[0]?.id ?? null);
       router.replace(`/shoot/${shootId}/${currentStation + 1}`);
     }
@@ -164,13 +150,13 @@ export function ShootPage({
     router.replace(`/shoot/${shootId}/${station}`);
   };
   const canGoPrevious = currentStation - 1 > 0;
-  const canGoNext = currentStation < clubData.totalStations;
+  const canGoNext = currentStation < shoot.totalStations;
 
   return (
     <div className="forest-page bg-background flex min-h-screen w-full max-w-full flex-col justify-between overflow-x-hidden">
       <Header
         title="In the Forest"
-        subtitle={"at " + clubData.name}
+        subtitle={"at " + shoot.clubData?.name}
         showBackButton={false}
         rightSlot={<OptionsDropdown shoot={shoot} />}
       />
@@ -182,7 +168,6 @@ export function ShootPage({
         <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col gap-2 overflow-x-hidden py-2">
           <ParticipantSelector
             currentStation={currentStation}
-            currentUserId={currentUser.id}
             disabled={isUpdatingScore}
             onSelect={setSelectedParticipantId}
             participants={participants || []}
@@ -201,23 +186,20 @@ export function ShootPage({
           <div className="flex-1">
             <ScorePanel
               currentScore={currentScore}
-              currentUserId={currentUser.id}
               disabled={isUpdatingScore}
               onClear={() => handleSetScore(null)}
               onSetScore={handleSetScore}
-              selectedParticipantUser={
-                (selectedParticipant as IDenormalizedParticipant) || null
-              }
+              selectedParticipantUser={selectedParticipant}
               clubId={shoot?.clubId}
             />
           </div>
 
-          {currentStation === clubData.totalStations && (
+          {currentStation === shoot.totalStations && (
             <div className="justify-center flex flex-col mx-4 my-2">
-              {remainingScoreCount > 0 && (
+              {shoot.remainingScoreCount > 0 && (
                 <p className="text-xs text-red-700 mb-2 text-center">
-                  You have {remainingScoreCount} scores left to track. Are you
-                  sure you want to finish the shoot?
+                  You have {shoot.remainingScoreCount} scores left to track. Are
+                  you sure you want to finish the shoot?
                 </p>
               )}
               <ExitDialog
@@ -249,8 +231,8 @@ export function ShootPage({
         disabled={isUpdatingScore}
         onStationChange={onStationChange}
         participantCount={participantCount}
-        stationCompletionCounts={stationCompletionCounts}
-        totalStations={clubData.totalStations}
+        stationCompletionCounts={shoot.stationCompletionCounts}
+        totalStations={shoot.totalStations}
       />
     </div>
   );

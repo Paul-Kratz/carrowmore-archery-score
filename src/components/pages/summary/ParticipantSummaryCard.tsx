@@ -1,13 +1,9 @@
 "use client";
 
-import { IDenormalizedParticipant } from "@/models";
+import { ShootParticipant } from "@/models";
 import { GuestBadge } from "@/components/shared/GuestBadge";
-import { getScoreCounts } from "./summaryUtils";
+import { getClubScoreValues } from "./summaryUtils";
 import { CLUBS, getPegColorHex, getPegColorLabel } from "@/constants";
-import {
-  getShootParticipantDisplayName,
-  getShootParticipantUserId,
-} from "@/helpers/participantDisplay";
 
 const getScoreCountTone = (score: number) => {
   if (score >= 16)
@@ -19,37 +15,18 @@ const getScoreCountTone = (score: number) => {
 };
 
 type ParticipantSummaryCardProps = {
-  currentUserId: string;
-  participant: IDenormalizedParticipant;
+  participant: ShootParticipant;
   clubId: string;
 };
 
 export function ParticipantSummaryCard({
-  currentUserId,
   participant,
   clubId,
 }: ParticipantSummaryCardProps) {
-  const counts = getScoreCounts(participant.scores);
-  const participantName = getShootParticipantDisplayName(
-    participant,
-    currentUserId,
-  );
-  const isCurrentUser =
-    getShootParticipantUserId(participant) === currentUserId &&
-    !participant.guestName;
-  const completedStations = participant.scores.filter(
-    (s) => s.score !== null,
-  ).length;
-  const clubScoreTotals = CLUBS[clubId].scoringRows
-    .map((row) => row.scores)
-    .flat()
-    .map((score) => score.score);
-  clubScoreTotals.push(0); // Ensure 0 is included as a possible score
-
-  const averageScore =
-    completedStations === 0
-      ? "0.00"
-      : (participant.totalScore / completedStations).toFixed(2);
+  const clubData = CLUBS[clubId];
+  const clubScoreValues = getClubScoreValues(clubId);
+  const counts = participant.getScoreCounts(clubScoreValues);
+  const averageScore = participant.averageScore.toFixed(2);
 
   return (
     <article className="w-full overflow-hidden rounded-xl border border-border bg-card/95 p-0 shadow-sm">
@@ -58,10 +35,10 @@ export function ParticipantSummaryCard({
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-2">
               <span className="truncate font-bold text-(--deep-forest-green)">
-                {participantName}
+                {participant.getParticipantLabel()}
               </span>
               {!!participant.guestName && <GuestBadge />}
-              {isCurrentUser && (
+              {participant.isCurrentUser && (
                 <span className="rounded-full border border-border bg-[#dfe7c7] px-2 py-0.5 text-xs font-bold text-(--deep-forest-green)">
                   You
                 </span>
@@ -81,7 +58,8 @@ export function ParticipantSummaryCard({
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span>
-                {completedStations} / {CLUBS[clubId].totalStations} stations
+                {participant.completedStationCount} / {clubData.totalStations}{" "}
+                stations
               </span>
               <span>Avg {averageScore}</span>
             </div>
@@ -102,7 +80,7 @@ export function ParticipantSummaryCard({
             <span>Score</span>
             <span>Times</span>
           </div>
-          {clubScoreTotals.map((score) => {
+          {clubScoreValues.map((score) => {
             const count = counts.get(score) || 0;
             const countLabel = count === 1 ? "time" : "times";
 

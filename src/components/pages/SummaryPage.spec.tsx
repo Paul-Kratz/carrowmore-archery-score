@@ -4,6 +4,7 @@ import {
   IDenormalizedParticipant,
   IDenormalizedScore,
   IShootDenormalized,
+  Shoot,
   IUser,
 } from "@/models";
 import type { Types } from "mongoose";
@@ -74,13 +75,16 @@ const createShootInfo = (
   };
 };
 
+const createShoot = (overrides: Partial<IShootDenormalized> = {}) =>
+  Shoot.from(createShootInfo(overrides), mockCurrentUser.id);
+
 describe("SummaryPage", () => {
   describe("Rendering", () => {
     it("should render the Shoot Details header", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       expect(screen.getByText("Shoot Details")).toBeInTheDocument();
@@ -90,7 +94,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({
+          shootInfo={createShoot({
             participants: [
               {
                 ...createShootInfo().participants[0],
@@ -107,7 +111,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
 
@@ -120,7 +124,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ notes: "Rainy session" })}
+          shootInfo={createShoot({ notes: "Rainy session" })}
         />,
       );
       expect(screen.getByText("Rainy session")).toBeInTheDocument();
@@ -130,7 +134,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ notes: null })}
+          shootInfo={createShoot({ notes: null })}
         />,
       );
       expect(screen.getByText("No notes")).toBeInTheDocument();
@@ -140,7 +144,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       expect(screen.getByText(/1 participant(?!s)/)).toBeInTheDocument();
@@ -150,7 +154,7 @@ describe("SummaryPage", () => {
       const { rerender } = render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ createdBy: asObjectId("user1") })}
+          shootInfo={createShoot({ createdBy: asObjectId("user1") })}
         />,
       );
 
@@ -159,7 +163,7 @@ describe("SummaryPage", () => {
       rerender(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({ createdBy: asObjectId("user2") })}
+          shootInfo={createShoot({ createdBy: asObjectId("user2") })}
         />,
       );
 
@@ -170,7 +174,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({
+          shootInfo={createShoot({
             participants: [
               createParticipant({ scores: createScores([10]) }),
               createParticipant({
@@ -191,7 +195,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       expect(screen.getByText("You")).toBeInTheDocument();
@@ -201,7 +205,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({
+          shootInfo={createShoot({
             participants: [
               createParticipant({
                 id: "guest-1",
@@ -223,10 +227,10 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
-      const matches = screen.getAllByText("Alice");
+      const matches = screen.getAllByText("Alice (you)");
       expect(matches.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -234,7 +238,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       const matches = screen.getAllByText("180");
@@ -247,7 +251,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       [20, 16, 14, 10, 8, 4, 0].forEach((score) => {
@@ -261,7 +265,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       expect(screen.getByLabelText("Score 20 count 2")).toBeInTheDocument();
@@ -277,7 +281,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({
+          shootInfo={createShoot({
             participants: [
               createParticipant({
                 scores: createScores([20, 20, 20]),
@@ -298,7 +302,7 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo({
+          shootInfo={createShoot({
             participants: [
               createParticipant({
                 scores: createScores([20]),
@@ -323,12 +327,12 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
       for (let i = 1; i <= 18; i++) {
         expect(
-          screen.getByLabelText(`Alice station ${i} score ${
+          screen.getByLabelText(`Alice (you) station ${i} score ${
             createShootInfo().participants[0].scores[i - 1]?.score
           }`),
         ).toBeInTheDocument();
@@ -339,10 +343,12 @@ describe("SummaryPage", () => {
       render(
         <SummaryPage
           currentUser={mockCurrentUser}
-          shootInfo={createShootInfo()}
+          shootInfo={createShoot()}
         />,
       );
-      expect(screen.getAllByText("Alice").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("Alice (you)").length).toBeGreaterThanOrEqual(
+        1,
+      );
       expect(screen.getAllByText("180").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("18 / 18 stations scored")).toBeInTheDocument();
     });

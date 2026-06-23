@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { type IShootDenormalized } from "@/models";
+import { Shoot, type IShootDenormalized } from "@/models";
 import { ShootHistoryCard } from "./ShootHistoryCard";
 import type { Types } from "mongoose";
 
@@ -43,7 +43,7 @@ describe("ShootHistoryCard", () => {
         currentUserId="user-1"
         onDelete={jest.fn()}
         onOpenSummary={jest.fn()}
-        shoot={shoot}
+        shoot={Shoot.from(shoot, "user-1")}
       />,
     );
 

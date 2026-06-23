@@ -3,15 +3,17 @@
 import { GuestBadge } from "@/components/shared/GuestBadge";
 import { CLUBS, getPegColorHex } from "@/constants";
 import { getParticipantPegColorSummary } from "@/helpers/pegColors";
-import { IShootDenormalized } from "@/models";
-import { Button } from "@radix-ui/themes";
-import { ChevronRight, Notebook, Trash2 } from "lucide-react";
+import { Shoot } from "@/models";
+import { Badge, Button } from "@radix-ui/themes";
+import {
+  BowArrow,
+  ChevronRight,
+  Notebook,
+  NotebookPen,
+  Trash2,
+} from "lucide-react";
 import {
   formatHistoryDate,
-  getShootCompletionStats,
-  getTopScorer,
-  getUserScore,
-  getUserStanding,
   truncateString,
 } from "./historyUtils";
 
@@ -20,7 +22,7 @@ type ShootHistoryCardProps = {
   onDelete: (shootId: string) => void;
   onOpenSummary: (shootId: string) => void;
   relationLabel?: string;
-  shoot: IShootDenormalized;
+  shoot: Shoot;
   showUserScore?: boolean;
 };
 
@@ -32,34 +34,24 @@ export function ShootHistoryCard({
   shoot,
   showUserScore = false,
 }: ShootHistoryCardProps) {
-  const topScorer = getTopScorer(shoot);
-  const userScore = showUserScore ? getUserScore(shoot, currentUserId) : null;
-  const userStanding = showUserScore
-    ? getUserStanding(shoot, currentUserId)
-    : null;
-  const completionStats = getShootCompletionStats(shoot);
+  const topScorer = shoot.topScorer;
+  const userParticipant = showUserScore ? shoot.currentUserParticipant : null;
+
   const clubName = CLUBS[shoot.clubId || "carrowmore"]?.name ?? shoot.clubId;
-  const { label: pegLabel, pegColors } = getParticipantPegColorSummary(
-    shoot.participants,
-  );
-  const primaryMetric = userScore
+  const { pegColors } = getParticipantPegColorSummary(shoot.participants);
+  const primaryMetric = userParticipant
     ? {
         label: "Your score",
-        value: `${userScore.score}`,
-        subtext: userStanding
-          ? `Rank ${userStanding.rank}/${userStanding.participantCount}`
-          : `${userScore.completed}/18 stations`,
+        value: `${userParticipant.totalScore}`,
       }
     : topScorer
       ? {
           label: "Top score",
-          value: `${topScorer.score}`,
-          subtext: topScorer.name,
+          value: `${topScorer.totalScore}`,
         }
       : {
           label: "Top score",
           value: "-",
-          subtext: "No scores",
         };
 
   return (
@@ -68,34 +60,33 @@ export function ShootHistoryCard({
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-              {relationLabel && (
-                <>
-                  <span>{relationLabel}</span>
-                  <span aria-hidden="true">-</span>
-                </>
-              )}
               <span>
                 {formatHistoryDate(new Date(shoot.createdAt).getTime())}
               </span>
-              <span aria-hidden="true">-</span>
-              <span className="rounded-full border border-(--olive-green)/50 bg-[#eef4d7] px-2 py-0.5 font-semibold text-(--deep-forest-green)">
-                {clubName}
-              </span>
-              <span aria-hidden="true">-</span>
+              <span aria-hidden="true">|</span>
+
+              {relationLabel && (
+                <>
+                  <BowArrow className="w-4" />
+                  {relationLabel === "Shot & tracked" && (
+                    <NotebookPen className="w-4" />
+                  )}
+                  <span aria-hidden="true">|</span>
+                </>
+              )}
+
               <span className="inline-flex items-center gap-1">
                 {pegColors.slice(0, 3).map((pegColor) => (
                   <span
                     key={pegColor}
-                    className="h-2 w-2 rounded-full"
+                    className="h-4 w-4 rounded-full"
                     style={{ backgroundColor: getPegColorHex(pegColor) }}
                   />
                 ))}
-                {pegLabel}
               </span>
+              <span aria-hidden="true">|</span>
+              <Badge color="gray">{clubName}</Badge>
             </div>
-            <h3 className="truncate text-base font-semibold leading-tight text-(--deep-forest-green)">
-              {primaryMetric.label}
-            </h3>
           </div>
           <button
             type="button"
@@ -111,32 +102,37 @@ export function ShootHistoryCard({
 
         <div className="flex items-end justify-between gap-4">
           <div className="min-w-0">
+            <h3 className="truncate text-base font-semibold leading-tight text-(--deep-forest-green) mb-2">
+              {primaryMetric.label}
+            </h3>
             <div className="text-3xl font-bold leading-none text-(--deep-forest-green)">
               {primaryMetric.value}
             </div>
+
             <div className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
-              <span className="truncate">{primaryMetric.subtext}</span>
-              {topScorer?.isGuest && !showUserScore && <GuestBadge />}
+              {topScorer?.isGuest && !userParticipant && <GuestBadge />}
             </div>
           </div>
 
           <div className="shrink-0 text-right text-xs leading-5 text-muted-foreground">
             <div>
-              {completionStats.participantCount} archer
-              {completionStats.participantCount !== 1 ? "s" : ""}
+              {shoot.participants.length} archer
+              {shoot.participants.length !== 1 ? "s" : ""}
             </div>
-            <div>{completionStats.completedStations}/18 stations</div>
+            <div>
+              {shoot.completedStationCount}/{shoot.totalStations} stations
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-border/70 px-4 py-2.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          {completionStats.guestCount > 0 && (
+          {shoot.guestCount > 0 && (
             <span className="inline-flex items-center gap-1">
               <GuestBadge />
-              {completionStats.guestCount} guest
-              {completionStats.guestCount !== 1 ? "s" : ""}
+              {shoot.guestCount} guest
+              {shoot.guestCount !== 1 ? "s" : ""}
             </span>
           )}
           <span className="inline-flex min-w-0 items-center gap-1">
@@ -147,7 +143,7 @@ export function ShootHistoryCard({
           </span>
         </div>
 
-        {shoot.createdBy.toString() === currentUserId && (
+        {shoot.isCreatedBy(currentUserId) && (
           <Button
             variant="ghost"
             color="red"

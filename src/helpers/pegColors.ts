@@ -1,5 +1,3 @@
-import { getPegColorLabel } from "@/constants";
-
 export type PegColorParticipant = {
   pegColor?: string | null;
 };
@@ -40,10 +38,6 @@ export const getParticipantPegColorSummary = <
   participants: TParticipant[],
 ) => {
   const pegColors = getUniqueParticipantPegColors(participants);
-  const label =
-    pegColors.length === 1
-      ? `${getPegColorLabel(pegColors[0])} peg`
-      : `${pegColors.length} peg colours`;
 
-  return { label, pegColors };
+  return { pegColors };
 };

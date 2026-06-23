@@ -1,6 +1,6 @@
 "use client";
 import { useUpdateShoot } from "@/hooks/queries";
-import { IShootDenormalized } from "@/models";
+import { Shoot } from "@/models";
 import { Button, Dialog, TextArea } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,7 +11,7 @@ import { Clock, MapPin, NotebookPen, TreePine, X } from "lucide-react";
 
 type ExitDialogProps = {
   isShootFinished?: boolean;
-  shoot: IShootDenormalized;
+  shoot: Shoot;
   triggerComponent: React.ReactNode;
 };
 

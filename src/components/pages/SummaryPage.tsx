@@ -1,6 +1,6 @@
 "use client";
 import { CLUBS } from "@/constants";
-import { IShootDenormalized, IUser } from "@/models";
+import { IShootDenormalized, IUser, Shoot } from "@/models";
 import { ParticipantSummaryCard } from "./summary/ParticipantSummaryCard";
 import { StationBreakdownCard } from "./summary/StationBreakdownCard";
 import { SummaryHeaderCard } from "./summary/SummaryHeaderCard";
@@ -16,6 +16,8 @@ export const SummaryPage = ({
   const onBack = () => {
     window.history.back();
   };
+
+  const shoot = Shoot.from(shootInfo, currentUser.id);
   const clubName =
     CLUBS[shootInfo.clubId || "carrowmore"]?.name ?? shootInfo.clubId;
 
@@ -23,10 +25,7 @@ export const SummaryPage = ({
     <div className="forest-page min-h-screen bg-background">
       <Header onBack={onBack} title="Shoot Details" subtitle={clubName} />
       <main className="container max-w-2xl mx-auto px-4 py-3 pb-10">
-        <SummaryHeaderCard
-          currentUserId={currentUser.id}
-          shootInfo={shootInfo}
-        />
+        <SummaryHeaderCard currentUserId={currentUser.id} shootInfo={shoot} />
 
         <section className="mt-5">
           <div className="mb-2 flex items-end justify-between gap-3">
@@ -43,10 +42,9 @@ export const SummaryPage = ({
             </span>
           </div>
           <div className="space-y-2.5">
-            {shootInfo.participants.map((participant) => (
+            {shoot.participants.map((participant) => (
               <ParticipantSummaryCard
                 key={participant.id}
-                currentUserId={currentUser.id}
                 participant={participant}
                 clubId={shootInfo.clubId}
               />
@@ -64,7 +62,7 @@ export const SummaryPage = ({
             </p>
           </div>
           <StationBreakdownCard
-            participants={shootInfo.participants}
+            participants={shoot.participants}
             clubId={shootInfo.clubId}
           />
         </section>

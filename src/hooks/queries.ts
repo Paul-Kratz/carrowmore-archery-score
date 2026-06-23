@@ -1,5 +1,5 @@
 import { queryClient } from "@/lib/queryClient";
-import { IShootDenormalized } from "@/models";
+import { IShootDenormalized, Shoot } from "@/models";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 class ScoreUpdateError extends Error {
@@ -230,13 +230,15 @@ export function useGetParticipatedShoots(currentUserId: string | null) {
     return { participatedShoots: [], trackedShoots: [], isLoading: true };
   }
 
-  const shoots = data as IShootDenormalized[];
+  const shoots = (data as IShootDenormalized[]).map((shoot) =>
+    Shoot.from(shoot, currentUserId ?? ""),
+  );
   const participatedShoots = shoots.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
   );
 
-  const trackedShoots = participatedShoots.filter(
-    (s) => s.createdBy.toString() === currentUserId,
+  const trackedShoots = participatedShoots.filter((shoot) =>
+    currentUserId ? shoot.isCreatedBy(currentUserId) : false,
   );
 
   return { participatedShoots, trackedShoots, isLoading: false };

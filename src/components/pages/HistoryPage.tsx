@@ -1,7 +1,7 @@
 "use client";
 import { useDeleteShoot, useGetParticipatedShoots } from "@/hooks/queries";
-import { IShootChartData, IShootDenormalized, IUser } from "@/models";
-import { BarChart3, ChevronDown } from "lucide-react";
+import { IShootChartData, IUser, Shoot } from "@/models";
+import { BarChart3, BowArrow, ChevronDown, NotebookPen } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -9,7 +9,6 @@ import { DeleteShootDialog } from "./history/DeleteShootDialog";
 import { HistoryEmptyState } from "./history/HistoryEmptyState";
 import { Header } from "../shared/Header";
 import { ShootHistoryCard } from "./history/ShootHistoryCard";
-import { formatHistoryDate, getUserStanding } from "./history/historyUtils";
 import { ForestLoader } from "../shared/ForestLoader";
 
 const ShootsLineChart = dynamic(
@@ -35,14 +34,14 @@ type HistoryPageProps = {
 type HistoryFilter = "all" | "shot" | "tracked";
 
 type HistoryFeedItem = {
-  shoot: IShootDenormalized;
+  shoot: Shoot;
   shotByCurrentUser: boolean;
   trackedByCurrentUser: boolean;
 };
 
 const getRelationshipLabel = (item: HistoryFeedItem) => {
   if (item.shotByCurrentUser && item.trackedByCurrentUser) {
-    return "Shot + tracked";
+    return "Shot & tracked";
   }
 
   if (item.shotByCurrentUser) {
@@ -97,8 +96,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
         shoot,
         shotByCurrentUser: true,
         trackedByCurrentUser:
-          existing?.trackedByCurrentUser ||
-          shoot.createdBy.toString() === currentUser.id,
+          existing?.trackedByCurrentUser || shoot.isCreatedBy(currentUser.id),
       });
     });
 
@@ -127,12 +125,6 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     { value: "shot", label: "Shot", count: shotCount },
     { value: "tracked", label: "Tracked", count: trackedCount },
   ];
-  const bestPersonalScore = participatedShoots.reduce(
-    (bestScore, shoot) =>
-      Math.max(bestScore, getUserStanding(shoot, currentUser.id)?.score ?? 0),
-    0,
-  );
-  const latestShoot = historyFeed[0]?.shoot;
 
   const handleOnDelete = (shootId: string) => {
     setDeleteShootId(shootId);
@@ -142,7 +134,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     if (isDeletingShoot) return;
     if (!deleteShootId) return;
     const shootToDelete = trackedShoots.find((s) => s.id === deleteShootId);
-    if (currentUser.id !== shootToDelete?.createdBy.toString()) return; // Extra safety check to ensure only creator can delete
+    if (!shootToDelete?.isCreatedBy(currentUser.id)) return; // Extra safety check to ensure only creator can delete
     try {
       await mutateAsync(deleteShootId);
     } catch (error) {
@@ -159,8 +151,8 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     >
       <Header
         onBack={onBack}
-        title="Shoot Log"
-        subtitle="Past rounds and scores"
+        title="Shoot History"
+        subtitle="Past rounds & scores"
         showBackButton={true}
       />
       {isLoading ? (
@@ -177,29 +169,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
               />
             ) : (
               <>
-                <section className="mb-4">
-                  <div className="mb-2 flex items-end justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-bold leading-tight text-(--deep-forest-green)">
-                        Shoot history
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        {latestShoot
-                          ? `Latest ${formatHistoryDate(
-                              new Date(latestShoot.createdAt).getTime(),
-                            )}`
-                          : "No rounds yet"}
-                      </p>
-                    </div>
-                    <div className="text-right text-xs leading-5 text-muted-foreground">
-                      <div>{historyFeed.length} rounds</div>
-                      <div>Best {bestPersonalScore || "-"}</div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {trackedShoots.length} tracked by you
-                  </p>
-
+                <section className="mb-2">
                   <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                     {filterOptions.map((option) => {
                       const selected = option.value === historyFilter;
@@ -242,6 +212,10 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
                         }`}
                       />
                     </button>
+                  </div>
+                  <div className="flex justify-end items-center text-muted-foreground text-xs gap-2 mt-2">
+                    <BowArrow className="w-4" /> (Participated) |{" "}
+                    <NotebookPen className="w-4" /> (Tracked)
                   </div>
                 </section>
 
