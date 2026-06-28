@@ -11,7 +11,7 @@ import {
 } from "@/helpers/participantDisplay";
 import { connectMongoose } from "@/lib/mongoose";
 import { IShootDenormalized, ShootParticipantInput } from "@/models";
-import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { ShootDenormalized } from "@/models/mongoose";
 import { User } from "@/models/mongoose";
 import { Types } from "mongoose";
 

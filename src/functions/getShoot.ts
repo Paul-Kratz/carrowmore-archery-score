@@ -1,7 +1,7 @@
 import { formatResponse } from "@/helpers/formatResponse";
 import { connectMongoose } from "@/lib/mongoose";
 import { IDenormalizedParticipant } from "@/models";
-import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { ShootDenormalized } from "@/models/mongoose";
 import { Types } from "mongoose";
 
 type ShootAccessParticipant = {

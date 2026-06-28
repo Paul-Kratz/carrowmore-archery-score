@@ -1,7 +1,7 @@
 import { formatResponseArray } from "@/helpers/formatResponse";
 import { connectMongoose } from "@/lib/mongoose";
 import { IShootChartData } from "@/models";
-import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { ShootDenormalized } from "@/models/mongoose";
 import { Types } from "mongoose";
 
 export const getShootChartData = async (userId: string) => {

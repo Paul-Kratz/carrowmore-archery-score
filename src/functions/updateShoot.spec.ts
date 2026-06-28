@@ -19,7 +19,7 @@ jest.mock("@/lib/mongoose", () => ({
   connectMongoose: mockConnectMongoose,
 }));
 
-jest.mock("@/models/denormalized/mongoose", () => ({
+jest.mock("@/models/mongoose", () => ({
   ShootDenormalized: {
     updateOne: mockShootDenormalizedUpdateOne,
   },

@@ -1,6 +1,6 @@
 import { formatResponseArray } from "@/helpers/formatResponse";
 import { connectMongoose } from "@/lib/mongoose";
-import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { ShootDenormalized } from "@/models/mongoose";
 import { Types } from "mongoose";
 
 export const getCreatedShoots = async (userId: string) => {

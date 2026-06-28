@@ -5,7 +5,7 @@ import {
   IDenormalizedScore,
   IShootDenormalized,
 } from "@/models";
-import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { ShootDenormalized } from "@/models/mongoose";
 import { createHash } from "node:crypto";
 import { model, models, Schema, Types } from "mongoose";
 

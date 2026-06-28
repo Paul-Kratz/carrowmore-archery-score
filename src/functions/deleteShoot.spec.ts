@@ -22,7 +22,7 @@ jest.mock("@/lib/mongoose", () => ({
   connectMongoose: mockConnectMongoose,
 }));
 
-jest.mock("@/models/denormalized/mongoose", () => ({
+jest.mock("@/models/mongoose", () => ({
   ShootDenormalized: {
     deleteOne: mockShootDenormalizedDeleteOne,
   },
@@ -52,9 +52,9 @@ describe("deleteShoot", () => {
       _id: expect.any(MockObjectId),
       createdBy: expect.any(MockObjectId),
     });
-    expect(
-      mockShootDenormalizedDeleteOne.mock.calls[0][0]._id.toString(),
-    ).toBe(shootId);
+    expect(mockShootDenormalizedDeleteOne.mock.calls[0][0]._id.toString()).toBe(
+      shootId,
+    );
     expect(
       mockShootDenormalizedDeleteOne.mock.calls[0][0].createdBy.toString(),
     ).toBe(userId);
@@ -69,7 +69,9 @@ describe("deleteShoot", () => {
   });
 
   it("propagates delete failures", async () => {
-    mockShootDenormalizedDeleteOne.mockRejectedValue(new Error("Delete failed"));
+    mockShootDenormalizedDeleteOne.mockRejectedValue(
+      new Error("Delete failed"),
+    );
 
     await expect(deleteShoot({ shootId, userId })).rejects.toThrow(
       "Delete failed",

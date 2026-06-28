@@ -1,6 +1,6 @@
 import { connectMongoose } from "@/lib/mongoose";
 import { IDenormalizedParticipant, IDenormalizedScore } from "@/models";
-import { ShootDenormalized } from "@/models/denormalized/mongoose";
+import { ShootDenormalized } from "@/models/mongoose";
 import { Types } from "mongoose";
 
 type UpdateRoundResult = {
@@ -13,9 +13,7 @@ const zeroMatchResult = (): UpdateRoundResult => ({
   modifiedCount: 0,
 });
 
-const getFirstScoredAt = (
-  participants: { scores: IDenormalizedScore[] }[],
-) => {
+const getFirstScoredAt = (participants: { scores: IDenormalizedScore[] }[]) => {
   return (
     participants
       .flatMap((participant) => participant.scores)

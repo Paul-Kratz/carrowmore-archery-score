@@ -32,9 +32,6 @@ jest.mock("@/models/mongoose", () => ({
   User: {
     find: mockUserFind,
   },
-}));
-
-jest.mock("@/models/denormalized/mongoose", () => ({
   ShootDenormalized: {
     create: mockShootDenormalizedCreate,
   },
@@ -271,10 +268,7 @@ describe("createNewShoot", () => {
     await expect(
       createShoot({
         userId: USER_ID,
-        participants: [
-          { guestName: "Charlie" },
-          { guestName: " charlie " },
-        ],
+        participants: [{ guestName: "Charlie" }, { guestName: " charlie " }],
       }),
     ).rejects.toThrow("Guest names must be unique");
   });
