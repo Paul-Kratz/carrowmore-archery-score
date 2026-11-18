@@ -5,9 +5,7 @@ jest.mock("@/lib/auth", () => ({
 }));
 
 jest.mock("next/server", () => {
-  const actual = jest.requireActual("next/server");
   return {
-    ...actual,
     NextResponse: {
       next: () => new Response(null, { status: 200 }),
       redirect: (url: URL) =>
@@ -19,7 +17,12 @@ jest.mock("next/server", () => {
   };
 });
 
+// Next bootstraps this global in its server runtime.
+import { AsyncLocalStorage } from "node:async_hooks";
+Object.assign(globalThis, { AsyncLocalStorage });
+
 import { config, proxy } from "./proxy";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 
 function createRequest(url: string, cookies: Record<string, string> = {}) {
   const parsedUrl = new URL(url, "http://localhost:3000");
@@ -42,6 +45,34 @@ describe("Proxy", () => {
   });
 
   describe("config", () => {
+    it.each([
+      "/icons/apple-touch-icon.png",
+      "/icons/favicon-32.png",
+      "/icons/icon-192.png",
+      "/icons/icon-512.png",
+      "/icons/icon.svg",
+      "/icon.svg",
+      "/manifest.webmanifest",
+      "/icons/apple-touch-icon.png?v=2",
+      "/manifest.webmanifest?v=2",
+    ])("serves public installation asset %s without running the auth proxy", (path) => {
+      expect(unstable_doesMiddlewareMatch({ config, url: `http://localhost:3000${path}` })).toBe(false);
+    });
+
+    it.each([
+      "/",
+      "/setup",
+      "/history",
+      "/shoot/shoot-1/1",
+      "/gate",
+      "/icons-private",
+      "/icon.svg/private",
+      "/manifest.webmanifest/private",
+      "/manifestXwebmanifest",
+    ])("keeps the proxy active for %s", (path) => {
+      expect(unstable_doesMiddlewareMatch({ config, url: `http://localhost:3000${path}` })).toBe(true);
+    });
+
     it("should have matcher array configured", () => {
       expect(config.matcher).toBeDefined();
       expect(Array.isArray(config.matcher)).toBe(true);

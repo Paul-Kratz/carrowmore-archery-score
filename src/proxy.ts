@@ -23,7 +23,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Installation assets must be fetchable without gate or sign-in cookies.
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|icons/|icon\\.svg$|manifest\\.webmanifest$).*)",
   ],
 };
