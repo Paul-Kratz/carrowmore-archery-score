@@ -23,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // Require authentication for all other routes
-      return !!auth;
+      return typeof auth?.user?.id === "string" && auth.user.id.trim().length > 0;
     },
   },
 });
