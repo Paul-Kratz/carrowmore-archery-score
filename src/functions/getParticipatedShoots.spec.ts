@@ -68,7 +68,7 @@ describe("getParticipatedShoots", () => {
     expect(mockShootDenormalizedSort).toHaveBeenCalledWith({ createdAt: -1 });
     expect(mockShootDenormalizedPopulate).toHaveBeenCalledWith({
       path: "participants.user",
-      select: "name email",
+      select: "name",
     });
     expect(mockShootDenormalizedLean).toHaveBeenCalled();
   });

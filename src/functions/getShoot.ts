@@ -14,7 +14,7 @@ export const getShoot = async ({ shootId }: { shootId: string }) => {
   const shoot = await ShootDenormalized.findById(shootId)
     .populate({
       path: "participants.user",
-      select: "name email",
+      select: "name",
     })
     .lean();
 
@@ -33,7 +33,7 @@ export const getShootWithAccess = async ({
   const shoot = await ShootDenormalized.findById(shootId)
     .populate({
       path: "participants.user",
-      select: "name email",
+      select: "name",
     })
     .lean();
 

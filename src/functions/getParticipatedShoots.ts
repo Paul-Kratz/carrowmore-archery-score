@@ -12,7 +12,7 @@ export const getParticipatedShoots = async (userId: string) => {
     .sort({ createdAt: -1 })
     .populate({
       path: "participants.user",
-      select: "name email",
+      select: "name",
     })
     .lean();
 

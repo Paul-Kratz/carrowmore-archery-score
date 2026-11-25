@@ -49,7 +49,7 @@ describe("getShoot", () => {
     expect(mockFindById).toHaveBeenCalledWith("shoot123");
   });
 
-  it("populates participant users", async () => {
+  it("loads only participant display names, excluding email addresses", async () => {
     mockLean.mockResolvedValue(null);
     mockFormatResponse.mockReturnValue(null);
 
@@ -57,7 +57,7 @@ describe("getShoot", () => {
 
     expect(mockPopulate).toHaveBeenCalledWith({
       path: "participants.user",
-      select: "name email",
+      select: "name",
     });
   });
 
@@ -148,7 +148,7 @@ describe("getShootWithAccess", () => {
     expect(result.shoot?.participants[0].user.name).toBe("Pat");
   });
 
-  it("populates participant users for the returned shoot", async () => {
+  it("excludes participant emails from the access-checked shoot", async () => {
     mockLean.mockResolvedValue({
       createdBy: { toString: () => "creator123" },
       participants: [],
@@ -161,7 +161,7 @@ describe("getShootWithAccess", () => {
 
     expect(mockPopulate).toHaveBeenCalledWith({
       path: "participants.user",
-      select: "name email",
+      select: "name",
     });
   });
 });
