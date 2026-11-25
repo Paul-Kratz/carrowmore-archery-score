@@ -34,6 +34,7 @@ jest.mock("@/helpers/formatResponse", () => ({
 }));
 
 import { getParticipatedShoots } from "./getParticipatedShoots";
+import { createTestShootData } from "@/testFixtures/shoot";
 
 describe("getParticipatedShoots", () => {
   const userId = "507f1f77bcf86cd799439001";
@@ -86,7 +87,7 @@ describe("getParticipatedShoots", () => {
         ],
       },
     ];
-    const formattedShoots = [{ id: "shoot-1", participants: [] }];
+    const formattedShoots = [{ id: "shoot-1", createdBy: userId, participants: [] }];
 
     mockShootDenormalizedLean.mockResolvedValue(shoots);
     mockFormatResponseArray.mockReturnValue(formattedShoots);
@@ -95,5 +96,19 @@ describe("getParticipatedShoots", () => {
 
     expect(mockFormatResponseArray).toHaveBeenCalledWith(shoots);
     expect(result).toEqual(formattedShoots);
+  });
+
+  it("strips other participants' scores from history responses but keeps own scores and group totals", async () => {
+    const fixture = createTestShootData({ createdBy: "other-tracker" });
+    const shoot = { ...fixture, participants: [
+      { ...fixture.participants[0], user: userId },
+      { ...fixture.participants[0], id: "other", user: "other-tracker", totalScore: 18 },
+    ] };
+    mockFormatResponseArray.mockReturnValue([shoot]);
+    const result = await getParticipatedShoots(userId);
+    expect(result[0].participants[0].scores).toHaveLength(2);
+    expect(result[0].participants[1].scores).toEqual([]);
+    expect(result[0].participants[1].totalScore).toBe(18);
+    expect(result[0].participants[1].scoredCount).toBe(1);
   });
 });

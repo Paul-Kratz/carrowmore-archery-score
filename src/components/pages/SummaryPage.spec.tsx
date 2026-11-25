@@ -1,9 +1,23 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { SummaryPage } from "./SummaryPage";
 import { createTestShootData, testUser } from "@/testFixtures/shoot";
 import type { IShootDenormalized } from "@/models";
+import { Shoot } from "@/models";
+import { StationBreakdownCard } from "./summary/StationBreakdownCard";
 
 jest.mock("@/fonts/oswald", () => ({ oswald: { className: "oswald" } }));
+
+const mockReplace = jest.fn();
+const mockRefresh = jest.fn();
+const mockDelete = jest.fn();
+let mockDeleting = false;
+jest.mock("next/navigation", () => ({ useRouter: () => ({ replace: mockReplace, refresh: mockRefresh }) }));
+jest.mock("@/hooks/queries", () => ({ useDeleteShoot: () => ({ mutateAsync: mockDelete, isPending: mockDeleting }) }));
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockDeleting = false;
+  mockDelete.mockResolvedValue(undefined);
+});
 
 const renderSummary = (overrides: Partial<IShootDenormalized> = {}) =>
   render(<SummaryPage currentUser={testUser} shootInfo={createTestShootData(overrides)} />);
@@ -112,4 +126,95 @@ it("preserves back navigation", () => {
   fireEvent.click(screen.getByRole("button", { name: "Back" }));
   expect(back).toHaveBeenCalledTimes(1);
   back.mockRestore();
+});
+
+it.each([false, true])("limits another-tracked shoot to own breakdowns while retaining every total (redacted=%s)", (redacted) => {
+  const participant = createTestShootData().participants[0];
+  renderSummary({ createdBy: "other-tracker", participants: [participant, {
+    ...participant, id: "bob", user: { id: "other-tracker", name: "Bob" }, totalScore: 18,
+    scores: redacted ? [] : [{ roundNumber: 1, score: 18 }],
+    scoreDetailsVisible: !redacted,
+  }, {
+    ...participant, id: "guest", user: null, guestName: "Guest archer", totalScore: 10,
+    scores: redacted ? [] : [{ roundNumber: 1, score: 10 }],
+    scoreDetailsVisible: !redacted,
+  }] });
+  const totals = screen.getByRole("table", { name: "Archer totals" });
+  expect(within(totals).getByRole("cell", { name: "18" })).toBeInTheDocument();
+  expect(within(totals).getByRole("cell", { name: "10" })).toBeInTheDocument();
+  expect(within(totals).getAllByText("1/2")).toHaveLength(3);
+  expect(screen.getByRole("list", { name: "Alice (you) station breakdown" })).toBeInTheDocument();
+  expect(screen.queryByRole("list", { name: "Bob station breakdown" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("list", { name: "Guest archer station breakdown" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByText("Score patterns"));
+  expect(screen.getByRole("article", { name: "Alice (you) score pattern" })).toBeVisible();
+  expect(screen.queryByRole("article", { name: "Bob score pattern" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("article", { name: "Guest archer score pattern" })).not.toBeInTheDocument();
+});
+
+it("omits the detail sections entirely when no score breakdown is visible", () => {
+  const participant = createTestShootData().participants[0];
+  renderSummary({ createdBy: "other-tracker", participants: [{
+    ...participant, scores: [], scoreDetailsVisible: false,
+  }] });
+  expect(screen.getByRole("table", { name: "Archer totals" })).toBeInTheDocument();
+  expect(screen.getByRole("cell", { name: "20" })).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Station scorecard" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "Station breakdown" })).not.toBeInTheDocument();
+  expect(screen.queryByText("Score patterns")).not.toBeInTheDocument();
+});
+
+it("never renders redacted participants as gray station cards", () => {
+  const data = createTestShootData();
+  const shoot = Shoot.from({ ...data, participants: [{
+    ...data.participants[0], scores: [], scoreDetailsVisible: false,
+  }] }, testUser.id);
+  const { container } = render(<StationBreakdownCard participants={shoot.participants} totalStations={2} />);
+  expect(container).toBeEmptyDOMElement();
+});
+
+it("places deletion after the summary and restores focus when cancelled", async () => {
+  renderSummary();
+  const trigger = screen.getByRole("button", { name: "Delete shoot" });
+  expect(screen.getByText("Score patterns").compareDocumentPosition(trigger) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  trigger.focus();
+  fireEvent.click(trigger);
+  expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(trigger).toHaveFocus());
+  expect(mockDelete).not.toHaveBeenCalled();
+  expect(mockReplace).not.toHaveBeenCalled();
+});
+
+it("keeps a failed deletion open for retry, then returns to refreshed history", async () => {
+  mockDelete.mockRejectedValueOnce(new Error("Network failed"));
+  renderSummary();
+  fireEvent.click(screen.getByRole("button", { name: "Delete shoot" }));
+  const dialog = screen.getByRole("alertdialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Delete shoot" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("could not be deleted");
+  expect(mockReplace).not.toHaveBeenCalled();
+  expect(mockRefresh).not.toHaveBeenCalled();
+  expect(mockDelete).toHaveBeenCalledWith("shoot-1");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Delete shoot" }));
+  await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/history"));
+  expect(mockRefresh).toHaveBeenCalledTimes(1);
+  expect(mockDelete).toHaveBeenCalledTimes(2);
+});
+
+it("locks confirmation and cancellation while deletion is pending", () => {
+  const { rerender } = renderSummary();
+  fireEvent.click(screen.getByRole("button", { name: "Delete shoot" }));
+  mockDeleting = true;
+  rerender(<SummaryPage currentUser={testUser} shootInfo={createTestShootData()} />);
+  const dialog = screen.getByRole("alertdialog");
+  for (const button of within(dialog).getAllByRole("button")) expect(button).toBeDisabled();
+  fireEvent.keyDown(dialog, { key: "Escape" });
+  expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  expect(mockDelete).not.toHaveBeenCalled();
+});
+
+it("only offers deletion to the shoot's creator", () => {
+  renderSummary({ createdBy: "other-tracker" });
+  expect(screen.queryByRole("button", { name: "Delete shoot" })).not.toBeInTheDocument();
 });

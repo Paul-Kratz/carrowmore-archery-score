@@ -15,6 +15,7 @@ jest.mock("@/helpers/formatResponse", () => ({
 }));
 
 import { GET } from "./route";
+import { createTestShootData } from "@/testFixtures/shoot";
 
 describe("/api/shoot/[shootId]", () => {
   const validShootId = "507f1f77bcf86cd799439011";
@@ -53,7 +54,7 @@ describe("/api/shoot/[shootId]", () => {
 
   it("returns the shoot for a participant", async () => {
     const shoot = { id: "shoot-1" };
-    const formattedShoot = { id: "shoot-1", formatted: true };
+    const formattedShoot = createTestShootData({ createdBy: "session-user" });
 
     mockAuth.mockResolvedValue({ user: { id: "session-user" } });
     mockGetShootWithAccess.mockResolvedValue({
@@ -74,7 +75,7 @@ describe("/api/shoot/[shootId]", () => {
     });
     expect(mockFormatResponse).toHaveBeenCalledWith(shoot);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(formattedShoot);
+    expect(await response.json()).toEqual(JSON.parse(JSON.stringify(formattedShoot)));
   });
 
   it("returns 400 for malformed shoot ids", async () => {
@@ -87,5 +88,20 @@ describe("/api/shoot/[shootId]", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Invalid shootId" });
     expect(mockGetShootWithAccess).not.toHaveBeenCalled();
+  });
+
+  it("does not send other archers' detailed scores to a participant", async () => {
+    const fixture = createTestShootData({ createdBy: "tracker" });
+    const own = { ...fixture.participants[0], id: "own", user: "session-user" };
+    const shoot = { ...fixture, participants: [own, fixture.participants[0]] };
+    mockAuth.mockResolvedValue({ user: { id: "session-user" } });
+    mockGetShootWithAccess.mockResolvedValue({ exists: true, isCreator: false, isParticipant: true, shoot });
+    mockFormatResponse.mockReturnValue(shoot);
+    const response = await GET({} as Request, { params: Promise.resolve({ shootId: validShootId }) });
+    const body = await response.json();
+    expect(body.participants[0].scores).toHaveLength(2);
+    expect(body.participants[1].scores).toEqual([]);
+    expect(body.participants[1].totalScore).toBe(20);
+    expect(body.participants[1].scoreDetailsVisible).toBe(false);
   });
 });

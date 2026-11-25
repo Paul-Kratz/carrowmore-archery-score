@@ -198,7 +198,7 @@ export function SetupPage({
       radius="small"
       panelBackground="solid"
       style={scorebookTheme}
-      className="flex min-h-dvh flex-col bg-background text-foreground"
+      className="flex min-h-[var(--app-viewport-height,100dvh)] flex-col bg-background text-foreground"
     >
       <ScorebookHeader rightSlot={
         <button
@@ -211,7 +211,7 @@ export function SetupPage({
           History
         </button>
       } />
-      <main className={`mx-auto w-full max-w-2xl flex-1 px-5 pt-8 ${createError ? "pb-44" : "pb-28"} sm:flex-none sm:px-8 sm:pt-12 sm:pb-8`}>
+      <main className={`mx-auto w-full max-w-2xl flex-1 px-5 pt-8 ${createError ? "pb-44" : "pb-28"} sm:flex-none sm:px-8 sm:pt-12 sm:pb-8 keyboard:pb-8`}>
         <div className="mb-8">
           <h1 className={`${oswald.className} text-4xl leading-tight font-normal`}>
             New shoot
@@ -246,7 +246,7 @@ export function SetupPage({
           </section>
         )}
 
-        <div className="space-y-8">
+        <div className="space-y-5">
           <ClubSelectorCard
             disabled={isCreatingShoot}
             selectedClub={selectedClub}
@@ -269,7 +269,7 @@ export function SetupPage({
         </div>
         {currentUser && !currentUser.name && <AddUsernameDialog />}
       </main>
-      <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:px-8 sm:pt-0 sm:pb-12">
+      <footer className="keyboard:hidden fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:px-8 sm:pt-0 sm:pb-12">
         <div className="mx-auto max-w-2xl sm:px-8">
           {createError && <p role="alert" className="mb-3 text-sm leading-relaxed text-red-800">{createError}</p>}
           <Button

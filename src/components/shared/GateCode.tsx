@@ -46,10 +46,10 @@ export const GateCode = () => {
       radius="small"
       panelBackground="solid"
       style={scorebookTheme}
-      className="flex min-h-dvh flex-col bg-background text-foreground"
+      className="flex min-h-[var(--app-viewport-height,100dvh)] flex-col bg-background text-foreground"
     >
       <ScorebookHeader />
-      <main className="mx-auto flex w-full max-w-2xl flex-1 items-start justify-center px-5 pt-[max(2rem,8dvh)] pb-10 sm:px-8">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 items-start justify-center px-5 pt-[max(2rem,8dvh)] pb-10 sm:px-8 keyboard:pt-4 keyboard:pb-4">
         <div className="w-full max-w-sm">
           <Image
             src="/icons/icon-512.png"
@@ -57,7 +57,7 @@ export const GateCode = () => {
             width={128}
             height={128}
             priority
-            className="mx-auto mb-4 h-28 w-28 sm:h-32 sm:w-32"
+            className="mx-auto mb-4 h-28 w-28 sm:h-32 sm:w-32 keyboard:h-16 keyboard:w-16"
           />
           <h1
             className={`${oswald.className} text-4xl leading-tight font-normal text-center`}
@@ -73,6 +73,7 @@ export const GateCode = () => {
 
           <form
             aria-label="Gate access"
+            data-keyboard-focus
             className="mt-6 space-y-4"
             onSubmit={handleSubmit}
           >

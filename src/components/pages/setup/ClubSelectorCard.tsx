@@ -16,7 +16,7 @@ export function ClubSelectorCard({
 }: ClubSelectorCardProps) {
   return (
     <section
-      className="border-b border-border pb-8"
+      className="rounded border border-border p-4 shadow sm:p-5"
       aria-labelledby="club-heading"
     >
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">

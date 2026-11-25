@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant keyboard (&:where([data-keyboard-open="true"] *));
 
 :root {
   --font-size: 16px;

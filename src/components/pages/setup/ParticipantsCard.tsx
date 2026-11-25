@@ -92,7 +92,8 @@ export function ParticipantsCard({
         ),
       ) === normalizedQuery,
   );
-  const guestNameTooLong = !exactMatch && archerQuery.trim().length > MAX_GUEST_NAME_LENGTH;
+  const guestNameTooLong =
+    !exactMatch && archerQuery.trim().length > MAX_GUEST_NAME_LENGTH;
   const canAddGuest =
     archerQuery.trim().length > 0 &&
     archerQuery.trim().length <= MAX_GUEST_NAME_LENGTH &&
@@ -134,7 +135,10 @@ export function ParticipantsCard({
   };
 
   return (
-    <section aria-labelledby="archers-heading">
+    <section
+      aria-labelledby="archers-heading"
+      className="rounded border border-border p-4 shadow sm:p-5"
+    >
       <div className="mb-4 flex items-baseline gap-2">
         <h2 id="archers-heading" className="text-base font-semibold">
           Archers
@@ -144,7 +148,7 @@ export function ParticipantsCard({
         </span>
       </div>
 
-      <form className="space-y-2" onSubmit={handleSubmit}>
+      <form data-keyboard-focus className="space-y-2" onSubmit={handleSubmit}>
         <label htmlFor="archer-search" className="sr-only">
           Add archer by name
         </label>
@@ -178,8 +182,14 @@ export function ParticipantsCard({
             Add
           </Button>
         </div>
-        <p id="archer-search-help" role={guestNameTooLong ? "alert" : undefined} className={`text-sm ${guestNameTooLong ? "text-red-800" : "text-muted-foreground"}`}>
-          {guestNameTooLong ? `Guest names must be ${MAX_GUEST_NAME_LENGTH} characters or fewer.` : "Find a member or add a guest."}
+        <p
+          id="archer-search-help"
+          role={guestNameTooLong ? "alert" : undefined}
+          className={`text-sm ${guestNameTooLong ? "text-red-800" : "text-muted-foreground"}`}
+        >
+          {guestNameTooLong
+            ? `Guest names must be ${MAX_GUEST_NAME_LENGTH} characters or fewer.`
+            : "Find a member or add a guest."}
         </p>
 
         {archerQuery.trim() && hasSuggestions && (
@@ -198,7 +208,9 @@ export function ParticipantsCard({
                     currentUserId === getParticipantUserId(user),
                   )}
                 </span>
-                <span className="shrink-0 text-sm text-muted-foreground">Member</span>
+                <span className="shrink-0 text-sm text-muted-foreground">
+                  Member
+                </span>
               </button>
             ))}
             {canAddGuest && (
@@ -215,7 +227,17 @@ export function ParticipantsCard({
         )}
       </form>
 
-      <ul className="mt-4 divide-y divide-border border-b border-border">
+      {participants.length > 0 && (
+        <div className="mt-4 mb-1 grid grid-cols-[minmax(0,1fr)_4rem] items-center gap-3">
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Name
+          </h3>
+          <h3 className="w-16 text-center text-sm font-medium text-muted-foreground">
+            Peg
+          </h3>
+        </div>
+      )}
+      <ul className="divide-y divide-border">
         {participants.map((participant) => {
           const isCurrentUser =
             !participant.isGuest && participant.userId === currentUserId;
@@ -224,14 +246,17 @@ export function ParticipantsCard({
           return (
             <li
               key={participant.id}
-              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4"
+              className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3"
             >
-              <div className="col-span-2 flex min-w-0 items-center gap-1 min-[360px]:col-span-1">
+              <div className="flex min-w-0 items-center gap-1">
                 <div className="min-w-0 flex-1">
                   <p className="wrap-anywhere font-medium">
                     {name}
                     {isCurrentUser && (
-                      <span className="font-normal text-muted-foreground"> (you)</span>
+                      <span className="font-normal text-muted-foreground">
+                        {" "}
+                        (you)
+                      </span>
                     )}
                   </p>
                   {participant.isGuest && (
@@ -250,10 +275,7 @@ export function ParticipantsCard({
                   </button>
                 )}
               </div>
-              <div className="col-span-2 flex items-center justify-between gap-2 min-[360px]:col-span-1 min-[360px]:justify-end">
-                <span className="text-sm text-muted-foreground min-[360px]:hidden">
-                  Peg
-                </span>
+              <div className="flex items-center justify-end">
                 <SetupSelect
                   label={`Peg for ${name}`}
                   value={participant.pegColor}
@@ -266,6 +288,7 @@ export function ParticipantsCard({
                     label: `${getPegColorLabel(pegColor)} peg`,
                     color: getPegColorHex(pegColor),
                   }))}
+                  colorOnly
                 />
               </div>
             </li>

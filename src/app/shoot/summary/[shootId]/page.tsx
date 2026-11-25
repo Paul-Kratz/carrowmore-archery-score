@@ -4,6 +4,7 @@ import { formatResponse } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
 import { IShootDenormalized, IUser } from "@/models";
 import { redirect } from "next/navigation";
+import { limitShootScoreDetails } from "@/helpers/shootScoreVisibility";
 
 export default async function Summary({
   params,
@@ -35,6 +36,6 @@ export default async function Summary({
   ) as unknown as IShootDenormalized;
 
   return (
-    <SummaryPage currentUser={authData.user as IUser} shootInfo={shootInfo} />
+    <SummaryPage currentUser={authData.user as IUser} shootInfo={limitShootScoreDetails(shootInfo, authData.user.id)} />
   );
 }

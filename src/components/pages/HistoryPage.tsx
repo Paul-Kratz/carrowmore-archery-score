@@ -1,11 +1,10 @@
 "use client";
-import { useDeleteShoot, useGetParticipatedShoots } from "@/hooks/queries";
+import { useGetParticipatedShoots } from "@/hooks/queries";
 import { IShootChartData, IUser, Shoot } from "@/models";
 import { ArrowLeft, BarChart3, ChevronDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { DeleteShootDialog } from "./history/DeleteShootDialog";
 import { HistoryEmptyState } from "./history/HistoryEmptyState";
 import { ScorebookHeader } from "../shared/ScorebookHeader";
 import { scorebookStyles, scorebookTheme } from "../shared/scorebookTheme";
@@ -13,6 +12,7 @@ import { Button, Theme } from "@radix-ui/themes";
 import { oswald } from "@/fonts/oswald";
 import { ShootHistoryCard } from "./history/ShootHistoryCard";
 import { ForestLoader } from "../shared/ForestLoader";
+import { formatHistoryDate } from "./history/historyUtils";
 
 const ShootsLineChart = dynamic(
   () =>
@@ -42,26 +42,14 @@ type HistoryFeedItem = {
   trackedByCurrentUser: boolean;
 };
 
-const getRelationshipLabel = (item: HistoryFeedItem) => {
-  if (item.shotByCurrentUser && item.trackedByCurrentUser) {
-    return "Shot & tracked";
-  }
-
-  if (item.shotByCurrentUser) {
-    return "Shot by you";
-  }
-
-  return "Tracked by you";
-};
-
 const getEmptyFilterTitle = (filter: HistoryFilter) => {
-  if (filter === "shot") return "No Shoots Yet";
+  if (filter === "shot") return "No shoots tracked by others";
   if (filter === "tracked") return "No Tracked Shoots";
   return "No Shoot History";
 };
 
 const getEmptyFilterDescription = (filter: HistoryFilter) => {
-  if (filter === "shot") return "Shoots where you scored will appear here";
+  if (filter === "shot") return "Shoots you participated in but someone else tracked will appear here.";
   if (filter === "tracked") {
     return "Shoots you tracked for others will appear here";
   }
@@ -72,11 +60,8 @@ const getEmptyFilterDescription = (filter: HistoryFilter) => {
 export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>("all");
   const [showTrends, setShowTrends] = useState(false);
-  const [deleteShootId, setDeleteShootId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { participatedShoots, trackedShoots, isLoading, isError, refetch, isFetching } =
-    useGetParticipatedShoots(currentUser.id); // Refetch participated shoots to get latest data after deletion
-  const { mutateAsync, isPending: isDeletingShoot } = useDeleteShoot();
+    useGetParticipatedShoots(currentUser.id);
   const onBack = () => {
     window.history.back();
   };
@@ -111,12 +96,12 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     );
   }, [currentUser.id, participatedShoots, trackedShoots]);
 
-  const shotCount = historyFeed.filter((item) => item.shotByCurrentUser).length;
+  const shotCount = historyFeed.filter((item) => item.shotByCurrentUser && !item.trackedByCurrentUser).length;
   const trackedCount = historyFeed.filter(
     (item) => item.trackedByCurrentUser,
   ).length;
   const filteredFeed = historyFeed.filter((item) => {
-    if (historyFilter === "shot") return item.shotByCurrentUser;
+    if (historyFilter === "shot") return item.shotByCurrentUser && !item.trackedByCurrentUser;
     if (historyFilter === "tracked") return item.trackedByCurrentUser;
     return true;
   });
@@ -129,24 +114,6 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     { value: "shot", label: "Shot", count: shotCount },
     { value: "tracked", label: "Tracked", count: trackedCount },
   ];
-
-  const handleOnDelete = (shootId: string) => {
-    setDeleteError(null);
-    setDeleteShootId(shootId);
-  };
-
-  const finaliseDeleteShoot = async () => {
-    if (isDeletingShoot) return;
-    if (!deleteShootId) return;
-    const shootToDelete = trackedShoots.find((s) => s.id === deleteShootId);
-    if (!shootToDelete?.isCreatedBy(currentUser.id)) return; // Extra safety check to ensure only creator can delete
-    try {
-      await mutateAsync(deleteShootId);
-      setDeleteShootId(null);
-    } catch {
-      setDeleteError("The shoot could not be deleted. Please try again.");
-    }
-  };
 
   return (
     <Theme accentColor="green" grayColor="olive" radius="small" panelBackground="solid" style={scorebookTheme} className="min-h-dvh bg-background text-foreground">
@@ -190,22 +157,21 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
             <section aria-label="Shoot history">
               {filteredFeed.length === 0 ? (
                 <HistoryEmptyState compact title={getEmptyFilterTitle(historyFilter)} description={getEmptyFilterDescription(historyFilter)} />
-              ) : filteredFeed.map((item) => (
-                <ShootHistoryCard key={item.shoot.id} currentUserId={currentUser.id} onDelete={handleOnDelete} onOpenSummary={(shootId) => router.push(`/shoot/summary/${shootId}`)} relationLabel={getRelationshipLabel(item)} shoot={item.shoot} showUserScore={item.shotByCurrentUser} />
-              ))}
+              ) : (
+                <ol role="list" aria-label="Shoot timeline" className="ml-1 border-l border-border">
+                  {filteredFeed.map((item) => (
+                    <li key={item.shoot.id} className="relative pb-5 pl-5 last:pb-0 sm:pl-7">
+                      <span aria-hidden="true" className="absolute top-0.5 -left-2 h-4 w-4 rounded-full border-2 border-background bg-primary ring-4 ring-background" />
+                      <time dateTime={item.shoot.createdAt.toISOString()} className="mb-1 block text-sm leading-5 text-muted-foreground">{formatHistoryDate(item.shoot.createdAt.getTime())}</time>
+                      <ShootHistoryCard onOpenSummary={(shootId) => router.push(`/shoot/summary/${shootId}`)} shoot={item.shoot} showUserScore={item.shotByCurrentUser} />
+                    </li>
+                  ))}
+                </ol>
+              )}
             </section>
           </>
         )}
       </main>
-      <DeleteShootDialog
-        isDeleting={isDeletingShoot}
-        open={deleteShootId !== null}
-        error={deleteError}
-        onConfirm={finaliseDeleteShoot}
-        onOpenChange={() => {
-          if (!isDeletingShoot) setDeleteShootId(null);
-        }}
-      />
     </Theme>
   );
 };

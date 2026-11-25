@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SessionProvider } from "next-auth/react";
 import "@radix-ui/themes/styles.css";
 import "./globals.css";
@@ -6,6 +6,15 @@ import { Theme } from "@radix-ui/themes";
 
 import { QueryProvider } from "@/contexts/QueryContext";
 import { ShootProvider } from "@/contexts/ShootContext";
+
+import { KeyboardViewport } from "@/components/shared/KeyboardViewport";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
 
 export const metadata: Metadata = {
   title: "In The Forest",
@@ -35,13 +44,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="overflow-y-auto">
-      <head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover"
-        />
-      </head>
       <body className="antialiased min-h-full">
+        <KeyboardViewport />
         <QueryProvider>
           <Theme accentColor="green" grayColor="sage" radius="medium">
             <ShootProvider>

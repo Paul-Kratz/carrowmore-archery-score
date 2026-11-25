@@ -52,6 +52,7 @@ export interface IDenormalizedParticipant {
   pegColor?: string | null;
   joinedAt: DateLike;
   scores: IDenormalizedScore[];
+  scoreDetailsVisible?: boolean;
   totalScore: number;
   scoredCount: number;
 }
@@ -101,6 +102,7 @@ export class ShootParticipant {
   pegColor?: string | null;
   joinedAt: Date;
   scores: ShootScore[];
+  scoreDetailsVisible: boolean;
   totalScore: number;
   scoredCount: number;
   isCurrentUser: boolean;
@@ -116,6 +118,7 @@ export class ShootParticipant {
     this.pegColor = participantData.pegColor;
     this.joinedAt = toDate(participantData.joinedAt);
     this.scores = participantData.scores.map((score) => new ShootScore(score));
+    this.scoreDetailsVisible = participantData.scoreDetailsVisible !== false;
     this.totalScore = participantData.totalScore;
     this.scoredCount = participantData.scoredCount;
     this.isCurrentUser = this.userId === currentUserId && !this.isGuest;
@@ -169,6 +172,7 @@ export class ShootParticipant {
   }
 
   get completedStationCount() {
+    if (!this.scoreDetailsVisible) return this.scoredCount;
     return this.scores.filter((score) => score.isScored).length;
   }
 

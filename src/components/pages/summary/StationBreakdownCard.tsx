@@ -12,10 +12,13 @@ export function StationBreakdownCard({ participants, totalStations }: {
   participants: ShootParticipant[];
   totalStations: number;
 }) {
+  const visibleParticipants = participants.filter(participant => participant.scoreDetailsVisible);
+  if (visibleParticipants.length === 0) return null;
+
   return (
     <div role="region" aria-label="Station breakdown" className="space-y-4">
       <p className="text-xs text-muted-foreground">— means not scored.</p>
-      {participants.map(participant => {
+      {visibleParticipants.map(participant => {
         const name = participant.getParticipantLabel();
         return (
           <section key={participant.id} aria-label={`${name} station scores`} className="rounded-sm border border-border bg-card p-3 sm:p-4">

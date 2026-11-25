@@ -3,6 +3,8 @@ import { isValidObjectId } from "@/helpers/isValidObjectId";
 import { formatResponse } from "@/helpers/formatResponse";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { IShootDenormalized } from "@/models";
+import { limitShootScoreDetails } from "@/helpers/shootScoreVisibility";
 
 // GET SHOOT BY ID
 export const GET = async (
@@ -35,7 +37,8 @@ export const GET = async (
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    return NextResponse.json(formatResponse(access.shoot), { status: 200 });
+    const shoot = formatResponse<IShootDenormalized>(access.shoot);
+    return NextResponse.json(limitShootScoreDetails(shoot, session.user.id), { status: 200 });
   } catch (error) {
     console.error("Error fetching shoot", error);
 

@@ -2,6 +2,8 @@ import { formatResponseArray } from "@/helpers/formatResponse";
 import { connectMongoose } from "@/lib/mongoose";
 import { ShootDenormalized } from "@/models/mongoose";
 import { Types } from "mongoose";
+import type { IShootDenormalized } from "@/models";
+import { limitShootScoreDetails } from "@/helpers/shootScoreVisibility";
 
 export const getParticipatedShoots = async (userId: string) => {
   await connectMongoose();
@@ -16,5 +18,5 @@ export const getParticipatedShoots = async (userId: string) => {
     })
     .lean();
 
-  return formatResponseArray(shoots);
+  return formatResponseArray<IShootDenormalized>(shoots).map(shoot => limitShootScoreDetails(shoot, userId));
 };
