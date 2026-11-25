@@ -1,52 +1,36 @@
+import { useRef, useState } from "react";
 import { Button, DropdownMenu } from "@radix-ui/themes";
 import { LogOut, Settings } from "lucide-react";
 import { ExitDialog } from "./ExitDialog";
-import { ShowScoresToggle } from "./ShotScoresToggle";
 import { Shoot } from "@/models";
+import { useShootContext } from "@/contexts/ShootContext";
+import { scorebookStyles, scorebookTheme } from "@/components/shared/scorebookTheme";
 
-type OptionsDropdownProps = {
-  shoot: Shoot;
-};
+type OptionsDropdownProps = { shoot: Shoot };
 
 export const OptionsDropdown = ({ shoot }: OptionsDropdownProps) => {
+  const { showScores, setShowScores } = useShootContext();
+  const [exitOpen, setExitOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   return (
+    <>
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <Button
-          variant="ghost"
-          size="1"
-          className="h-10! text-primary-foreground!"
-        >
-          <Settings />
-          <DropdownMenu.TriggerIcon />
+        <Button ref={triggerRef} aria-label="Shoot options" variant="ghost" size="1" className="min-h-11! min-w-11! text-primary-foreground!">
+          <Settings aria-hidden="true" /><DropdownMenu.TriggerIcon />
         </Button>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content
-        align="end"
-        sideOffset={8}
-        className="bg-popover! text-popover-foreground!"
-      >
-        <div className="rounded-md px-3 hover:bg-[#edf4e9]">
-          <ShowScoresToggle />
-        </div>
-
-        <DropdownMenu.Separator className="mx-3! my-1.5! bg-border!" />
-
-        <ExitDialog
-          isShootFinished={false}
-          shoot={shoot}
-          triggerComponent={
-            <Button
-              variant="ghost"
-              size="1"
-              className="h-10! justify-start! gap-2! rounded-md! px-5! text-sm! font-bold! text-(--deep-forest-green)!"
-            >
-              <LogOut />
-              Exit shoot
-            </Button>
-          }
-        />
+      <DropdownMenu.Content highContrast align="end" sideOffset={8} style={scorebookTheme} className={scorebookStyles.menu}>
+        <DropdownMenu.CheckboxItem checked={showScores} onCheckedChange={setShowScores} onSelect={(event) => event.preventDefault()} className={scorebookStyles.menuItem}>
+          Show total scores
+        </DropdownMenu.CheckboxItem>
+        <DropdownMenu.Separator className="my-1.5! bg-border!" />
+        <DropdownMenu.Item onSelect={() => setExitOpen(true)} className={scorebookStyles.menuItem}>
+          <LogOut aria-hidden="true" className="h-4 w-4" />Exit shoot
+        </DropdownMenu.Item>
       </DropdownMenu.Content>
     </DropdownMenu.Root>
+    {exitOpen && <ExitDialog defaultOpen shoot={shoot} onOpenChange={setExitOpen} onCloseAutoFocus={() => triggerRef.current?.focus()} />}
+    </>
   );
 };

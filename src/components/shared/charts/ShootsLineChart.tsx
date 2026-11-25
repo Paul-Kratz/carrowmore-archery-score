@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { PegScoreDot, PegScoreTooltip } from "./PegScoreChartParts";
 import { StationLineChart } from "./StationLineChart";
+import { SetupSelect } from "@/components/pages/setup/SetupSelect";
 
 const DEEP_FOREST_GREEN = "#123426";
 const MOSS = "#6d7f47";
@@ -42,9 +43,7 @@ const TrendStat = ({
   helper?: string;
 }) => (
   <div>
-    <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-      {label}
-    </div>
+    <div className="text-xs font-medium text-muted-foreground">{label}</div>
     <div className="text-xl font-bold leading-tight text-(--deep-forest-green)">
       {value}
     </div>
@@ -77,8 +76,10 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
   const averageScore =
     sorted.length > 0
       ? Math.round(
-          sorted.reduce((total, shoot) => total + getShootTotalScore(shoot), 0) /
-            sorted.length,
+          sorted.reduce(
+            (total, shoot) => total + getShootTotalScore(shoot),
+            0,
+          ) / sorted.length,
         )
       : null;
   const latestChange =
@@ -98,9 +99,11 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
 
   if (sorted.length === 0) {
     return (
-      <div className="forest-chart-panel rounded-xl border border-border p-4 text-center shadow-sm">
+      <div className="rounded-sm border border-border bg-card p-5 text-center">
         <TreePine className="mx-auto mb-2 h-8 w-8 text-(--deep-forest-green)" />
-        <h3 className="font-semibold text-(--deep-forest-green)">No trends yet</h3>
+        <h3 className="font-semibold text-(--deep-forest-green)">
+          No trends yet
+        </h3>
         <p className="text-sm text-muted-foreground">
           Shoot statistics will appear once you have scored a round.
         </p>
@@ -108,8 +111,19 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
     );
   }
 
+  const clubDropdownItems = [
+    {
+      value: "all",
+      label: "All clubs",
+    },
+    ...clubIds.map((clubId) => ({
+      value: clubId,
+      label: CLUBS[clubId].name,
+    })),
+  ];
+
   return (
-    <div className="forest-chart-panel rounded-xl border border-border p-3 shadow-sm">
+    <div className="rounded-sm border border-border bg-card p-4 sm:p-5">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -122,34 +136,14 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
         </div>
       </div>
 
-      <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          aria-pressed={selectedClubId === "all"}
-          onClick={() => setSelectedClubId("all")}
-          className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
-            selectedClubId === "all"
-              ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
-              : "border-border bg-card/80 text-(--deep-forest-green)"
-          }`}
-        >
-          All clubs
-        </button>
-        {clubIds.map((clubId) => (
-          <button
-            key={clubId}
-            type="button"
-            aria-pressed={selectedClubId === clubId}
-            onClick={() => setSelectedClubId(clubId)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
-              selectedClubId === clubId
-                ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
-                : "border-border bg-card/80 text-(--deep-forest-green)"
-            }`}
-          >
-            {CLUBS[clubId].name}
-          </button>
-        ))}
+      <div className="mb-3 flex flex-wrap gap-2 pb-1">
+        <SetupSelect
+          label={`Clubs`}
+          value={selectedClubId}
+          onValueChange={(clubId) => setSelectedClubId(clubId)}
+          options={clubDropdownItems}
+          fullWidth
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-x-5 gap-y-3 border-b border-border/70 pb-3">
@@ -168,7 +162,7 @@ export const ShootsLineChart = ({ data }: { data: IShootChartData[] }) => {
           <Target className="h-4 w-4" />
           Total score
         </div>
-        <div className="forest-chart-surface h-[220px] px-1 pt-2">
+        <div className="bg-card h-[220px] px-1 pt-2">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}

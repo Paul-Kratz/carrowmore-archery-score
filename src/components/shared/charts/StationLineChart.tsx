@@ -35,7 +35,7 @@ const StationStat = ({
   value: string | number;
 }) => (
   <div>
-    <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+    <div className="text-xs font-medium text-muted-foreground">
       {label}
     </div>
     <div className="text-lg font-bold leading-tight text-(--deep-forest-green)">
@@ -116,7 +116,7 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
               aria-pressed={selected}
               aria-label={`Show station ${station + 1} trend`}
               onClick={() => setSelectedStation(station)}
-              className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border text-sm font-bold transition-colors ${
+              className={`grid h-11 w-11 shrink-0 place-items-center rounded-sm border text-sm font-bold transition-colors ${
                 selected
                   ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
                   : "border-border bg-card/75 text-(--deep-forest-green)"
@@ -128,7 +128,7 @@ export const StationLineChart = ({ data }: { data: IShootChartData[] }) => {
         })}
       </div>
 
-      <div className="forest-chart-surface h-[210px] px-1 pt-2">
+      <div className="bg-card h-[210px] px-1 pt-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}

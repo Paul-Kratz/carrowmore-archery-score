@@ -1,9 +1,9 @@
 "use client";
 
-import { GuestBadge } from "@/components/shared/GuestBadge";
 import { getPegColorHex, getPegColorLabel } from "@/constants";
 import { useShootContext } from "@/contexts/ShootContext";
 import { ShootParticipant } from "@/models";
+import { Check } from "lucide-react";
 
 type ParticipantSelectorProps = {
   currentStation: number;
@@ -24,80 +24,65 @@ export function ParticipantSelector({
   const selectedParticipant =
     participants.find(
       (participant) => participant.id === selectedParticipantId,
-    ) ??
-    participants[0] ??
-    null;
+    ) ?? participants[0];
 
-  if (!selectedParticipant) {
-    return null;
-  }
+  if (!selectedParticipant) return null;
 
   return (
-    <section className="mx-2 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-border bg-(--card)/95 p-2 shadow-sm backdrop-blur">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="flex items-center gap-2 justify-center text-center font-bold leading-tight">
-            <div className="flex items-center justify-center gap-2">
-              <span className="truncate text-base">
-                {selectedParticipant.getParticipantLabel()}
-              </span>
-              {selectedParticipant.isGuest && <GuestBadge />}
-            </div>
-            <span
-              aria-label={`${getPegColorLabel(
-                selectedParticipant.pegColor,
-              )} peg colour`}
-              className="h-3 w-3 shrink-0 rounded-full border border-border"
-              style={{
-                backgroundColor: getPegColorHex(selectedParticipant.pegColor),
-              }}
-            />
-            <span>|</span>
-            <span>Station: {currentStation}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-2 flex max-w-full justify-center min-w-0 gap-2 overflow-x-auto pb-1">
+    <section aria-label="Archers">
+      <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-3">
         {participants.map((participant) => {
-          const participantStationScore =
-            participant.getScoreForStation(currentStation);
-
+          const score = participant.getScoreForStation(currentStation);
+          const selected = participant.id === selectedParticipant.id;
           return (
             <button
+              type="button"
               key={participant.id}
               disabled={disabled}
               onClick={() => onSelect(participant.id)}
               aria-label={`Select ${participant.getParticipantLabel()}`}
-              className={`w-28 shrink-0 overflow-hidden rounded-md border px-2 py-1.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                participant.id === selectedParticipantId
-                  ? "border-(--deep-forest-green) bg-[#e2ecd0] shadow-sm"
-                  : participantStationScore !== null
-                    ? "border-(--emerald-green) bg-[#edf4e9]"
-                    : "border-border bg-background"
+              aria-pressed={selected}
+              title={participant.getParticipantLabel()}
+              className={`min-h-16 min-w-0 rounded-sm border px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50 ${
+                selected
+                  ? "border-foreground bg-foreground text-white"
+                  : "border-input bg-card text-foreground hover:border-foreground"
               }`}
             >
-              <div className="truncate text-xs font-bold">
+              <span className="flex items-center gap-1.5 text-sm font-semibold">
                 <span
-                  aria-hidden="true"
-                  className="mr-1 inline-block h-2.5 w-2.5 rounded-full border border-border align-[-1px]"
+                  aria-label={`${getPegColorLabel(participant.pegColor)} peg`}
+                  className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/20"
                   style={{
                     backgroundColor: getPegColorHex(participant.pegColor),
                   }}
                 />
-                {participant.getParticipantLabel()}
-              </div>
-              <div className="mt-1 flex items-center justify-between gap-2 text-[11px] leading-tight">
-                <div className="font-bold text-(--deep-forest-green) flex flex-col justify-center">
-                  Total
-                  <span>{showScores ? participant.totalScore : "-"}</span>
-                </div>
-
-                <div className="font-bold text-(--emerald-green) flex flex-col justify-center">
-                  Round
-                  <span>{participantStationScore ?? "-"}</span>
-                </div>
-              </div>
+                <span className="min-w-0 truncate">
+                  {participant.displayName}
+                </span>
+              </span>
+              <span className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
+                <span className="inline-flex items-center gap-1">
+                  {score !== null ? (
+                    <span>
+                      Score{" "}
+                      <span className="font-semibold tabular-nums">
+                        {score}
+                      </span>
+                    </span>
+                  ) : (
+                    <span aria-label="No score yet">—</span>
+                  )}
+                </span>
+                {showScores && (
+                  <span>
+                    Total{" "}
+                    <span className="font-semibold tabular-nums">
+                      {participant.totalScore}
+                    </span>
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}

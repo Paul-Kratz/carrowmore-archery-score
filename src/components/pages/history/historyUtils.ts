@@ -10,11 +10,10 @@ export const formatHistoryDate = (timestamp: number) => {
     minute: "numeric",
   });
   const dateFormatter = new Intl.DateTimeFormat("en-IE", {
-    month: "numeric",
+    month: "short",
     day: "numeric",
     year: "numeric",
   });
 
-  // Output: "4:30 PM, Jun 20, 2026"
-  return `${timeFormatter.format(date)}, ${dateFormatter.format(date)}`;
+  return `${dateFormatter.format(date)} · ${timeFormatter.format(date)}`;
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { IUser, Shoot } from "@/models";
-import { Button, ScrollArea } from "@radix-ui/themes";
+import { Button, Theme } from "@radix-ui/themes";
 import { TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -10,9 +10,12 @@ import { ExitDialog } from "@/components/pages/shoot/ExitDialog";
 import { ParticipantSelector } from "./shoot/ParticipantSelector";
 import { ScorePanel } from "./shoot/ScorePanel";
 import { StationNavigationCard } from "./shoot/StationNavigationCard";
-import { Header } from "../shared/Header";
+import { scorebookTheme } from "../shared/scorebookTheme";
+import { oswald } from "@/fonts/oswald";
 import { OptionsDropdown } from "./shoot/OptionsDropdown";
-import { ForestLoader } from "../shared/ForestLoader";
+import { ScorebookHeader } from "../shared/ScorebookHeader";
+import { ScorebookStatus } from "../shared/ScorebookStatus";
+import { scorebookStyles } from "../shared/scorebookTheme";
 
 type ShootPageProps = {
   currentStation: number;
@@ -36,7 +39,7 @@ export function ShootPage({
   currentUser,
   shootId,
 }: ShootPageProps) {
-  const { data: shootData, isLoading, isError } = useGetShoot(shootId);
+  const { data: shootData, isLoading, isError, refetch, isFetching } = useGetShoot(shootId);
   const { mutateAsync: updateScore, isPending: isUpdatingScore } =
     useUpdateScore();
   const [selectedParticipantId, setSelectedParticipantId] = useState<
@@ -78,11 +81,14 @@ export function ShootPage({
   );
 
   if (isLoading) {
-    return <ForestLoader label="Loading shoot" size="lg" />;
+    return <ScorebookStatus title="Opening your shoot" loadingLabel="Loading shoot" />;
   }
 
   if (isError || !shoot) {
-    return <div>Unable to load shoot</div>;
+    return <ScorebookStatus title="Unable to load shoot" description="Check your connection and try again.">
+      <Button disabled={isFetching} onClick={() => void refetch()} className={scorebookStyles.primaryButton}>{isFetching ? "Trying again…" : "Try again"}</Button>
+      <Button variant="ghost" onClick={() => router.push("/")} className={scorebookStyles.secondaryButton}>Back to setup</Button>
+    </ScorebookStatus>;
   }
   const participants = shoot.participants;
 
@@ -137,12 +143,6 @@ export function ShootPage({
 
     if (nextUnscoredParticipant) {
       setSelectedParticipantId(nextUnscoredParticipant.id);
-      return;
-    }
-
-    if (currentStation < shoot.totalStations) {
-      setSelectedParticipantId(participants[0]?.id ?? null);
-      router.replace(`/shoot/${shootId}/${currentStation + 1}`);
     }
   };
 
@@ -153,76 +153,83 @@ export function ShootPage({
   const canGoNext = currentStation < shoot.totalStations;
 
   return (
-    <div className="forest-page bg-background flex min-h-screen w-full max-w-full flex-col justify-between overflow-x-hidden">
-      <Header
-        title="In the Forest"
-        subtitle={"at " + shoot.clubData?.name}
-        showBackButton={false}
-        rightSlot={<OptionsDropdown shoot={shoot} />}
-      />
-      <ScrollArea
-        type="auto"
-        scrollbars="vertical"
-        className="min-w-0 flex-1 overflow-x-hidden"
-      >
-        <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col gap-2 overflow-x-hidden py-2">
-          <ParticipantSelector
-            currentStation={currentStation}
+    <Theme accentColor="green" grayColor="olive" radius="small" panelBackground="solid" style={scorebookTheme} className="flex min-h-dvh flex-col bg-background text-foreground">
+      <ScorebookHeader rightSlot={<OptionsDropdown shoot={shoot} />} />
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-5 pt-6 pb-28 sm:px-8 sm:pt-8">
+        <div>
+          <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <p>{shoot.clubData?.name}</p>
+            <p>{shoot.stationCompletionCounts[currentStation - 1] ?? 0}/{participantCount} scored</p>
+          </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h1 className={`${oswald.className} text-4xl font-normal leading-tight`}>Station {currentStation}</h1>
+            {selectedParticipant && (
+              <h2 className="min-w-0 break-words text-base font-semibold">
+                {selectedParticipant.getParticipantLabel()}
+                {selectedParticipant.isGuest && <span className="ml-2 text-sm font-normal text-muted-foreground">Guest</span>}
+              </h2>
+            )}
+          </div>
+        </div>
+        <ParticipantSelector
+          currentStation={currentStation}
+          disabled={isUpdatingScore}
+          onSelect={setSelectedParticipantId}
+          participants={participants || []}
+          selectedParticipantId={selectedParticipant?.id ?? null}
+        />
+
+        {scoreSaveError && (
+          <div
+            role="alert"
+            className="rounded-sm border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-800"
+          >
+            {scoreSaveError}
+          </div>
+        )}
+
+        <div>
+          <ScorePanel
+            currentScore={currentScore}
             disabled={isUpdatingScore}
-            onSelect={setSelectedParticipantId}
-            participants={participants || []}
-            selectedParticipantId={selectedParticipant?.id ?? null}
+            onClear={() => handleSetScore(null)}
+            onSetScore={handleSetScore}
+            selectedParticipantUser={selectedParticipant}
+            clubId={shoot?.clubId}
           />
+        </div>
 
-          {scoreSaveError && (
-            <div
-              role="alert"
-              className="mx-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-800"
-            >
-              {scoreSaveError}
-            </div>
-          )}
-
-          <div className="flex-1">
-            <ScorePanel
-              currentScore={currentScore}
-              disabled={isUpdatingScore}
-              onClear={() => handleSetScore(null)}
-              onSetScore={handleSetScore}
-              selectedParticipantUser={selectedParticipant}
-              clubId={shoot?.clubId}
+        {currentStation === shoot.totalStations && (
+          <div className="justify-center flex flex-col mx-4 my-2">
+            {shoot.remainingScoreCount > 0 && (
+              <p className="text-xs text-red-700 mb-2 text-center">
+                You have {shoot.remainingScoreCount} scores left to track. Are
+                you sure you want to finish the shoot?
+              </p>
+            )}
+            <ExitDialog
+              isShootFinished={true}
+              shoot={shoot}
+              triggerComponent={
+                <Button
+                  size="3"
+                  className="min-h-12! bg-primary! bg-none! text-white! shadow-none!"
+                  style={{ width: "100%" }}
+                  disabled={isUpdatingScore}
+                >
+                  <>
+                    <TreePine className="w-5 h-5 mr-1" />
+                    Finish shoot
+                  </>
+                </Button>
+              }
             />
           </div>
-
-          {currentStation === shoot.totalStations && (
-            <div className="justify-center flex flex-col mx-4 my-2">
-              {shoot.remainingScoreCount > 0 && (
-                <p className="text-xs text-red-700 mb-2 text-center">
-                  You have {shoot.remainingScoreCount} scores left to track. Are
-                  you sure you want to finish the shoot?
-                </p>
-              )}
-              <ExitDialog
-                isShootFinished={true}
-                shoot={shoot}
-                triggerComponent={
-                  <Button
-                    size="3"
-                    className="forest-primary-button"
-                    style={{ width: "100%" }}
-                    disabled={isUpdatingScore}
-                  >
-                    <>
-                      <TreePine className="w-5 h-5 mr-1" />
-                      Finish shoot
-                    </>
-                  </Button>
-                }
-              />
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+        )}
+        {isUpdatingScore && (
+          <p role="status" className="text-center text-sm text-muted-foreground">Saving score…</p>
+        )}
+      </main>
 
       <StationNavigationCard
         canGoNext={canGoNext}
@@ -234,6 +241,6 @@ export function ShootPage({
         stationCompletionCounts={shoot.stationCompletionCounts}
         totalStations={shoot.totalStations}
       />
-    </div>
+    </Theme>
   );
 }

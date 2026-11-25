@@ -1,13 +1,16 @@
 "use client";
 import { useDeleteShoot, useGetParticipatedShoots } from "@/hooks/queries";
 import { IShootChartData, IUser, Shoot } from "@/models";
-import { BarChart3, BowArrow, ChevronDown, NotebookPen } from "lucide-react";
+import { ArrowLeft, BarChart3, ChevronDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { DeleteShootDialog } from "./history/DeleteShootDialog";
 import { HistoryEmptyState } from "./history/HistoryEmptyState";
-import { Header } from "../shared/Header";
+import { ScorebookHeader } from "../shared/ScorebookHeader";
+import { scorebookStyles, scorebookTheme } from "../shared/scorebookTheme";
+import { Button, Theme } from "@radix-ui/themes";
+import { oswald } from "@/fonts/oswald";
 import { ShootHistoryCard } from "./history/ShootHistoryCard";
 import { ForestLoader } from "../shared/ForestLoader";
 
@@ -70,7 +73,8 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>("all");
   const [showTrends, setShowTrends] = useState(false);
   const [deleteShootId, setDeleteShootId] = useState<string | null>(null);
-  const { participatedShoots, trackedShoots, isLoading } =
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { participatedShoots, trackedShoots, isLoading, isError, refetch, isFetching } =
     useGetParticipatedShoots(currentUser.id); // Refetch participated shoots to get latest data after deletion
   const { mutateAsync, isPending: isDeletingShoot } = useDeleteShoot();
   const onBack = () => {
@@ -127,6 +131,7 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
   ];
 
   const handleOnDelete = (shootId: string) => {
+    setDeleteError(null);
     setDeleteShootId(shootId);
   };
 
@@ -137,133 +142,70 @@ export const HistoryPage = ({ currentUser, chartData }: HistoryPageProps) => {
     if (!shootToDelete?.isCreatedBy(currentUser.id)) return; // Extra safety check to ensure only creator can delete
     try {
       await mutateAsync(deleteShootId);
-    } catch (error) {
-      console.error("Error deleting shoot:", error);
-    } finally {
       setDeleteShootId(null);
+    } catch {
+      setDeleteError("The shoot could not be deleted. Please try again.");
     }
   };
 
   return (
-    <div
-      className="forest-page h-dvh overflow-y-auto bg-background"
-      style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
-    >
-      <Header
-        onBack={onBack}
-        title="Shoot History"
-        subtitle="Past rounds & scores"
-        showBackButton={true}
-      />
-      {isLoading ? (
-        <div className="flex min-h-64 items-center justify-center p-4">
-          <ForestLoader label="Loading your shoot history" size="lg" />
+    <Theme accentColor="green" grayColor="olive" radius="small" panelBackground="solid" style={scorebookTheme} className="min-h-dvh bg-background text-foreground">
+      <ScorebookHeader rightSlot={
+        <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm text-primary-foreground/85 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" /> Back
+        </button>
+      } />
+      <main className="mx-auto w-full max-w-2xl px-5 pt-8 pb-12 sm:px-8 sm:pt-12">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h1 className={`${oswald.className} text-4xl leading-tight font-normal`}>History</h1>
+          {historyFeed.length > 0 && (
+            <button type="button" aria-expanded={showTrends} aria-controls="history-trends" onClick={() => setShowTrends((value) => !value)} className="inline-flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground">
+              <BarChart3 aria-hidden="true" className="h-4 w-4" /> Trends
+              <ChevronDown aria-hidden="true" className={`h-4 w-4 ${showTrends ? "rotate-180" : ""}`} />
+            </button>
+          )}
         </div>
-      ) : (
-        <>
-          <main className="container max-w-2xl mx-auto px-4 py-3 pb-10">
-            {historyFeed.length === 0 ? (
-              <HistoryEmptyState
-                title="No Shoot History"
-                description="Your completed shoots will appear here"
-              />
-            ) : (
-              <>
-                <section className="mb-2">
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                    {filterOptions.map((option) => {
-                      const selected = option.value === historyFilter;
-
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          aria-pressed={selected}
-                          onClick={() => setHistoryFilter(option.value)}
-                          className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
-                            selected
-                              ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
-                              : "border-border bg-card/80 text-(--deep-forest-green)"
-                          }`}
-                        >
-                          {option.label}
-                          <span className="ml-1 text-xs opacity-80">
-                            {option.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-
-                    <button
-                      type="button"
-                      aria-expanded={showTrends}
-                      onClick={() => setShowTrends((value) => !value)}
-                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
-                        showTrends
-                          ? "border-(--deep-forest-green) bg-(--deep-forest-green) text-primary-foreground"
-                          : "border-border bg-card/80 text-(--deep-forest-green)"
-                      }`}
-                    >
-                      <BarChart3 className="h-4 w-4" />
-                      Trends
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          showTrends ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
-                  <div className="flex justify-end items-center text-muted-foreground text-xs gap-2 mt-2">
-                    <BowArrow className="w-4" /> (Participated) |{" "}
-                    <NotebookPen className="w-4" /> (Tracked)
-                  </div>
-                </section>
-
-                {showTrends && (
-                  <section className="mb-3">
-                    <ShootsLineChart data={chartData} />
-                  </section>
-                )}
-
-                <section className="space-y-2.5">
-                  {filteredFeed.length === 0 ? (
-                    <HistoryEmptyState
-                      compact
-                      title={getEmptyFilterTitle(historyFilter)}
-                      description={getEmptyFilterDescription(historyFilter)}
-                    />
-                  ) : (
-                    filteredFeed.map((item) => (
-                      <ShootHistoryCard
-                        key={item.shoot.id}
-                        currentUserId={currentUser.id}
-                        onDelete={handleOnDelete}
-                        onOpenSummary={(shootId) =>
-                          router.push(`/shoot/summary/${shootId}`)
-                        }
-                        relationLabel={getRelationshipLabel(item)}
-                        shoot={item.shoot}
-                        showUserScore={item.shotByCurrentUser}
-                      />
-                    ))
-                  )}
-                </section>
-              </>
-            )}
-          </main>
-        </>
-      )}
-
+        {isError && historyFeed.length > 0 && (
+          <div role="status" className="mb-5 border-l-2 border-input pl-3 text-sm text-muted-foreground">
+            <p>History couldn’t refresh. Showing saved results.</p>
+            <Button variant="ghost" disabled={isFetching} onClick={() => void refetch()} className="mt-1! min-h-11! px-0! font-semibold! text-foreground!">{isFetching ? "Trying again…" : "Try again"}</Button>
+          </div>
+        )}
+        {isLoading ? (
+          <div className="flex min-h-64 items-center justify-center"><ForestLoader label="Loading your shoot history" size="lg" /></div>
+        ) : isError && historyFeed.length === 0 ? (
+          <HistoryEmptyState title="Unable to load history" description="Check your connection and try again." action={<Button disabled={isFetching} className={scorebookStyles.primaryButton} onClick={() => void refetch()}>{isFetching ? "Trying again…" : "Try again"}</Button>} />
+        ) : historyFeed.length === 0 ? (
+          <HistoryEmptyState title="No shoot history yet" description="Your shoots will appear here once you start tracking." action={<Button className={scorebookStyles.primaryButton} onClick={() => router.push("/")}>New shoot</Button>} />
+        ) : (
+          <>
+            <div role="group" aria-label="Filter shoots" className="mb-4 grid grid-cols-3 gap-2">
+              {filterOptions.map((option) => (
+                <button key={option.value} type="button" aria-pressed={option.value === historyFilter} onClick={() => setHistoryFilter(option.value)} className={`min-h-11 rounded-sm border px-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${option.value === historyFilter ? "border-foreground bg-foreground font-semibold text-white" : "border-input bg-card hover:border-foreground"}`}>
+                  {option.label} <span className="ml-1 tabular-nums">{option.count}</span>
+                </button>
+              ))}
+            </div>
+            {showTrends && <section id="history-trends" aria-label="Your score trends" className="mb-6"><ShootsLineChart data={chartData} /></section>}
+            <section aria-label="Shoot history">
+              {filteredFeed.length === 0 ? (
+                <HistoryEmptyState compact title={getEmptyFilterTitle(historyFilter)} description={getEmptyFilterDescription(historyFilter)} />
+              ) : filteredFeed.map((item) => (
+                <ShootHistoryCard key={item.shoot.id} currentUserId={currentUser.id} onDelete={handleOnDelete} onOpenSummary={(shootId) => router.push(`/shoot/summary/${shootId}`)} relationLabel={getRelationshipLabel(item)} shoot={item.shoot} showUserScore={item.shotByCurrentUser} />
+              ))}
+            </section>
+          </>
+        )}
+      </main>
       <DeleteShootDialog
         isDeleting={isDeletingShoot}
         open={deleteShootId !== null}
+        error={deleteError}
         onConfirm={finaliseDeleteShoot}
         onOpenChange={() => {
-          if (!isDeletingShoot) {
-            setDeleteShootId(null);
-          }
+          if (!isDeletingShoot) setDeleteShootId(null);
         }}
       />
-    </div>
+    </Theme>
   );
 };

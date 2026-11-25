@@ -21,6 +21,14 @@ const participantData: IDenormalizedParticipant[] = [
     scoredCount: 1,
   },
 ];
+participantData.push({
+  ...participantData[0],
+  id: "participant-2",
+  user: { id: "user-2", name: "Bob" },
+  scores: [{ roundNumber: 1, score: 0 }],
+  totalScore: 40,
+});
+
 const participants = participantData.map(
   (participant) => new ShootParticipant(participant, "user-1"),
 );
@@ -29,38 +37,54 @@ const renderParticipantSelector = () =>
   render(
     <ShootProvider>
       <ShowScoresToggle />
-        <ParticipantSelector
-          currentStation={1}
-          onSelect={jest.fn()}
-          participants={participants}
+      <ParticipantSelector
+        currentStation={1}
+        onSelect={jest.fn()}
+        participants={participants}
         selectedParticipantId="participant-1"
       />
     </ShootProvider>,
   );
 
 describe("ParticipantSelector score visibility", () => {
-  it("shows participant totals by default", () => {
+  it("hides totals by default without hiding the station result", () => {
     renderParticipantSelector();
 
-    const participantButton = screen.getByRole("button", {
-      name: "Select Alice (you)",
-    });
-
-    expect(within(participantButton).getByText("24")).toBeInTheDocument();
-    expect(within(participantButton).getByText("8")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Show Scores" })).not.toBeChecked();
+    expect(screen.queryByText("Total")).not.toBeInTheDocument();
+    expect(screen.queryByText("24")).not.toBeInTheDocument();
+    expect(screen.queryByText("40")).not.toBeInTheDocument();
+    expect(screen.queryByText("-")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Select Alice (you)" })).getByText("8")).toBeInTheDocument();
   });
 
-  it("hides participant totals when score visibility is toggled off", () => {
+  it("contains no duplicate name heading or scored wording", () => {
     renderParticipantSelector();
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByText(/scored/i)).not.toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Select Bob" })).getByText("0")).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByText("Show Scores"));
+  it("reveals the total when enabled and removes it when disabled again", () => {
+    renderParticipantSelector();
+    const toggle = screen.getByRole("checkbox", { name: "Show Scores" });
 
-    const participantButton = screen.getByRole("button", {
-      name: "Select Alice (you)",
-    });
+    fireEvent.click(toggle);
+    expect(toggle).toBeChecked();
+    const aliceCard = within(screen.getByRole("button", { name: "Select Alice (you)" }));
+    const bobCard = within(screen.getByRole("button", { name: "Select Bob" }));
+    expect(aliceCard.getByText("Total")).toBeInTheDocument();
+    expect(aliceCard.getByText("24")).toBeInTheDocument();
+    expect(bobCard.getByText("Total")).toBeInTheDocument();
+    expect(bobCard.getByText("40")).toBeInTheDocument();
+    expect(bobCard.getByText("0")).toBeInTheDocument();
 
-    expect(within(participantButton).queryByText("24")).not.toBeInTheDocument();
-    expect(within(participantButton).getByText("8")).toBeInTheDocument();
-    expect(within(participantButton).getByText("-")).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+    expect(screen.queryByText("Total")).not.toBeInTheDocument();
+    expect(screen.queryByText("24")).not.toBeInTheDocument();
+    expect(screen.queryByText("40")).not.toBeInTheDocument();
+    expect(screen.queryByText("-")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("button", { name: "Select Alice (you)" })).getByText("8")).toBeInTheDocument();
   });
 });

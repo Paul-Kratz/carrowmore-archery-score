@@ -215,7 +215,7 @@ export function useDeleteShoot() {
 }
 
 export function useGetParticipatedShoots(currentUserId: string | null) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["participatedShoots"],
     queryFn: async () => {
       const response = await fetch("/api/shoot/participated");
@@ -226,8 +226,8 @@ export function useGetParticipatedShoots(currentUserId: string | null) {
     },
   });
 
-  if (isLoading) {
-    return { participatedShoots: [], trackedShoots: [], isLoading: true };
+  if (isLoading || !data) {
+    return { participatedShoots: [], trackedShoots: [], isLoading, isError, refetch, isFetching };
   }
 
   const shoots = (data as IShootDenormalized[]).map((shoot) =>
@@ -241,7 +241,7 @@ export function useGetParticipatedShoots(currentUserId: string | null) {
     currentUserId ? shoot.isCreatedBy(currentUserId) : false,
   );
 
-  return { participatedShoots, trackedShoots, isLoading: false };
+  return { participatedShoots, trackedShoots, isLoading: false, isError, refetch, isFetching };
 }
 
 export const useVerifyAccessCode = () => {
