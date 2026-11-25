@@ -2,6 +2,7 @@
 
 import { ShootParticipant } from "@/models";
 import { CLUBS } from "@/constants";
+import { Check } from "lucide-react";
 
 type ScorePanelProps = {
   currentScore: number | null;
@@ -12,25 +13,6 @@ type ScorePanelProps = {
   clubId: string;
 };
 
-const SCORE_ROW_PALETTE = [
-  { solid: "#2F5D43", tint: "#E4EFE7" },
-  { solid: "#8C8F57", tint: "#F0F1DD" },
-  { solid: "#A5402D", tint: "#F6E5DF" },
-  { solid: "#3D6F86", tint: "#E1EEF3" },
-  { solid: "#6F4F8C", tint: "#ECE5F2" },
-];
-
-export function getScoreButtonTheme(rowIndex: number, optionIndex: number) {
-  const palette = SCORE_ROW_PALETTE[rowIndex % SCORE_ROW_PALETTE.length];
-  const isPrimaryResult = optionIndex === 0;
-
-  return {
-    backgroundColor: isPrimaryResult ? palette.solid : palette.tint,
-    borderColor: palette.solid,
-    color: isPrimaryResult ? "#fff" : "var(--charcoal-green)",
-  };
-}
-
 export function ScorePanel({
   currentScore,
   disabled = false,
@@ -40,77 +22,60 @@ export function ScorePanel({
   clubId = "carrowmore",
 }: ScorePanelProps) {
   const clubData = CLUBS[clubId];
+  const resultClass = (selected: boolean) =>
+    `relative flex min-h-16 w-full min-w-0 items-center justify-center gap-2 rounded-sm border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50 ${
+      selected ? "border-foreground bg-foreground text-white" : "border-input bg-card hover:border-foreground"
+    }`;
 
   return (
-    <div className="max-w-full overflow-hidden p-2 pt-0">
-      <div className="sr-only">
-        Score for {selectedParticipantUser?.getParticipantLabel()}
-        {!!selectedParticipantUser?.guestName ? " guest" : ""}
-      </div>
-      <div className="max-w-full space-y-2">
-        {clubData.scoringRows.map((row, rowIndex) => (
-          <div
-            key={row.label}
-            className="rounded-lg border border-border bg-card p-2"
-          >
-            <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-(--deep-forest-green)">
-                {row.label}
-              </span>
-              {row.peg && (
-                <span className="text-muted-foreground">{row.peg}</span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {row.scores.map(({ score, result }, optionIndex) => {
-                return (
-                  <button
-                    key={score}
-                    disabled={disabled}
-                    onClick={() => onSetScore(score)}
-                    className={`min-h-16 min-w-0 w-full rounded-lg p-2 border-2 ${
-                      currentScore === score
-                        ? "ring-3 ring-offset-2 ring-black/80"
-                        : ""
-                    }`}
-                    style={getScoreButtonTheme(rowIndex, optionIndex)}
-                  >
-                    <div className="text-xs font-semibold uppercase opacity-90">
-                      {result}
-                    </div>
-                    <div className="text-3xl font-bold leading-none">
-                      {score}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+    <section aria-label={`Score for ${selectedParticipantUser?.getParticipantLabel() ?? "archer"}`} className="space-y-4">
+      {clubData.scoringRows.map((row) => (
+        <fieldset key={row.label} className="min-w-0">
+          <legend className="mb-2 w-full text-sm">
+            <span className="flex flex-wrap justify-between gap-x-2 gap-y-1">
+              <span className="font-semibold">{row.label}</span>
+              {row.peg && <span className="text-muted-foreground">{row.peg}</span>}
+            </span>
+          </legend>
+          <div className="grid grid-cols-2 gap-3">
+            {row.scores.map(({ score, result }) => (
+              <button
+                type="button"
+                key={score}
+                disabled={disabled}
+                onClick={() => onSetScore(score)}
+                aria-pressed={currentScore === score}
+                className={resultClass(currentScore === score)}
+              >
+                <span className="text-3xl font-semibold tabular-nums">{score}</span>
+                <span className="text-sm">{result}</span>
+                {currentScore === score && <Check aria-hidden="true" className="absolute right-1 top-1 h-3.5 w-3.5" />}
+              </button>
+            ))}
           </div>
-        ))}
-        {(() => {
-          return (
-            <button
-              disabled={disabled}
-              onClick={() => onSetScore(0)}
-              className={`min-h-14 min-w-0 w-full overflow-hidden rounded-lg p-2 transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 bg-[#2d211d] text-white border-2 border-[#2d211d] ${
-                currentScore === 0 ? "ring-3 ring-offset-2 ring-black/80" : ""
-              }`}
-            >
-              <span className="mr-2 text-sm font-semibold uppercase">Miss</span>
-              <span className="text-2xl font-bold leading-none">0</span>
-            </button>
-          );
-        })()}
-        {currentScore !== null && (
-          <button
-            disabled={disabled}
-            onClick={onClear}
-            className="min-h-10 min-w-0 w-full overflow-hidden rounded-lg border-2 border-dashed border-(--warm-brown) bg-card p-2 text-sm font-semibold text-(--charcoal-green) disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-    </div>
+        </fieldset>
+      ))}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onSetScore(0)}
+        aria-pressed={currentScore === 0}
+        className={resultClass(currentScore === 0)}
+      >
+        <span className="text-2xl font-semibold tabular-nums">0</span>
+        <span className="text-sm">Miss</span>
+        {currentScore === 0 && <Check aria-hidden="true" className="h-4 w-4" />}
+      </button>
+      {currentScore !== null && (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onClear}
+          className="min-h-11 w-full rounded-sm text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+        >
+          Clear score
+        </button>
+      )}
+    </section>
   );
 }

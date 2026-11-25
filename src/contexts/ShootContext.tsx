@@ -6,12 +6,12 @@ type ShootContextValue = {
   setShowScores: (value: boolean) => void;
 };
 const ShootContext = createContext<ShootContextValue>({
-  showScores: true,
+  showScores: false,
   setShowScores: () => {},
 });
 
 export const ShootProvider = ({ children }: { children: React.ReactNode }) => {
-  const [showScores, setShowScores] = useState(true);
+  const [showScores, setShowScores] = useState(false);
 
   return (
     <ShootContext value={{ showScores, setShowScores }}>

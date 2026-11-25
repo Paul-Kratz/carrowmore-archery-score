@@ -1,6 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { type IShootChartData } from "@/models";
 import { ShootsLineChart } from "./ShootsLineChart";
+import { Theme } from "@radix-ui/themes";
+
+beforeAll(() => {
+  HTMLElement.prototype.scrollIntoView = jest.fn();
+  global.ResizeObserver = jest.fn().mockImplementation(() => ({ observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() }));
+});
 
 jest.mock("@/constants", () => ({
   CLUBS: {
@@ -82,22 +88,20 @@ const chartData: IShootChartData[] = [
 
 describe("ShootsLineChart", () => {
   it("filters score and station charts by selected club", () => {
-    render(<ShootsLineChart data={chartData} />);
+    render(<Theme><ShootsLineChart data={chartData} /></Theme>);
 
-    expect(screen.getByRole("button", { name: "All clubs" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    expect(screen.getByRole("combobox", { name: "Clubs" })).toHaveTextContent("All clubs");
     expect(screen.getAllByTestId("line-chart")).toEqual([
       expect.objectContaining({ dataset: expect.objectContaining({ points: "2" }) }),
       expect.objectContaining({ dataset: expect.objectContaining({ points: "2" }) }),
     ]);
 
-    fireEvent.click(screen.getByRole("button", { name: "Carrowmore Archery" }));
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Clubs" }), { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "Carrowmore Archery" }));
 
     expect(
-      screen.getByRole("button", { name: "Carrowmore Archery" }),
-    ).toHaveAttribute("aria-pressed", "true");
+      screen.getByRole("combobox", { name: "Clubs" }),
+    ).toHaveTextContent("Carrowmore Archery");
     expect(screen.getAllByTestId("line-chart")).toEqual([
       expect.objectContaining({ dataset: expect.objectContaining({ points: "1" }) }),
       expect.objectContaining({ dataset: expect.objectContaining({ points: "1" }) }),
@@ -105,13 +109,14 @@ describe("ShootsLineChart", () => {
   });
 
   it("uses the selected club station count for station trend pills", () => {
-    render(<ShootsLineChart data={chartData} />);
+    render(<Theme><ShootsLineChart data={chartData} /></Theme>);
 
     expect(
       screen.getByRole("button", { name: "Show station 18 trend" }),
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Test Club" }));
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Clubs" }), { key: "ArrowDown" });
+    fireEvent.click(screen.getByRole("option", { name: "Test Club" }));
 
     expect(
       screen.getByRole("button", { name: "Show station 6 trend" }),

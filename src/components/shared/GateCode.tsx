@@ -1,20 +1,37 @@
 "use client";
-import { FormEvent, useState } from "react";
-import { Button, Card, Text, TextField } from "@radix-ui/themes";
-import { KeyRound, ShieldCheck, TreePine } from "lucide-react";
+
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
+import { Button, TextField, Theme } from "@radix-ui/themes";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import { useVerifyAccessCode } from "@/hooks/queries";
+import { oswald } from "@/fonts/oswald";
 import { ForestLoader } from "./ForestLoader";
+import { ScorebookHeader } from "./ScorebookHeader";
+import { scorebookStyles, scorebookTheme } from "./scorebookTheme";
 
 export const GateCode = () => {
   const [code, setCode] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { mutateAsync: verifyCode, isPending } = useVerifyAccessCode();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
+  const hintId = `${inputId}-hint`;
+  const errorId = `${inputId}-error`;
+  const canSubmit = Boolean(code.trim()) && !isPending;
 
-  const handleSetCode = async () => {
+  useEffect(() => {
+    if (errorMessage && !isPending) inputRef.current?.focus();
+  }, [errorMessage, isPending]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit) return;
+
     try {
       setErrorMessage(null);
-      await verifyCode({ accessCode: code });
-      // Cookie is set server-side by the API; full reload so proxy sees it
+      await verifyCode({ accessCode: code.trim() });
+      // Reload so the proxy sees the gate cookie set by the API.
       window.location.href = "/";
     } catch {
       setErrorMessage("Incorrect gate code. Please try again.");
@@ -22,93 +39,108 @@ export const GateCode = () => {
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    void handleSetCode();
-  };
-
   return (
-    <div className="forest-page bg-background min-h-screen">
-      <header className="bg-[var(--pine-green)] text-primary-foreground border-b-4 border-[var(--sage-green)] shadow-lg">
-        <div className="container max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-[var(--sage-green)] bg-[var(--deep-forest-green)]">
-                <TreePine className="w-6 h-6 text-[var(--sage-green)]" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">In the Forest</h1>
-                <p className="text-xs text-[#dbe8bf]">Carrowmore Archers</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="container mx-auto flex min-h-[calc(100vh-5rem)] max-w-2xl flex-col justify-center px-4 py-8">
-        <section className="mb-5 rounded-2xl border border-border bg-[linear-gradient(135deg,#fbf7e8,#dfe9cb)] p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--deep-forest-green)] text-primary-foreground">
-              <ShieldCheck className="h-6 w-6 text-[var(--sage-green)]" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-2xl font-bold leading-tight">
-                Welcome to In the Forest
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Carrowmore Archers
-              </p>
-            </div>
-          </div>
-        </section>
+    <Theme
+      accentColor="green"
+      grayColor="olive"
+      radius="small"
+      panelBackground="solid"
+      style={scorebookTheme}
+      className="flex min-h-dvh flex-col bg-background text-foreground"
+    >
+      <ScorebookHeader />
+      <main className="mx-auto flex w-full max-w-2xl flex-1 items-start justify-center px-5 pt-[max(2rem,8dvh)] pb-10 sm:px-8">
+        <div className="w-full max-w-sm">
+          <Image
+            src="/icons/icon-512.png"
+            alt="In the Forest logo"
+            width={128}
+            height={128}
+            priority
+            className="mx-auto mb-4 h-28 w-28 sm:h-32 sm:w-32"
+          />
+          <h1
+            className={`${oswald.className} text-4xl leading-tight font-normal text-center`}
+          >
+            Come on in
+          </h1>
+          <p
+            id={hintId}
+            className="mt-3 text-base leading-relaxed text-muted-foreground text-center"
+          >
+            Enter the gate code to begin tracking.
+          </p>
 
-        <Card className="overflow-hidden p-0">
-          <div className="border-b border-border bg-[#dfe9cb] px-4 py-3">
-            <div className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-[var(--deep-forest-green)]" />
-              <p className="font-bold">Please enter the gate code</p>
-            </div>
-          </div>
-
-          <form className="space-y-4 p-4" onSubmit={handleSubmit}>
-            <TextField.Root
-              aria-label="Gate code"
-              type="number"
-              placeholder="Gate Code"
-              value={code}
-              disabled={isPending}
-              onChange={(e) => {
-                setCode(e.target.value);
-                if (errorMessage) {
-                  setErrorMessage(null);
+          <form
+            aria-label="Gate access"
+            className="mt-6 space-y-4"
+            onSubmit={handleSubmit}
+          >
+            <div>
+              <label
+                htmlFor={inputId}
+                className="mb-2 block text-sm font-semibold"
+              >
+                Gate code
+              </label>
+              <TextField.Root
+                ref={inputRef}
+                id={inputId}
+                type="text"
+                inputMode="numeric"
+                enterKeyHint="go"
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+                value={code}
+                disabled={isPending}
+                aria-invalid={Boolean(errorMessage)}
+                aria-describedby={
+                  errorMessage ? `${hintId} ${errorId}` : hintId
                 }
-              }}
-              maxLength={4}
-              size="3"
-            />
-            {errorMessage && (
-              <Text color="red" size="2" role="alert">
-                {errorMessage}
-              </Text>
-            )}
+                onChange={(event) => {
+                  setCode(event.target.value);
+                  if (errorMessage) setErrorMessage(null);
+                }}
+                size="3"
+                maxLength={4}
+                className={`${scorebookStyles.field} h-14! text-left! text-2xl! tracking-widest! tabular-nums [&_input]:text-left`}
+              />
+              {errorMessage && (
+                <p
+                  id={errorId}
+                  role="alert"
+                  className="mt-2 text-sm leading-relaxed text-red-800"
+                >
+                  {errorMessage}
+                </p>
+              )}
+            </div>
             <Button
               size="4"
-              className="forest-primary-button"
-              style={{ width: "100%" }}
               type="submit"
-              disabled={isPending}
+              disabled={!canSubmit}
+              className={`${scorebookStyles.primaryButton} min-h-12! w-full!`}
             >
               {isPending ? (
-                <ForestLoader label="Checking gate code" size="sm" tone="light" />
+                <>
+                  <ForestLoader
+                    label="Checking gate code"
+                    size="sm"
+                    tone="light"
+                  />
+                  <span aria-hidden="true">Checking…</span>
+                </>
               ) : (
                 <>
-                  <TreePine className="h-5 w-5 mr-1" />
-                  Enter
+                  Enter <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </>
               )}
             </Button>
           </form>
-        </Card>
+        </div>
       </main>
-    </div>
+    </Theme>
   );
 };

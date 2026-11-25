@@ -7,23 +7,31 @@ import { useState } from "react";
 import Cookies from "js-cookie";
 import { ACTIVE_SHOOT_COOKIE, CLUBS } from "@/constants";
 import { ForestLoader } from "@/components/shared/ForestLoader";
-import { Clock, MapPin, NotebookPen, TreePine, X } from "lucide-react";
+import { X } from "lucide-react";
+import { scorebookStyles, scorebookTheme } from "@/components/shared/scorebookTheme";
 
 type ExitDialogProps = {
   isShootFinished?: boolean;
   shoot: Shoot;
-  triggerComponent: React.ReactNode;
+  triggerComponent?: React.ReactNode;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onCloseAutoFocus?: () => void;
 };
 
 export const ExitDialog = ({
   isShootFinished = false,
   shoot,
   triggerComponent,
+  defaultOpen = false,
+  onOpenChange,
+  onCloseAutoFocus,
 }: ExitDialogProps) => {
-  const [notes, setNotes] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [openedAt, setOpenedAt] = useState<Date | null>(null);
+  const [notes, setNotes] = useState(shoot.notes ?? "");
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [openedAt, setOpenedAt] = useState<Date | null>(() => defaultOpen ? new Date() : null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const { mutateAsync } = useUpdateShoot();
   const router = useRouter();
 
@@ -48,16 +56,19 @@ export const ExitDialog = ({
   const saveShoot = async () => {
     try {
       setIsSaving(true);
+      setSaveError(null);
       await mutateAsync({
         shootId: shoot.id,
         notes,
         completed: isShootFinished,
       });
-      Cookies.remove(ACTIVE_SHOOT_COOKIE);
+      if (isShootFinished) Cookies.remove(ACTIVE_SHOOT_COOKIE);
+      else Cookies.set(ACTIVE_SHOOT_COOKIE, shoot.id);
       setIsOpen(false);
+      onOpenChange?.(false);
       router.push("/");
-    } catch (error) {
-      console.error("Error saving shoot:", error);
+    } catch {
+      setSaveError("The shoot could not be saved. Check your connection and try again.");
     } finally {
       setIsSaving(false);
     }
@@ -71,99 +82,35 @@ export const ExitDialog = ({
             setOpenedAt(new Date());
           }
           setIsOpen(open);
+          onOpenChange?.(open);
         }
       }}
     >
-      <Dialog.Trigger>{triggerComponent}</Dialog.Trigger>
-      <Dialog.Content
-        className="overflow-hidden"
-        style={{ padding: 0 }}
-        maxWidth="420px"
-      >
-        <div className="border-b border-border bg-[linear-gradient(135deg,var(--deep-forest-green),var(--pine-green))] px-4 py-4 text-primary-foreground">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-(--sage-green)/70 bg-[rgba(18,52,38,0.45)]">
-                <TreePine className="h-6 w-6 text-(--sage-green)" />
-              </div>
-              <div>
-                <Dialog.Title className="text-xl font-bold leading-tight">
-                  {dialogTitle}
-                </Dialog.Title>
-                <Dialog.Description className="text-sm text-[#dfe9cb]">
-                  {isShootFinished ? "Close out this round" : "Save progress"}
-                </Dialog.Description>
-              </div>
-            </div>
-            <Dialog.Close>
-              <Button
-                aria-label="Close"
-                className="h-9 w-9 p-0 text-primary-foreground"
-                disabled={isSaving}
-                size="2"
-                variant="ghost"
-              >
-                <X className="h-9 w-9" />
-              </Button>
-            </Dialog.Close>
-          </div>
+      {triggerComponent && <Dialog.Trigger>{triggerComponent}</Dialog.Trigger>}
+      <Dialog.Content style={scorebookTheme} className={scorebookStyles.dialog} maxWidth="420px" onCloseAutoFocus={onCloseAutoFocus ? (event) => { event.preventDefault(); onCloseAutoFocus(); } : undefined}>
+        <div className={scorebookStyles.dialogHeader}>
+          <Dialog.Title className={scorebookStyles.dialogTitle}>{dialogTitle}</Dialog.Title>
+          <Dialog.Close>
+            <Button aria-label="Close" disabled={isSaving} variant="ghost" className={scorebookStyles.closeButton}><X aria-hidden="true" className="h-5 w-5" /></Button>
+          </Dialog.Close>
         </div>
-
-        <div className="space-y-4 bg-card p-4">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-border bg-[#edf4e9] px-3 py-2">
-              <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" />
-                Duration
-              </div>
-              <div className="text-base font-bold text-(--deep-forest-green)">
-                {shootLength}
-              </div>
-            </div>
-            <div className="rounded-lg border border-border bg-[#edf4e9] px-3 py-2">
-              <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                Club
-              </div>
-              <div className="text-base font-bold text-(--deep-forest-green)">
-                {clubName}
-              </div>
-            </div>
-          </div>
-
-          <label className="block">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-(--deep-forest-green)">
-              <NotebookPen className="h-4 w-4" />
-              Notes
-            </div>
-            <TextArea
-              size="3"
-              value={notes}
-              disabled={isSaving}
-              placeholder="Add anything worth remembering"
-              className="min-h-28"
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </label>
-
-          <div className="grid grid-cols-[1fr] gap-3 pt-1">
-            <Button
-              onClick={saveShoot}
-              size="3"
-              disabled={isSaving}
-              className="forest-primary-button"
-              style={{ width: "100%" }}
-            >
-              {isSaving ? (
-                <ForestLoader label="Saving shoot" size="sm" tone="light" />
-              ) : (
-                <>
-                  <TreePine className="w-5 h-5 mr-1" />
-                  {actionLabel}
-                </>
-              )}
-            </Button>
-          </div>
+        <Dialog.Description className={scorebookStyles.description}>
+          {isShootFinished ? "Save your notes and finish this shoot." : "Save your notes and leave scoring. You can return to this shoot later."}
+        </Dialog.Description>
+        <dl className="my-5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 border-y border-border py-3 text-sm">
+          <dt className="text-muted-foreground">Club</dt><dd className="text-right">{clubName}</dd>
+          <dt className="text-muted-foreground">Duration</dt><dd className="text-right tabular-nums">{shootLength}</dd>
+        </dl>
+        <label className="block">
+          <span className="mb-2 block text-sm font-semibold">Notes <span className="font-normal text-muted-foreground">(optional)</span></span>
+          <TextArea size="3" value={notes} disabled={isSaving} placeholder="Anything worth remembering?" className={`${scorebookStyles.field} min-h-24!`} onChange={(event) => setNotes(event.target.value)} />
+        </label>
+        {saveError && <p role="alert" className="mt-4 text-sm text-red-800">{saveError}</p>}
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <Dialog.Close><Button variant="surface" disabled={isSaving} className={scorebookStyles.secondaryButton}>Cancel</Button></Dialog.Close>
+          <Button onClick={saveShoot} disabled={isSaving} className={scorebookStyles.primaryButton}>
+            {isSaving ? <ForestLoader label="Saving shoot" size="sm" tone="light" /> : actionLabel}
+          </Button>
         </div>
       </Dialog.Content>
     </Dialog.Root>

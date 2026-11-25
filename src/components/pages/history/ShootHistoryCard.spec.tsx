@@ -1,52 +1,42 @@
-import { render, screen } from "@testing-library/react";
-import { Shoot, type IShootDenormalized } from "@/models";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { Theme } from "@radix-ui/themes";
+import { Shoot } from "@/models";
+import { createTestShootData } from "@/testFixtures/shoot";
 import { ShootHistoryCard } from "./ShootHistoryCard";
-import type { Types } from "mongoose";
 
-const asObjectId = (value: string) => value as unknown as Types.ObjectId;
+const onDelete = jest.fn();
+const onOpenSummary = jest.fn();
+const props = { currentUserId: "user-1", onDelete, onOpenSummary };
+beforeAll(() => {
+  HTMLElement.prototype.scrollIntoView = jest.fn();
+  global.ResizeObserver = jest.fn().mockImplementation(() => ({ observe: jest.fn(), unobserve: jest.fn(), disconnect: jest.fn() }));
+});
+beforeEach(() => jest.clearAllMocks());
 
-const shoot: IShootDenormalized = {
-  id: "shoot-1",
-  schemaVersion: 1,
-  clubId: "carrowmore",
-  createdBy: asObjectId("user-1"),
-  createdAt: new Date("2026-01-01T10:00:00.000Z"),
-  updatedAt: new Date("2026-01-01T10:00:00.000Z"),
-  firstScoredAt: new Date("2026-01-01T10:00:00.000Z"),
-  completedAt: null,
-  completed: false,
-  notes: null,
-  participantCount: 1,
-  scoredCount: 1,
-  totalStations: 2,
-  totalScoreSlots: 2,
-  participants: [
-    {
-      id: "participant-1",
-      user: { id: "user-1", name: "Alice" },
-      joinedAt: new Date("2026-01-01T10:00:00.000Z"),
-      pegColor: "red",
-      scores: [
-        { roundNumber: 1, score: 20, scoredAt: new Date("2026-01-01") },
-        { roundNumber: 2, score: null, scoredAt: null },
-      ],
-      totalScore: 20,
-      scoredCount: 1,
-    },
-  ],
-};
+it("shows club, score and progress without empty note or decorative metadata", () => {
+  render(<Theme><ShootHistoryCard {...props} shoot={Shoot.from(createTestShootData(), "user-1")} showUserScore relationLabel="Shot & tracked" /></Theme>);
+  expect(screen.getByText("Carrowmore Archery")).toBeInTheDocument();
+  expect(screen.getByText("Your score")).toBeInTheDocument();
+  expect(screen.getByText("20")).toBeInTheDocument();
+  expect(screen.getByText("1/2 stations")).toBeInTheDocument();
+  expect(screen.getByText("Shot & tracked")).toBeInTheDocument();
+  expect(screen.queryByText("No notes")).not.toBeInTheDocument();
+});
 
-describe("ShootHistoryCard", () => {
-  it("renders the shoot club name", () => {
-    render(
-      <ShootHistoryCard
-        currentUserId="user-1"
-        onDelete={jest.fn()}
-        onOpenSummary={jest.fn()}
-        shoot={Shoot.from(shoot, "user-1")}
-      />,
-    );
+it("keeps opening a summary separate from requesting deletion", () => {
+  render(<Theme><ShootHistoryCard {...props} shoot={Shoot.from(createTestShootData(), "user-1")} /></Theme>);
+  fireEvent.click(screen.getByRole("button", { name: /^Open shoot/ }));
+  expect(onOpenSummary).toHaveBeenCalledWith("shoot-1");
+  expect(onDelete).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: /^Delete shoot/ }));
+  expect(onDelete).toHaveBeenCalledWith("shoot-1");
+  expect(onOpenSummary).toHaveBeenCalledTimes(1);
+});
 
-    expect(screen.getByText("Carrowmore Archery")).toBeInTheDocument();
-  });
+it("retains notes and hides deletion from someone who did not create the shoot", () => {
+  render(<Theme><ShootHistoryCard {...props} currentUserId="user-2" shoot={Shoot.from(createTestShootData({ notes: "Windy at the last station", completed: true }), "user-2")} /></Theme>);
+  expect(screen.queryByRole("button", { name: /^Delete shoot/ })).not.toBeInTheDocument();
+  expect(screen.getByText("Top score")).toBeInTheDocument();
+  expect(screen.getByText("Windy at the last station")).toBeInTheDocument();
+  expect(screen.getByText("1/2 stations")).toBeInTheDocument();
 });

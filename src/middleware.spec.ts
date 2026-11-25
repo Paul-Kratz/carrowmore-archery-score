@@ -63,6 +63,8 @@ describe("Proxy", () => {
       "/",
       "/setup",
       "/history",
+      "/login",
+      "/login/check-email",
       "/shoot/shoot-1/1",
       "/gate",
       "/icons-private",
@@ -106,6 +108,13 @@ describe("Proxy", () => {
   });
 
   describe("gate code check", () => {
+    it.each(["/login", "/login/check-email"])("still requires the gate cookie for %s", async (path) => {
+      const response = await proxy(createRequest(`http://localhost:3000${path}`));
+      expect(response.status).toBe(307);
+      expect(new URL(response.headers.get("location")!).pathname).toBe("/gate");
+      expect(mockAuth).not.toHaveBeenCalled();
+    });
+
     it("should redirect to /gate when no gate code cookie is present", async () => {
       const req = createRequest("http://localhost:3000/setup");
 

@@ -1,12 +1,17 @@
 "use client";
 
 import { ForestLoader } from "@/components/shared/ForestLoader";
+import {
+  scorebookStyles,
+  scorebookTheme,
+} from "@/components/shared/scorebookTheme";
 import { AlertDialog, Button } from "@radix-ui/themes";
-import { AlertTriangle, Trash2, TreePine, X } from "lucide-react";
+import { useRef } from "react";
 
 type DeleteShootDialogProps = {
   isDeleting?: boolean;
   open: boolean;
+  error?: string | null;
   onConfirm: () => Promise<void> | void;
   onOpenChange: () => void;
 };
@@ -14,90 +19,67 @@ type DeleteShootDialogProps = {
 export function DeleteShootDialog({
   isDeleting = false,
   open,
+  error,
   onConfirm,
   onOpenChange,
 }: DeleteShootDialogProps) {
-  if (!open) {
-    return null;
-  }
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  if (!open) return null;
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Content
-        className="overflow-hidden"
-        style={{ padding: 0 }}
+        style={scorebookTheme}
+        className={scorebookStyles.dialog}
         maxWidth="420px"
+        onOpenAutoFocus={() => {
+          returnFocusRef.current = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          if (returnFocusRef.current?.isConnected) {
+            event.preventDefault();
+            returnFocusRef.current.focus();
+          }
+        }}
       >
-        <div className="border-b border-border bg-[linear-gradient(135deg,var(--deep-forest-green),var(--pine-green))] px-4 py-4 text-primary-foreground">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-(--sage-green)/70 bg-[rgba(18,52,38,0.45)]">
-                <AlertTriangle className="h-6 w-6 text-(--sage-green)" />
-              </div>
-              <div>
-                <AlertDialog.Title className="text-xl font-bold leading-tight">
-                  Delete shoot
-                </AlertDialog.Title>
-                <AlertDialog.Description className="text-sm text-[#dfe9cb]">
-                  Remove this round permanently
-                </AlertDialog.Description>
-              </div>
-            </div>
-
-            <AlertDialog.Cancel>
-              <Button
-                aria-label="Close"
-                className="h-9 w-9 p-0 text-primary-foreground"
-                disabled={isDeleting}
-                size="2"
-                variant="ghost"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </AlertDialog.Cancel>
-          </div>
+        <div className={scorebookStyles.dialogHeader}>
+          <AlertDialog.Title className={scorebookStyles.dialogTitle}>
+            Delete shoot?
+          </AlertDialog.Title>
         </div>
-
-        <div className="space-y-4 bg-card p-4">
-          <div className="rounded-lg border border-border bg-[#edf4e9] p-3">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-(--deep-forest-green)">
-              <Trash2 className="h-4 w-4" />
-              This cannot be undone
-            </div>
-            <p className="text-sm leading-6 text-muted-foreground">
-              This will permanently delete the shoot, all participant scores, and
-              any notes saved with the round.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <AlertDialog.Cancel>
-              <Button
-                variant="surface"
-                disabled={isDeleting}
-                style={{ width: "100%" }}
-              >
-                Cancel
-              </Button>
-            </AlertDialog.Cancel>
-
+        <AlertDialog.Description className={scorebookStyles.description}>
+          This will permanently delete the shoot, all participant scores and its
+          notes. This cannot be undone.
+        </AlertDialog.Description>
+        {error && (
+          <p role="alert" className="mt-4 text-sm text-red-800">
+            {error}
+          </p>
+        )}
+        <div className="mt-6 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+          <AlertDialog.Cancel>
             <Button
-              variant="solid"
-              color="red"
-              onClick={onConfirm}
               disabled={isDeleting}
-              style={{ width: "100%" }}
+              variant="surface"
+              className={scorebookStyles.secondaryButton}
             >
-              {isDeleting ? (
-                <ForestLoader label="Deleting shoot" size="sm" tone="light" />
-              ) : (
-                <>
-                  <TreePine className="h-4 w-4" />
-                  Delete
-                </>
-              )}
+              Cancel
             </Button>
-          </div>
+          </AlertDialog.Cancel>
+          <Button
+            disabled={isDeleting}
+            onClick={onConfirm}
+            color="red"
+            className={scorebookStyles.dangerButton}
+          >
+            {isDeleting ? (
+              <ForestLoader label="Deleting shoot" size="sm" tone="light" />
+            ) : (
+              "Delete shoot"
+            )}
+          </Button>
         </div>
       </AlertDialog.Content>
     </AlertDialog.Root>

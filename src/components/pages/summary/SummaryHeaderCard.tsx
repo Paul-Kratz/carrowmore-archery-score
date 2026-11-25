@@ -1,114 +1,28 @@
-"use client";
-
-import { getPegColorHex, getPegColorLabel } from "@/constants";
-import { getParticipantPegColorSummary } from "@/helpers/pegColors";
 import { Shoot } from "@/models";
-import {
-  Calendar,
-  MapPin,
-  Notebook,
-  Target,
-  Trophy,
-  Users,
-} from "lucide-react";
-import { formatSummaryDate } from "./summaryUtils";
+import { formatHistoryDate } from "../history/historyUtils";
 
-type SummaryHeaderCardProps = {
+export function SummaryHeaderCard({ currentUserId, shootInfo }: {
   currentUserId: string;
   shootInfo: Shoot;
-};
-
-export function SummaryHeaderCard({
-  currentUserId,
-  shootInfo,
-}: SummaryHeaderCardProps) {
-  const createdAtTimestamp = shootInfo.createdAt.getTime();
-  const clubName = shootInfo.clubData?.name ?? shootInfo.clubId;
-  const { pegColors } = getParticipantPegColorSummary(shootInfo.participants);
-  const pegLabel =
-    pegColors.length === 1
-      ? `${getPegColorLabel(pegColors[0])} peg`
-      : `${pegColors.length} pegs`;
+}) {
+  const status = shootInfo.completed
+    ? "Complete"
+    : shootInfo.remainingScoreCount === 0 && shootInfo.participants.length > 0
+      ? "All scored"
+      : "In progress";
 
   return (
-    <section className="bg-card/95 overflow-hidden rounded-xl border border-border p-4 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            <Target className="h-3.5 w-3.5" />
-            Shoot summary
-          </div>
-          <h2 className="text-2xl font-bold leading-tight text-(--deep-forest-green)">
-            {formatSummaryDate(createdAtTimestamp, false)}
-          </h2>
+    <div className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground">
+      <p className="font-semibold text-foreground">{shootInfo.clubData?.name ?? shootInfo.clubId}</p>
+      <p>{formatHistoryDate(shootInfo.createdAt.getTime())}</p>
+      <p>{status} · {shootInfo.totalStations} stations · {shootInfo.participants.length} {shootInfo.participants.length === 1 ? "archer" : "archers"}</p>
+      {shootInfo.isCreatedBy(currentUserId) && <p>Tracked by you</p>}
+      {shootInfo.notes?.trim() && (
+        <div className="mt-4 border-l-2 border-border pl-3">
+          <p className="font-semibold text-foreground">Notes</p>
+          <p className="whitespace-pre-wrap wrap-anywhere">{shootInfo.notes}</p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-1 text-xs font-bold uppercase text-(--deep-forest-green)">
-          {pegColors.slice(0, 3).map((pegColor) => (
-            <span
-              key={pegColor}
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: getPegColorHex(pegColor) }}
-            />
-          ))}
-          {pegLabel}
-        </span>
-      </div>
-
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-            Archers
-          </div>
-          <div className="text-xl font-bold text-(--deep-forest-green)">
-            {shootInfo.participants.length}
-          </div>
-        </div>
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-            Top Score
-          </div>
-          <div className="text-xl font-bold text-(--deep-forest-green)">
-            {shootInfo.topScore}
-          </div>
-        </div>
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-            Scored
-          </div>
-          <div className="text-xl font-bold text-(--deep-forest-green)">
-            {shootInfo.completionPercent}%
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-2 border-t border-border/70 pt-3 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          <span className="rounded-full border border-(--olive-green)/50 bg-[#eef4d7] px-2.5 py-1 text-xs font-bold text-(--deep-forest-green)">
-            {clubName}
-          </span>
-        </div>
-        <div className="flex items-start gap-2">
-          <Notebook className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{shootInfo.notes ? shootInfo.notes : "No notes"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          <span>
-            {shootInfo.participants.length} participant
-            {shootInfo.participants.length !== 1 ? "s" : ""}
-            {shootInfo.isCreatedBy(currentUserId) && " (tracked by you)"}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          <span>{formatSummaryDate(createdAtTimestamp, true)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Trophy className="h-4 w-4" />
-          <span>Best score {shootInfo.topScore}</span>
-        </div>
-      </div>
-    </section>
+      )}
+    </div>
   );
 }

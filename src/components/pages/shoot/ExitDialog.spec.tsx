@@ -1,126 +1,64 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import Cookies from "js-cookie";
-import { Shoot, type IShootDenormalized } from "@/models";
+import { Theme } from "@radix-ui/themes";
+import { Shoot } from "@/models";
+import { createTestShootData } from "@/testFixtures/shoot";
 import { ExitDialog } from "./ExitDialog";
 
 const mockMutateAsync = jest.fn();
 const mockPush = jest.fn();
+jest.mock("@/hooks/queries", () => ({ useUpdateShoot: () => ({ mutateAsync: mockMutateAsync }) }));
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock("js-cookie", () => ({ remove: jest.fn(), set: jest.fn() }));
 
-jest.mock("@/hooks/queries", () => ({
-  useUpdateShoot: () => ({
-    mutateAsync: mockMutateAsync,
-  }),
-}));
-
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
-}));
-
-jest.mock("js-cookie", () => ({
-  remove: jest.fn(),
-}));
-
-jest.mock("@radix-ui/themes", () => ({
-  Button: ({
-    children,
-    ...props
-  }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button type="button" {...props}>
-      {children}
-    </button>
-  ),
-  Dialog: {
-    Root: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    Trigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    Content: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
-    ),
-    Title: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-    Description: ({ children }: { children: React.ReactNode }) => (
-      <p>{children}</p>
-    ),
-    Close: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  },
-  TextArea: (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-    <textarea {...props} />
-  ),
-}));
-
-const shootData: IShootDenormalized = {
-  id: "shoot-123",
-  schemaVersion: 1,
-  createdAt: new Date("2026-01-01T10:00:00.000Z"),
-  updatedAt: new Date("2026-01-01T10:00:00.000Z"),
-  createdBy: "user-1",
-  clubId: "carrowmore",
-  totalStations: 18,
-  completed: false,
-  firstScoredAt: null,
-  completedAt: null,
-  notes: null,
-  participantCount: 0,
-  scoredCount: 0,
-  totalScoreSlots: 0,
-  participants: [],
+const renderExitDialog = (notes: string | null = null, finished = false) => {
+  render(<Theme><ExitDialog shoot={Shoot.from(createTestShootData({ notes }), "user-1")} isShootFinished={finished} triggerComponent={<button>Open dialog</button>} /></Theme>);
+  fireEvent.click(screen.getByRole("button", { name: "Open dialog" }));
 };
-const shoot = Shoot.from(shootData, "user-1");
+beforeEach(() => { jest.clearAllMocks(); mockMutateAsync.mockResolvedValue(undefined); });
 
-const renderExitDialog = () =>
-  render(
-    <ExitDialog
-      shoot={shoot}
-      triggerComponent={<button type="button">Leave shoot</button>}
-    />,
-  );
+it("allows cancelling without saving or clearing the active shoot cookie", () => {
+  renderExitDialog();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(mockMutateAsync).not.toHaveBeenCalled(); expect(Cookies.remove).not.toHaveBeenCalled();
+  expect(Cookies.set).not.toHaveBeenCalled();
+});
 
-describe("ExitDialog active shoot cookie", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockMutateAsync.mockResolvedValue(undefined);
-  });
-
-  it("does not clear the active shoot cookie when the dialog opens or closes", () => {
-    renderExitDialog();
-
-    fireEvent.click(screen.getByRole("button", { name: "Leave shoot" }));
-    fireEvent.click(screen.getByLabelText("Close"));
-
+it.each([false, true])("preserves notes and updates resume state only after saving, finished=%s", async (finished) => {
+  renderExitDialog("Existing notes", finished);
+  expect(screen.getByRole("textbox", { name: /Notes/ })).toHaveValue("Existing notes");
+  fireEvent.click(screen.getByRole("button", { name: finished ? "Save & Finish" : "Save & Exit" }));
+  await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+  if (finished) {
+    expect(Cookies.remove).toHaveBeenCalledWith("active_shoot");
+    expect(Cookies.set).not.toHaveBeenCalled();
+  } else {
+    expect(Cookies.set).toHaveBeenCalledWith("active_shoot", "shoot-1");
     expect(Cookies.remove).not.toHaveBeenCalled();
-    expect(mockPush).not.toHaveBeenCalled();
-  });
+  }
+  expect(mockMutateAsync).toHaveBeenCalledWith({ shootId: "shoot-1", notes: "Existing notes", completed: finished });
+  expect(mockPush).toHaveBeenCalledWith("/");
+});
 
-  it("clears the active shoot cookie after the exit action saves successfully", async () => {
-    renderExitDialog();
+it("retains the dialog and edited notes after failure, without clearing the cookie", async () => {
+  mockMutateAsync.mockRejectedValue(new Error("Save failed")); renderExitDialog();
+  fireEvent.change(screen.getByRole("textbox", { name: /Notes/ }), { target: { value: "A wet afternoon" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save & Exit" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("could not be saved");
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: /Notes/ })).toHaveValue("A wet afternoon");
+  expect(Cookies.remove).not.toHaveBeenCalled(); expect(mockPush).not.toHaveBeenCalled();
+  expect(Cookies.set).not.toHaveBeenCalled();
+});
 
-    fireEvent.click(screen.getByText("Save & Exit"));
-
-    await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalledWith({
-        shootId: "shoot-123",
-        notes: "",
-        completed: false,
-      });
-      expect(Cookies.remove).toHaveBeenCalledWith("active_shoot");
-      expect(mockPush).toHaveBeenCalledWith("/");
-    });
-  });
-
-  it("keeps the active shoot cookie when saving the exit fails", async () => {
-    const consoleError = jest.spyOn(console, "error").mockImplementation();
-    mockMutateAsync.mockRejectedValue(new Error("Save failed"));
-
-    renderExitDialog();
-    fireEvent.click(screen.getByText("Save & Exit"));
-
-    await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalled();
-    });
-
-    expect(Cookies.remove).not.toHaveBeenCalled();
-    expect(mockPush).not.toHaveBeenCalled();
-
-    consoleError.mockRestore();
-  });
+it("prevents closing or resubmitting while saving", () => {
+  mockMutateAsync.mockReturnValue(new Promise(() => {})); renderExitDialog();
+  fireEvent.click(screen.getByRole("button", { name: "Save & Exit" }));
+  const dialog = screen.getByRole("dialog");
+  for (const button of within(dialog).getAllByRole("button")) expect(button).toBeDisabled();
+  expect(screen.getByRole("textbox")).toBeDisabled();
+  fireEvent.keyDown(dialog, { key: "Escape" });
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(mockMutateAsync).toHaveBeenCalledTimes(1);
 });

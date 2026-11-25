@@ -1,144 +1,86 @@
-const mockVerifyCode = jest.fn();
-const mockUseVerifyAccessCode = jest.fn();
-
-jest.mock("@/hooks/queries", () => ({
-  useVerifyAccessCode: () => mockUseVerifyAccessCode(),
-}));
-
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { GateCode } from "./GateCode";
 
-describe("GateCode", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockUseVerifyAccessCode.mockReturnValue({
-      mutateAsync: mockVerifyCode,
-      isPending: false,
-    });
-  });
+const mockVerifyCode = jest.fn();
+let mockPending = false;
 
-  describe("Rendering", () => {
-    it("should render the header with title", () => {
-      render(<GateCode />);
-      expect(screen.getByText("In the Forest")).toBeInTheDocument();
-    });
+jest.mock("@/fonts/oswald", () => ({ oswald: { className: "oswald" } }));
+jest.mock("@/hooks/queries", () => ({
+  useVerifyAccessCode: () => ({ mutateAsync: mockVerifyCode, isPending: mockPending }),
+}));
 
-    it("should render the welcome heading", () => {
-      render(<GateCode />);
-      expect(screen.getByText("Welcome to In the Forest")).toBeInTheDocument();
-    });
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockPending = false;
+  mockVerifyCode.mockReset();
+  mockVerifyCode.mockRejectedValue(new Error("Invalid access code"));
+});
 
-    it("should render the gate code prompt", () => {
-      render(<GateCode />);
-      expect(
-        screen.getByText("Please enter the gate code"),
-      ).toBeInTheDocument();
-    });
+it("has one page heading and a labelled code field with a numeric keyboard hint", () => {
+  render(<GateCode />);
+  expect(screen.getByText("In the Forest")).toBeInTheDocument();
+  expect(screen.getAllByRole("heading")).toHaveLength(1);
+  expect(screen.getByRole("heading", { name: "Come on in" })).toBeInTheDocument();
+  const input = screen.getByRole("textbox", { name: "Gate code" });
+  expect(input).toHaveAttribute("type", "text");
+  expect(input).toHaveAttribute("inputmode", "numeric");
+  expect(input).toHaveAttribute("maxlength", "4");
+  expect(input).toHaveValue("");
+  expect(input).toHaveAttribute("aria-invalid", "false");
+  expect(screen.queryByText("Carrowmore Archers")).not.toBeInTheDocument();
+});
 
-    it("should render a number input with Gate Code placeholder", () => {
-      render(<GateCode />);
-      const input = screen.getByPlaceholderText("Gate Code");
-      expect(input).toBeInTheDocument();
-      expect(input).toHaveAttribute("type", "number");
-    });
+it("blocks empty and whitespace-only submissions", () => {
+  render(<GateCode />);
+  const submit = screen.getByRole("button", { name: "Enter" });
+  expect(submit).toBeDisabled();
+  fireEvent.submit(screen.getByRole("form", { name: "Gate access" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "Gate code" }), { target: { value: "   " } });
+  expect(submit).toBeDisabled();
+  fireEvent.submit(screen.getByRole("form", { name: "Gate access" }));
+  expect(mockVerifyCode).not.toHaveBeenCalled();
+});
 
-    it("should render the Enter button", () => {
-      render(<GateCode />);
-      expect(screen.getByRole("button", { name: "Enter" })).toBeInTheDocument();
-    });
+it("preserves leading zeroes when submitting a four-character gate code", async () => {
+  render(<GateCode />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Gate code" }), { target: { value: "0012" } });
+  fireEvent.submit(screen.getByRole("form", { name: "Gate access" }));
+  await screen.findByRole("alert");
+  expect(mockVerifyCode).toHaveBeenCalledWith({ accessCode: "0012" });
+});
 
-    it("should start with an empty code input", () => {
-      render(<GateCode />);
-      const input = screen.getByPlaceholderText(
-        "Gate Code",
-      ) as HTMLInputElement;
-      expect(input.value).toBe("");
-    });
-  });
+it("submits the entered code and trims surrounding whitespace", async () => {
+  render(<GateCode />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Gate code" }), { target: { value: " 0123 " } });
+  fireEvent.click(screen.getByRole("button", { name: "Enter" }));
+  await screen.findByRole("alert");
+  expect(mockVerifyCode).toHaveBeenCalledWith({ accessCode: "0123" });
+});
 
-  describe("Code Input", () => {
-    it("should update the input when user types", () => {
-      render(<GateCode />);
-      const input = screen.getByPlaceholderText(
-        "Gate Code",
-      ) as HTMLInputElement;
+it("announces rejection, clears and focuses the field, and clears the error on editing", async () => {
+  render(<GateCode />);
+  const input = screen.getByRole("textbox", { name: "Gate code" });
+  fireEvent.change(input, { target: { value: "0000" } });
+  fireEvent.click(screen.getByRole("button", { name: "Enter" }));
+  const error = await screen.findByRole("alert");
+  expect(error).toHaveTextContent("Incorrect gate code. Please try again.");
+  expect(input).toHaveValue("");
+  expect(input).toHaveAttribute("aria-invalid", "true");
+  expect(input.getAttribute("aria-describedby")).toContain(error.id);
+  await waitFor(() => expect(input).toHaveFocus());
+  fireEvent.change(input, { target: { value: "1234" } });
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(input).toHaveAttribute("aria-invalid", "false");
+  expect(screen.getByRole("button", { name: "Enter" })).toBeEnabled();
+});
 
-      fireEvent.change(input, { target: { value: "1234" } });
-
-      expect(input.value).toBe("1234");
-    });
-  });
-
-  describe("Code Verification", () => {
-    it("should call verifyCode with the entered code when Enter is clicked", async () => {
-      render(<GateCode />);
-      const input = screen.getByPlaceholderText("Gate Code");
-      const button = screen.getByRole("button", { name: "Enter" });
-
-      fireEvent.change(input, { target: { value: "1609" } });
-      fireEvent.click(button);
-
-      await waitFor(() =>
-        expect(mockVerifyCode).toHaveBeenCalledWith({ accessCode: "1609" }),
-      );
-    });
-
-    it("should call verifyCode with empty string when submitted without input", async () => {
-      render(<GateCode />);
-      const button = screen.getByRole("button", { name: "Enter" });
-
-      fireEvent.click(button);
-
-      await waitFor(() =>
-        expect(mockVerifyCode).toHaveBeenCalledWith({ accessCode: "" }),
-      );
-    });
-
-    it("should set window.location.href to / on successful verification", async () => {
-      mockVerifyCode.mockResolvedValue(undefined);
-
-      render(<GateCode />);
-      const input = screen.getByPlaceholderText("Gate Code");
-      const button = screen.getByRole("button", { name: "Enter" });
-
-      fireEvent.change(input, { target: { value: "1609" } });
-      fireEvent.click(button);
-
-      // jsdom may throw "Not implemented: navigation" on href assignment
-      try {
-        await waitFor(() => expect(mockVerifyCode).toHaveBeenCalled());
-      } catch {
-        // expected in jsdom
-      }
-
-      // Verify the onSuccess path was reached (cookie is set server-side,
-      // the component just does window.location.href = "/")
-      expect(mockVerifyCode).toHaveBeenCalled();
-    });
-
-    it("should show inline error and clear input on error", async () => {
-      mockVerifyCode.mockRejectedValue(new Error("Invalid access code"));
-
-      render(<GateCode />);
-      const input = screen.getByPlaceholderText(
-        "Gate Code",
-      ) as HTMLInputElement;
-      const button = screen.getByRole("button", { name: "Enter" });
-
-      fireEvent.change(input, { target: { value: "0000" } });
-      fireEvent.click(button);
-
-      await waitFor(() =>
-        expect(
-          screen.getByRole("alert", {
-            name: "",
-          }),
-        ).toBeInTheDocument(),
-      );
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "Incorrect gate code. Please try again.",
-      );
-      expect(input.value).toBe("");
-    });
-  });
+it("locks input and submission while checking and announces the pending state", () => {
+  mockPending = true;
+  render(<GateCode />);
+  expect(screen.getByRole("textbox", { name: "Gate code" })).toBeDisabled();
+  expect(screen.getByRole("button")).toBeDisabled();
+  expect(screen.getByRole("status", { name: "Checking gate code" })).toBeInTheDocument();
+  expect(screen.getByText("Checking…")).toBeVisible();
+  fireEvent.submit(screen.getByRole("form", { name: "Gate access" }));
+  expect(mockVerifyCode).not.toHaveBeenCalled();
 });

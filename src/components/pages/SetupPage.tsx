@@ -9,16 +9,18 @@ import {
   normalizeParticipantName,
 } from "@/helpers/participantDisplay";
 import { IShootDenormalized, IUser, ShootParticipantInput } from "@/models";
-import { Button } from "@radix-ui/themes";
-import { History, Sprout, TreePine } from "lucide-react";
+import { Button, Theme } from "@radix-ui/themes";
+import { ArrowRight, History } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { AddUsernameDialog } from "@/components/pages/setup/AddUsernameDialog";
 import { ForestLoader } from "@/components/shared/ForestLoader";
 import { ParticipantsCard, SetupParticipant } from "./setup/ParticipantsCard";
-import { Header } from "../shared/Header";
 import { ClubSelectorCard } from "./setup/ClubSelectorCard";
+import { scorebookTheme } from "../shared/scorebookTheme";
+import { oswald } from "@/fonts/oswald";
+import { ScorebookHeader } from "../shared/ScorebookHeader";
 
 type SetupPageProps = {
   activeShootId?: string;
@@ -52,6 +54,7 @@ export function SetupPage({
   ]);
   const [archerQuery, setArcherQuery] = useState("");
   const [isCreatingShoot, setIsCreatingShoot] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const router = useRouter();
 
   const canStartShoot = Boolean(currentUser?.id) && !isCreatingShoot;
@@ -148,6 +151,7 @@ export function SetupPage({
     }
 
     setIsCreatingShoot(true);
+    setCreateError(null);
     const shootParticipants: ShootParticipantInput[] = participants.map(
       (participant) =>
         participant.isGuest
@@ -180,49 +184,59 @@ export function SetupPage({
       Cookies.set(ACTIVE_SHOOT_COOKIE, newShoot.id);
 
       router.push(`/shoot/${newShoot.id}/1`);
+    } catch {
+      setCreateError("The shoot couldn’t be started. Check your connection and try again.");
     } finally {
       setIsCreatingShoot(false);
     }
   };
 
   return (
-    <div className="forest-page bg-background min-h-screen">
-      <Header
-        title="In the Forest"
-        subtitle="Setup your shoot"
-        showBackButton={false}
-      />
-      <main className="container max-w-2xl mx-auto px-4 py-5 pb-28">
-        <div className="mb-5 rounded-2xl border border-border bg-[linear-gradient(135deg,#fbf7e8,#dfe9cb)] p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-(--deep-forest-green) text-primary-foreground">
-              <Sprout className="h-5 w-5 text-(--sage-green)" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold leading-tight">
-                Start a New Shoot
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Forest round setup
-              </p>
-            </div>
-          </div>
+    <Theme
+      accentColor="green"
+      grayColor="olive"
+      radius="small"
+      panelBackground="solid"
+      style={scorebookTheme}
+      className="flex min-h-dvh flex-col bg-background text-foreground"
+    >
+      <ScorebookHeader rightSlot={
+        <button
+          type="button"
+          onClick={() => router.push("/history")}
+          disabled={isCreatingShoot}
+          className="inline-flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm text-primary-foreground/85 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50"
+        >
+          <History aria-hidden="true" className="h-4 w-4" />
+          History
+        </button>
+      } />
+      <main className={`mx-auto w-full max-w-2xl flex-1 px-5 pt-8 ${createError ? "pb-44" : "pb-28"} sm:flex-none sm:px-8 sm:pt-12 sm:pb-8`}>
+        <div className="mb-8">
+          <h1 className={`${oswald.className} text-4xl leading-tight font-normal`}>
+            New shoot
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Choose a club and who’s shooting.
+          </p>
         </div>
 
         {/* Resume a previous active shoot */}
         {activeShootId && (
-          <section className="mb-4 rounded-xl border border-(--sage-green)/60 bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
+          <section className="mb-8 border-l-2 border-primary pl-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
-                <h3 className="font-bold text-(--deep-forest-green)">
+                <h2 className="text-base font-semibold">
                   Active shoot
-                </h3>
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   Continue scoring your current round.
                 </p>
               </div>
               <Button
-                variant="surface"
+                variant="outline"
+                size="3"
+                className="min-h-11!"
                 onClick={() => router.push(`/shoot/${activeShootId}/1`)}
                 disabled={isCreatingShoot}
               >
@@ -232,7 +246,7 @@ export function SetupPage({
           </section>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-8">
           <ClubSelectorCard
             disabled={isCreatingShoot}
             selectedClub={selectedClub}
@@ -255,35 +269,27 @@ export function SetupPage({
         </div>
         {currentUser && !currentUser.name && <AddUsernameDialog />}
       </main>
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-(--card)/95 px-4 py-3 shadow-[0_-10px_24px_rgba(30,38,28,0.12)] backdrop-blur">
-        <div className="mx-auto grid max-w-2xl grid-cols-[1fr_auto] gap-3">
+      <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:px-8 sm:pt-0 sm:pb-12">
+        <div className="mx-auto max-w-2xl sm:px-8">
+          {createError && <p role="alert" className="mb-3 text-sm leading-relaxed text-red-800">{createError}</p>}
           <Button
+            type="button"
             onClick={createNewShoot}
             disabled={!canStartShoot}
             size="4"
-            className="forest-primary-button"
-            style={{ width: "100%" }}
+            className="w-full! min-h-12! bg-primary! bg-none! font-semibold! text-white! shadow-none! hover:bg-(--deep-forest-green)! disabled:bg-muted! disabled:text-muted-foreground!"
           >
             {isCreatingShoot ? (
               <ForestLoader label="Starting shoot" size="sm" tone="light" />
             ) : (
               <>
-                <TreePine className="w-5 h-5 mr-1" />
                 Start Shoot
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </>
             )}
           </Button>
-          <Button
-            variant="surface"
-            onClick={() => router.push("/history")}
-            size="4"
-            aria-label="History"
-            disabled={isCreatingShoot}
-          >
-            <History className="w-5 h-5" />
-          </Button>
         </div>
-      </div>
-    </div>
+      </footer>
+    </Theme>
   );
 }
