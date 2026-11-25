@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom";
 import { TextEncoder, TextDecoder } from "util";
 import React from "react";
+import { setImmediate as nodeSetImmediate, clearImmediate as nodeClearImmediate } from "node:timers";
 
 // Make React available globally for JSX
 const globalWithReact = globalThis as typeof globalThis & {
@@ -11,6 +12,11 @@ globalWithReact.React = React;
 // Polyfill for global objects
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+
+// JSDOM omits these Node timers. Next's middleware test helpers patch the shared
+// timers module, so React's async act() needs valid originals in every suite.
+global.setImmediate = nodeSetImmediate;
+global.clearImmediate = nodeClearImmediate;
 
 class HeadersMock {
   private readonly headerMap = new Map<string, string>();
